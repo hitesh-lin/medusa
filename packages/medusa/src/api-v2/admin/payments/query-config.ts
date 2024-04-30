@@ -11,19 +11,20 @@ export const defaultAdminPaymentFields = [
   "refunds.amount",
 ]
 
+export const defaultAdminPaymentRelations = ["captures", "refunds"]
+
+export const allowedAdminPaymentRelations = ["captures", "refunds"]
+
 export const listTransformQueryConfig = {
-  defaults: defaultAdminPaymentFields,
+  defaultFields: defaultAdminPaymentFields,
+  defaultRelations: defaultAdminPaymentRelations,
+  allowedRelations: allowedAdminPaymentRelations,
   isList: true,
 }
 
 export const retrieveTransformQueryConfig = {
-  defaults: defaultAdminPaymentFields,
+  defaultFields: defaultAdminPaymentFields,
+  defaultRelations: defaultAdminPaymentRelations,
+  allowedRelations: allowedAdminPaymentRelations,
   isList: false,
-}
-
-export const defaultAdminPaymentPaymentProviderFields = ["id", "is_enabled"]
-
-export const listTransformPaymentProvidersQueryConfig = {
-  defaults: defaultAdminPaymentPaymentProviderFields,
-  isList: true,
 }

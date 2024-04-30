@@ -1,7 +1,6 @@
 import {
   JoinerRelationship,
   JoinerServiceConfig,
-  RemoteJoinerOptions,
   RemoteJoinerQuery,
 } from "../joiner"
 
@@ -118,7 +117,6 @@ export type LoaderOptions<TOptions = Record<string, unknown>> = {
   container: MedusaContainer
   options?: TOptions
   logger?: Logger
-  dataLoaderOnly?: boolean
 }
 
 export type ModuleLoaderFunction = (
@@ -147,8 +145,7 @@ export type ModuleJoinerConfig = Omit<
       | string
       | {
           path: string
-          forwardArgumentsOnPath?: string[]
-          isList?: boolean
+          forwardArgumentsOnPath: string[]
         }
     > // alias for deeper nested relationships (e.g. { 'price': 'prices.calculated_price_set.amount' })
     relationship: ModuleJoinerRelationship
@@ -281,8 +278,7 @@ export type ModuleBootstrapDeclaration =
 
 export type RemoteQueryFunction = (
   query: string | RemoteJoinerQuery | object,
-  variables?: Record<string, unknown>,
-  options?: RemoteJoinerOptions
+  variables?: Record<string, unknown>
 ) => Promise<any> | null
 
 export interface IModuleService {
@@ -296,7 +292,5 @@ export interface IModuleService {
    */
   __hooks?: {
     onApplicationStart?: () => Promise<void>
-    onApplicationShutdown?: () => Promise<void>
-    onApplicationPrepareShutdown?: () => Promise<void>
   }
 }

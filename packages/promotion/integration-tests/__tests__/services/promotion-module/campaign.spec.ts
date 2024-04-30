@@ -70,6 +70,7 @@ moduleIntegrationTestRunner({
               name: "campaign 1",
               budget: expect.objectContaining({
                 id: expect.any(String),
+                campaign: expect.any(Object),
                 limit: 1000,
               }),
             },

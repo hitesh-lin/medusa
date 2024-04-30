@@ -20,9 +20,7 @@ export async function loadInternalModule(
   migrationOnly?: boolean,
   loaderOnly?: boolean
 ): Promise<{ error?: Error } | void> {
-  const registrationName = !loaderOnly
-    ? resolution.definition.registrationName
-    : resolution.definition.registrationName + "__loaderOnly"
+  const registrationName = resolution.definition.registrationName
 
   const { resources } =
     resolution.moduleDeclaration as InternalModuleDeclaration
@@ -108,7 +106,6 @@ export async function loadInternalModule(
           container: localContainer,
           logger,
           options: resolution.options,
-          dataLoaderOnly: loaderOnly,
         },
         resolution.moduleDeclaration as InternalModuleDeclaration
       )
@@ -125,8 +122,11 @@ export async function loadInternalModule(
     }
   }
 
-  const moduleService = loadedModule.service
+  if (loaderOnly) {
+    return
+  }
 
+  const moduleService = loadedModule.service
   container.register({
     [registrationName]: asFunction((cradle) => {
       ;(moduleService as any).__type = MedusaModuleType
@@ -137,13 +137,6 @@ export async function loadInternalModule(
       )
     }).singleton(),
   })
-
-  if (loaderOnly) {
-    // The expectation is only to run the loader as standalone, so we do not need to register the service and we need to cleanup all services
-    const service = container.resolve(registrationName)
-    await service.__hooks?.onApplicationPrepareShutdown()
-    await service.__hooks?.onApplicationShutdown()
-  }
 }
 
 export async function loadModuleMigrations(

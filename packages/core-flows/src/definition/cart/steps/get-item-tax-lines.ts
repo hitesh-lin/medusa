@@ -1,4 +1,3 @@
-import { ModuleRegistrationName } from "@medusajs/modules-sdk"
 import {
   CartLineItemDTO,
   CartShippingMethodDTO,
@@ -12,6 +11,7 @@ import {
 } from "@medusajs/types"
 import { MedusaError } from "@medusajs/utils"
 import { StepResponse, createStep } from "@medusajs/workflows-sdk"
+import { ModuleRegistrationName } from "../../../../../modules-sdk/dist"
 
 interface StepInput {
   cart: CartWorkflowDTO
@@ -42,7 +42,7 @@ function normalizeTaxModuleContext(
     return null
   }
 
-  const customer = cart.customer
+  let customer = cart.customer
     ? {
         id: cart.customer.id,
         email: cart.customer.email,
@@ -104,7 +104,6 @@ export const getItemTaxLinesStep = createStep(
       shipping_methods: shippingMethods,
       force_tax_calculation: forceTaxCalculation = false,
     } = data
-
     const taxService = container.resolve<ITaxModuleService>(
       ModuleRegistrationName.TAX
     )

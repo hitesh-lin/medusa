@@ -37,7 +37,7 @@ medusaIntegrationTestRunner({
             application_method: {
               type: "fixed",
               target_type: "order",
-              value: 100,
+              value: "100",
             },
           },
         ])
@@ -50,6 +50,7 @@ medusaIntegrationTestRunner({
           expect.objectContaining({
             id: expect.any(String),
             code: "TEST",
+            campaign: null,
             is_automatic: false,
             type: "standard",
             created_at: expect.any(String),
@@ -67,47 +68,15 @@ medusaIntegrationTestRunner({
         ])
       })
 
-      it("should support search of promotions", async () => {
-        await promotionModuleService.create([
-          {
-            code: "first",
-            type: PromotionType.STANDARD,
-            application_method: {
-              type: "fixed",
-              target_type: "order",
-              value: 100,
-            },
-          },
-          {
-            code: "second",
-            type: PromotionType.STANDARD,
-            application_method: {
-              type: "fixed",
-              target_type: "order",
-              value: 100,
-            },
-          },
-        ])
-
-        const response = await api.get(`/admin/promotions?q=fir`, adminHeaders)
-
-        expect(response.status).toEqual(200)
-        expect(response.data.promotions).toEqual([
-          expect.objectContaining({
-            code: "first",
-          }),
-        ])
-      })
-
       it("should get all promotions and its count filtered", async () => {
-        await promotionModuleService.create([
+        const [createdPromotion] = await promotionModuleService.create([
           {
             code: "TEST",
             type: PromotionType.STANDARD,
             application_method: {
               type: "fixed",
               target_type: "order",
-              value: 100,
+              value: "100",
             },
           },
         ])
@@ -126,6 +95,7 @@ medusaIntegrationTestRunner({
             created_at: expect.any(String),
             application_method: {
               id: expect.any(String),
+              promotion: expect.any(Object),
             },
           },
         ])

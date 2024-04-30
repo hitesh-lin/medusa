@@ -12,34 +12,32 @@ export type AuthUserDTO = {
   id: string
 
   /**
-   * The ID of the provider used to authenticate the user.
+   * The provider of the auth user.
    */
   provider: string
 
   /**
-   * The user's identifier. For example, when using the `emailpass`
-   * provider, the `entity_id` would be the user's email.
+   * The associated providers entity's ID.
    */
   entity_id: string
 
   /**
-   * The scope of the auth user. For example,
-   * `admin` or `store`.
+   * The scope of the auth user.
    */
   scope: string
 
   /**
-   * Holds custom data related to the provider in key-value pairs.
+   * The provider metadata of the auth user.
    */
   provider_metadata?: Record<string, unknown>
 
   /**
-   * Holds custom data related to the user in key-value pairs.
+   * The user metadata of the auth user.
    */
   user_metadata: Record<string, unknown>
 
   /**
-   * Holds custom data related to the third-party app in key-value pairs.
+   * The app metadata of the auth user.
    */
   app_metadata: Record<string, unknown>
 }
@@ -56,35 +54,32 @@ export type CreateAuthUserDTO = {
   id?: string
 
   /**
-   * The ID of the provider used to authenticate
-   * the user.
+   * The provider of the auth user.
    */
   provider: string
 
   /**
-   * The user's identifier. For example, when using the `emailpass`
-   * provider, the `entity_id` would be the user's email.
+   * The associated entity's ID.
    */
   entity_id: string
 
   /**
-   * The scope of the auth user. For example,
-   * `admin` or `store`.
+   * The scope of the auth user.
    */
   scope: string
 
   /**
-   * Holds custom data related to the provider in key-value pairs.
+   * The provider metadata of the auth user.
    */
   provider_metadata?: Record<string, unknown>
 
   /**
-   * Holds custom data related to the user in key-value pairs.
+   * The user metadata of the auth user.
    */
   user_metadata?: Record<string, unknown>
 
   /**
-   * Holds custom data related to the third-party app in key-value pairs.
+   * The app metadata of the auth user.
    */
   app_metadata?: Record<string, unknown>
 }
@@ -101,17 +96,17 @@ export type UpdateAuthUserDTO = {
   id: string
 
   /**
-   * Holds custom data related to the provider in key-value pairs.
+   * The provider metadata of the auth user.
    */
   provider_metadata?: Record<string, unknown>
 
   /**
-   * Holds custom data related to the user in key-value pairs.
+   * The user metadata of the auth user.
    */
   user_metadata?: Record<string, unknown>
 
   /**
-   * Holds custom data related to the third-party app in key-value pairs.
+   * The app metadata of the auth user.
    */
   app_metadata?: Record<string, unknown>
 }
@@ -127,7 +122,7 @@ export interface FilterableAuthUserProps
   id?: string[]
 
   /**
-   * Filter the auth users by the ID of their auth provider.
+   * Filter the auth auth user by the associated provider(s).
    */
   provider?: string[] | string
 }

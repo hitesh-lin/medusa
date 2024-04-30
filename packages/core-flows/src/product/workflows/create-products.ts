@@ -4,14 +4,17 @@ import {
   createWorkflow,
   transform,
 } from "@medusajs/workflows-sdk"
-import { createProductsStep } from "../steps/create-products"
-import { createVariantPricingLinkStep } from "../steps/create-variant-pricing-link"
+import { createProductsStep, createVariantPricingLinkStep } from "../steps"
 import { createPriceSetsStep } from "../../pricing"
-import { associateProductsWithSalesChannelsStep } from "../../sales-channel"
-import { CreateProductWorkflowInputDTO } from "@medusajs/types/src"
 
+// TODO: We should have separate types here as input, not the module DTO. Eg. the HTTP request that we are handling
+// has different data than the DTO, so that needs to be represented differently.
 type WorkflowInput = {
-  products: CreateProductWorkflowInputDTO[]
+  products: (Omit<ProductTypes.CreateProductDTO, "variants"> & {
+    variants?: (ProductTypes.CreateProductVariantDTO & {
+      prices?: PricingTypes.CreateMoneyAmountDTO[]
+    })[]
+  })[]
 }
 
 export const createProductsWorkflowId = "create-products"
@@ -21,10 +24,9 @@ export const createProductsWorkflow = createWorkflow(
     input: WorkflowData<WorkflowInput>
   ): WorkflowData<ProductTypes.ProductDTO[]> => {
     // Passing prices to the product module will fail, we want to keep them for after the product is created.
-    const productWithoutExternalRelations = transform({ input }, (data) =>
+    const productWithoutPrices = transform({ input }, (data) =>
       data.input.products.map((p) => ({
         ...p,
-        sales_channels: undefined,
         variants: p.variants?.map((v) => ({
           ...v,
           prices: undefined,
@@ -32,25 +34,9 @@ export const createProductsWorkflow = createWorkflow(
       }))
     )
 
-    const createdProducts = createProductsStep(productWithoutExternalRelations)
+    const createdProducts = createProductsStep(productWithoutPrices)
 
-    const salesChannelLinks = transform({ input, createdProducts }, (data) => {
-      return data.createdProducts
-        .map((createdProduct, i) => {
-          const inputProduct = data.input.products[i]
-          return (
-            inputProduct.sales_channels?.map((salesChannel) => ({
-              sales_channel_id: salesChannel.id,
-              product_id: createdProduct.id,
-            })) ?? []
-          )
-        })
-        .flat()
-    })
-
-    associateProductsWithSalesChannelsStep({ links: salesChannelLinks })
-
-    // Note: We rely on the same order of input and output when creating products here, ensure this always holds true
+    // Note: We rely on the same order of input and output when creating products here, make sure that assumption holds
     const variantsWithAssociatedPrices = transform(
       { input, createdProducts },
       (data) => {
@@ -58,21 +44,16 @@ export const createProductsWorkflow = createWorkflow(
           .map((p, i) => {
             const inputProduct = data.input.products[i]
             return p.variants?.map((v, j) => ({
-              ...v,
-              prices: inputProduct?.variants?.[j]?.prices ?? [],
+              id: v.id,
+              prices: inputProduct?.variants?.[j]?.prices,
             }))
           })
           .flat()
+          .filter((v) => !!v.prices?.length)
       }
     )
 
-    const pricesToCreate = transform({ variantsWithAssociatedPrices }, (data) =>
-      data.variantsWithAssociatedPrices.map((v) => ({
-        prices: v.prices ?? [],
-      }))
-    )
-
-    const createdPriceSets = createPriceSetsStep(pricesToCreate)
+    const createdPriceSets = createPriceSetsStep(variantsWithAssociatedPrices)
 
     const variantAndPriceSets = transform(
       { variantsWithAssociatedPrices, createdPriceSets },
@@ -97,6 +78,23 @@ export const createProductsWorkflow = createWorkflow(
 
     createVariantPricingLinkStep(variantAndPriceSetLinks)
 
-    return createdProducts
+    // TODO: Should we just refetch the products here?
+    return transform(
+      {
+        createdProducts,
+        variantAndPriceSets,
+      },
+      (data) => {
+        return data.createdProducts.map((product) => ({
+          ...product,
+          variants: product.variants?.map((variant) => ({
+            ...variant,
+            price_set: data.variantAndPriceSets.find(
+              (v) => v.variant.id === variant.id
+            )?.price_set,
+          })),
+        }))
+      }
+    )
   }
 )

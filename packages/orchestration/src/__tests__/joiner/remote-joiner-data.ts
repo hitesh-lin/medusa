@@ -241,7 +241,12 @@ describe("RemoteJoiner", () => {
           fields: ["name"],
         },
       ],
-      args: [],
+      args: [
+        {
+          name: "id",
+          value: "3",
+        },
+      ],
     }
 
     const data = await joiner.query(query)
@@ -796,35 +801,5 @@ describe("RemoteJoiner", () => {
     expect(newJoiner.query(queryWithAlias)).rejects.toThrowError(
       `Service with alias "user" was not found.`
     )
-  })
-
-  it("Should throw when any key of the entrypoint isn't found", async () => {
-    const query = RemoteJoiner.parseQuery(`
-      query {
-        order (id: 201) {
-          id
-          number
-        }
-      }
-    `)
-    const data = await joiner.query(query, {
-      throwIfKeyNotFound: true,
-    })
-
-    expect(data.length).toEqual(1)
-
-    const queryNotFound = RemoteJoiner.parseQuery(`
-      query {
-        order (id: "ord_1234556") {
-          id
-          number
-        }
-      }
-    `)
-    const dataNotFound = joiner.query(queryNotFound, {
-      throwIfKeyNotFound: true,
-    })
-
-    expect(dataNotFound).rejects.toThrowError("order id not found: ord_1234556")
   })
 })

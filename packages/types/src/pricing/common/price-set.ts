@@ -1,6 +1,5 @@
 import { BaseFilterable } from "../../dal"
 import { Context } from "../../shared-context"
-import { BigNumberInput, BigNumberValue } from "../../totals"
 import {
   CreateMoneyAmountDTO,
   FilterableMoneyAmountProps,
@@ -25,21 +24,20 @@ export interface PricingRepositoryService {
  */
 export interface PricingContext {
   /**
-   * an object whose keys are the name of the context attribute. Its value can be a string or a BigNumberInput. For example, you can pass the `currency_code` property with its value being the currency code to calculate the price in.
+   * an object whose keys are the name of the context attribute. Its value can be a string or a number. For example, you can pass the `currency_code` property with its value being the currency code to calculate the price in.
    * Another example is passing the `quantity` property to calculate the price for that specified quantity, which finds a price set whose `min_quantity` and `max_quantity` conditions match the specified quantity.
    */
-  context?: Record<string, string | BigNumberInput>
+  context?: Record<string, string | number>
 }
 
 /**
  * @interface
  *
- * Filters to apply when calculating prices.
+ * Filters to apply on prices.
  */
 export interface PricingFilters {
   /**
-   * IDs of the price sets to use in the
-   * calculation.
+   * IDs to filter prices.
    */
   id: string[]
 }
@@ -57,13 +55,7 @@ export interface PriceSetDTO {
   /**
    * The prices that belong to this price set.
    */
-  prices?: MoneyAmountDTO[]
-
-  /**
-   * The calculated price based on the context.
-   */
-  calculated_price?: CalculatedPriceSet
-
+  money_amounts?: MoneyAmountDTO[]
   /**
    * The rule types applied on this price set.
    */
@@ -131,7 +123,7 @@ export interface CalculatedPriceSet {
   /**
    * The amount of the calculated price, or `null` if there isn't a calculated price.
    */
-  calculated_amount: BigNumberValue | null
+  calculated_amount: number | null
 
   /**
    * Whether the original price is associated with a price list. During the calculation process, if the price list of the calculated price is of type override,
@@ -141,7 +133,7 @@ export interface CalculatedPriceSet {
   /**
    * The amount of the original price, or `null` if there isn't a calculated price.
    */
-  original_amount: BigNumberValue | null
+  original_amount: number | null
 
   /**
    * The currency code of the calculated price, or null if there isn't a calculated price.
@@ -167,11 +159,11 @@ export interface CalculatedPriceSet {
     /**
      * The `min_quantity` field defined on a price.
      */
-    min_quantity: BigNumberValue | null
+    min_quantity: number | null
     /**
      * The `max_quantity` field defined on a price.
      */
-    max_quantity: BigNumberValue | null
+    max_quantity: number | null
   }
 
   /**
@@ -193,11 +185,11 @@ export interface CalculatedPriceSet {
     /**
      * The `min_quantity` field defined on a price.
      */
-    min_quantity: BigNumberValue | null
+    min_quantity: number | null
     /**
      * The `max_quantity` field defined on a price.
      */
-    max_quantity: BigNumberValue | null
+    max_quantity: number | null
   }
 }
 
@@ -290,35 +282,13 @@ export interface CreatePriceSetDTO {
 /**
  * @interface
  *
- * The data to upsert in a price set.
- */
-export interface UpsertPriceSetDTO extends UpdatePriceSetDTO {
-  /**
-   * A string indicating the ID of the price set to update.
-   * If not provided, a price set is created.
-   */
-  id?: string
-}
-
-/**
- * @interface
- *
- * The data to update in a price set.
+ * The data to update in a price set. The `id` is used to identify which price set to update.
  */
 export interface UpdatePriceSetDTO {
   /**
-   * The rules to associate with the price set.
+   * A string indicating the ID of the price set to update.
    */
-  rules?: {
-    /**
-     * the value of the rule's `rule_attribute` attribute.
-     */
-    rule_attribute: string
-  }[]
-  /**
-   * The prices to create and add to this price set.
-   */
-  prices?: CreatePricesDTO[]
+  id: string
 }
 
 /**
@@ -327,8 +297,7 @@ export interface UpdatePriceSetDTO {
  * Filters to apply on price sets.
  */
 export interface FilterablePriceSetProps
-  extends BaseFilterable<FilterablePriceSetProps>,
-    PricingContext {
+  extends BaseFilterable<FilterablePriceSetProps> {
   /**
    * IDs to filter price sets by.
    */

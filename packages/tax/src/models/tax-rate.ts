@@ -1,25 +1,24 @@
 import { DAL } from "@medusajs/types"
 import {
-  createPsqlIndexStatementHelper,
   DALUtils,
+  createPsqlIndexStatementHelper,
   generateEntityId,
-  Searchable,
 } from "@medusajs/utils"
 import {
+  Filter,
   BeforeCreate,
   Cascade,
   Collection,
   Entity,
-  Filter,
   ManyToOne,
-  OneToMany,
   OnInit,
+  OneToMany,
   OptionalProps,
   PrimaryKey,
   Property,
 } from "@mikro-orm/core"
-import TaxRateRule from "./tax-rate-rule"
 import TaxRegion from "./tax-region"
+import TaxRateRule from "./tax-rate-rule"
 
 type OptionalTaxRateProps = DAL.SoftDeletableEntityDateColumns
 
@@ -54,11 +53,9 @@ export default class TaxRate {
   @Property({ columnType: "real", nullable: true })
   rate: number | null = null
 
-  @Searchable()
   @Property({ columnType: "text", nullable: true })
   code: string | null = null
 
-  @Searchable()
   @Property({ columnType: "text" })
   name: string
 
@@ -69,7 +66,7 @@ export default class TaxRate {
   is_combinable = false
 
   @ManyToOne(() => TaxRegion, {
-    columnType: "text",
+    type: "text",
     fieldName: "tax_region_id",
     mapToPk: true,
     onDelete: "cascade",
@@ -82,6 +79,7 @@ export default class TaxRate {
 
   @OneToMany(() => TaxRateRule, (rule) => rule.tax_rate, {
     cascade: ["soft-remove" as Cascade],
+    persist: false,
   })
   rules = new Collection<TaxRateRule>(this)
 

@@ -39,7 +39,7 @@ export const updatePricingRuleTypesStep = createStep(
       ModuleRegistrationName.PRICING
     )
 
-    await pricingModule.updateRuleTypes(
+    await pricingModule.update(
       dataBeforeUpdate.map((data) =>
         convertItemResponseToUpdateRequest(data, selects, relations)
       )

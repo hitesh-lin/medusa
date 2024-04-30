@@ -10,34 +10,23 @@ export type AuthenticationResponse = {
   success: boolean
 
   /**
-   * The authenticated user's details.
+   * The authenticated user's details. The details shape
+   * depends on the used provider ID.
    */
   authUser?: any
 
   /**
-   * If an error occurs during the authentication process,
-   * whether within the Auth Module or a third-party provider,
-   * the error message is set in this field.
+   * The error message, if an error occurs.
    */
   error?: string
 
   /**
-   * The URL to redirect to for further authentication action
-   * with a third-party provider. This takes precedence before
-   * the `success` field.
-   *
-   * So, after checking that authentication is successful,
-   * you should check whether this field is defined and, if so, redirect to the
-   * specified location.
+   * Redirect location. Location takes precedence over success.
    */
   location?: string
 
   /**
-   * Some authentication providers support redirecting to a specified URL on
-   * success. In those cases, the URL to redirect to is set in this field.
-   *
-   * So, if `success` is true, there's no `location` set, and this field
-   * is set, you can redirect to this URL.
+   * Redirect url for successful authentication.
    */
   successRedirectUrl?: string
 }
@@ -45,17 +34,16 @@ export type AuthenticationResponse = {
 /**
  * @interface
  *
- * The configurations of the `providers` option
- * passed to the Auth Module.
+ * Provider configuration for the Medusa auth module.
  */
 export type AuthModuleProviderConfig = {
   /**
-   * The provider's name.
+   * Provider name
    */
   name: string
 
   /**
-   * The scopes configuration of that provider.
+   * Scope configurations for the provider
    */
   scopes: Record<string, AuthProviderScope>
 }
@@ -63,19 +51,18 @@ export type AuthModuleProviderConfig = {
 /**
  * @interface
  *
- * The scope configurations of an auth provider.
+ * Configuration of a single provider scope
  */
 export type AuthProviderScope = Record<string, unknown>
 
 /**
  * @interface
  *
- * The data passed to the auth provider when authenticating a user
- * or validating a callback.
+ * Input for authentication and callback validation methods.
  */
 export type AuthenticationInput = {
   /**
-   * URL of the incoming authentication request.
+   * url of incoming authentication request.
    */
   url: string
 
@@ -85,22 +72,22 @@ export type AuthenticationInput = {
   headers: Record<string, string>
 
   /**
-   *  Query params of the incoming authentication request.
+   *  Query params of incoming authentication request.
    */
   query: Record<string, string>
 
   /**
-   * Body of the incoming authentication request.
+   * Body of incoming authentication request.
    */
   body: Record<string, string>
 
   /**
-   * Scope for the authentication request.
+   * Scope for authentication request.
    */
   authScope: string
 
   /**
-   * Protocol of the incoming authentication request (For example, `https`).
+   * Protocol of incoming authentication request (For example, `https`).
    */
   protocol: string
 }

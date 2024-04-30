@@ -1,7 +1,5 @@
-import { RepositoryTransformOptions } from "../common"
+import { RepositoryTransformOptions } from '../common'
 
-export interface ProductCategoryTransformOptions
-  extends RepositoryTransformOptions {
+export interface ProductCategoryTransformOptions extends RepositoryTransformOptions {
   includeDescendantsTree?: boolean
-  includeAncestorsTree?: boolean
 }

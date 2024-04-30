@@ -1,32 +1,31 @@
 import * as QueryConfig from "./query-config"
 
 import {
-  AdminCreateCustomer,
-  AdminCreateCustomerAddress,
-  AdminCustomerAdressesParams,
-  AdminCustomerParams,
-  AdminCustomersParams,
-  AdminUpdateCustomer,
-  AdminUpdateCustomerAddress,
+  AdminGetCustomersCustomerAddressesParams,
+  AdminGetCustomersCustomerParams,
+  AdminGetCustomersParams,
+  AdminPostCustomersCustomerAddressesAddressReq,
+  AdminPostCustomersCustomerAddressesReq,
+  AdminPostCustomersCustomerReq,
+  AdminPostCustomersReq,
 } from "./validators"
+import { transformBody, transformQuery } from "../../../api/middlewares"
 
 import { MiddlewareRoute } from "../../../loaders/helpers/routing/types"
 import { authenticate } from "../../../utils/authenticate-middleware"
-import { validateAndTransformBody } from "../../utils/validate-body"
-import { validateAndTransformQuery } from "../../utils/validate-query"
 
 export const adminCustomerRoutesMiddlewares: MiddlewareRoute[] = [
   {
     method: ["ALL"],
     matcher: "/admin/customers*",
-    middlewares: [authenticate("admin", ["bearer", "session", "api-key"])],
+    middlewares: [authenticate("admin", ["bearer", "session"])],
   },
   {
     method: ["GET"],
     matcher: "/admin/customers",
     middlewares: [
-      validateAndTransformQuery(
-        AdminCustomersParams,
+      transformQuery(
+        AdminGetCustomersParams,
         QueryConfig.listTransformQueryConfig
       ),
     ],
@@ -34,20 +33,14 @@ export const adminCustomerRoutesMiddlewares: MiddlewareRoute[] = [
   {
     method: ["POST"],
     matcher: "/admin/customers",
-    middlewares: [
-      validateAndTransformBody(AdminCreateCustomer),
-      validateAndTransformQuery(
-        AdminCustomerParams,
-        QueryConfig.retrieveTransformQueryConfig
-      ),
-    ],
+    middlewares: [transformBody(AdminPostCustomersReq)],
   },
   {
     method: ["GET"],
     matcher: "/admin/customers/:id",
     middlewares: [
-      validateAndTransformQuery(
-        AdminCustomerParams,
+      transformQuery(
+        AdminGetCustomersCustomerParams,
         QueryConfig.retrieveTransformQueryConfig
       ),
     ],
@@ -55,52 +48,24 @@ export const adminCustomerRoutesMiddlewares: MiddlewareRoute[] = [
   {
     method: ["POST"],
     matcher: "/admin/customers/:id",
-    middlewares: [
-      validateAndTransformBody(AdminUpdateCustomer),
-      validateAndTransformQuery(
-        AdminCustomerParams,
-        QueryConfig.retrieveTransformQueryConfig
-      ),
-    ],
+    middlewares: [transformBody(AdminPostCustomersCustomerReq)],
   },
   {
     method: ["POST"],
     matcher: "/admin/customers/:id/addresses",
-    middlewares: [
-      validateAndTransformBody(AdminCreateCustomerAddress),
-      validateAndTransformQuery(
-        AdminCustomerParams,
-        QueryConfig.retrieveTransformQueryConfig
-      ),
-    ],
+    middlewares: [transformBody(AdminPostCustomersCustomerAddressesReq)],
   },
   {
     method: ["POST"],
     matcher: "/admin/customers/:id/addresses/:address_id",
-    middlewares: [
-      validateAndTransformBody(AdminUpdateCustomerAddress),
-      validateAndTransformQuery(
-        AdminCustomerParams,
-        QueryConfig.retrieveTransformQueryConfig
-      ),
-    ],
-  },
-  {
-    method: ["DELETE"],
-    matcher: "/admin/customers/:id/addresses/:address_id",
-    middlewares: [
-      validateAndTransformQuery(
-        AdminCustomerParams,
-        QueryConfig.retrieveTransformQueryConfig
-      ),
-    ],
+    middlewares: [transformBody(AdminPostCustomersCustomerAddressesAddressReq)],
   },
   {
     method: ["GET"],
     matcher: "/admin/customers/:id/addresses",
     middlewares: [
-      validateAndTransformQuery(
-        AdminCustomerAdressesParams,
+      transformQuery(
+        AdminGetCustomersCustomerAddressesParams,
         QueryConfig.listAddressesTransformQueryConfig
       ),
     ],

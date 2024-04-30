@@ -1,33 +1,34 @@
-import { createApiKeysWorkflow } from "@medusajs/core-flows"
-import {
-  ContainerRegistrationKeys,
-  remoteQueryObjectFromString,
-} from "@medusajs/utils"
 import {
   AuthenticatedMedusaRequest,
   MedusaResponse,
 } from "../../../types/routing"
-import { AdminCreateApiKeyType } from "./validators"
+
+import { CreateApiKeyDTO } from "@medusajs/types"
+import { createApiKeysWorkflow } from "@medusajs/core-flows"
+import { defaultAdminApiKeyFields } from "./query-config"
+import { remoteQueryObjectFromString } from "@medusajs/utils"
 
 export const GET = async (
   req: AuthenticatedMedusaRequest,
   res: MedusaResponse
 ) => {
-  const remoteQuery = req.scope.resolve(ContainerRegistrationKeys.REMOTE_QUERY)
+  const remoteQuery = req.scope.resolve("remoteQuery")
 
   const queryObject = remoteQueryObjectFromString({
     entryPoint: "api_key",
     variables: {
       filters: req.filterableFields,
-      ...req.remoteQueryConfig.pagination,
+      order: req.listConfig.order,
+      skip: req.listConfig.skip,
+      take: req.listConfig.take,
     },
-    fields: req.remoteQueryConfig.fields,
+    fields: defaultAdminApiKeyFields,
   })
 
   const { rows: apiKeys, metadata } = await remoteQuery(queryObject)
 
   res.json({
-    api_keys: apiKeys,
+    apiKeys,
     count: metadata.count,
     offset: metadata.skip,
     limit: metadata.take,
@@ -35,14 +36,14 @@ export const GET = async (
 }
 
 export const POST = async (
-  req: AuthenticatedMedusaRequest<AdminCreateApiKeyType>,
+  req: AuthenticatedMedusaRequest<Omit<CreateApiKeyDTO, "created_by">>,
   res: MedusaResponse
 ) => {
   const input = [
     {
       ...req.validatedBody,
       created_by: req.auth.actor_id,
-    },
+    } as CreateApiKeyDTO,
   ]
 
   const { result, errors } = await createApiKeysWorkflow(req.scope).run({
@@ -54,7 +55,5 @@ export const POST = async (
     throw errors[0].error
   }
 
-  // We should not refetch the api key here, as we need to show the secret key in the response (and never again)
-  // And the only time we get to see the secret, is when we create it
-  res.status(200).json({ api_key: result[0] })
+  res.status(200).json({ apiKey: result[0] })
 }

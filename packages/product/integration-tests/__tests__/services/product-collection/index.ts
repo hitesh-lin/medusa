@@ -180,7 +180,6 @@ moduleIntegrationTestRunner({
             {
               id: "test-2",
               title: "col 2",
-              handle: "col-2",
               products: [],
             },
           ])
@@ -254,7 +253,6 @@ moduleIntegrationTestRunner({
           expect(serialized).toEqual({
             id: collectionData.id,
             title: collectionData.title,
-            handle: "collection-1",
           })
         })
 
@@ -274,7 +272,6 @@ moduleIntegrationTestRunner({
           expect(serialized).toEqual({
             id: collectionData.id,
             title: collectionData.title,
-            handle: "collection-1",
             products: [],
           })
         })

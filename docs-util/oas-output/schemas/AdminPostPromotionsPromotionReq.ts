@@ -12,11 +12,7 @@
  *     type: boolean
  *     title: is_automatic
  *     description: The promotion's is automatic.
- *   type:
- *     type: string
- *     enum:
- *       - standard
- *       - buyget
+ *   type: {}
  *   campaign_id:
  *     type: string
  *     title: campaign_id
@@ -37,16 +33,7 @@
  *         - attribute
  *         - values
  *       properties:
- *         operator:
- *           type: string
- *           enum:
- *             - gte
- *             - lte
- *             - gt
- *             - lt
- *             - eq
- *             - ne
- *             - in
+ *         operator: {}
  *         description:
  *           type: string
  *           title: description

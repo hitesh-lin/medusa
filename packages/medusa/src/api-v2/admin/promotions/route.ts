@@ -1,49 +1,41 @@
-import { createPromotionsWorkflow } from "@medusajs/core-flows"
+import { CreatePromotionDTO, IPromotionModuleService } from "@medusajs/types"
 import {
   AuthenticatedMedusaRequest,
   MedusaResponse,
 } from "../../../types/routing"
-import {
-  ContainerRegistrationKeys,
-  remoteQueryObjectFromString,
-} from "@medusajs/utils"
-import {
-  AdminCreatePromotionType,
-  AdminGetPromotionsParamsType,
-} from "./validators"
-import { refetchPromotion } from "./helpers"
+
+import { createPromotionsWorkflow } from "@medusajs/core-flows"
+import { ModuleRegistrationName } from "@medusajs/modules-sdk"
 
 export const GET = async (
-  req: AuthenticatedMedusaRequest<AdminGetPromotionsParamsType>,
+  req: AuthenticatedMedusaRequest,
   res: MedusaResponse
 ) => {
-  const remoteQuery = req.scope.resolve(ContainerRegistrationKeys.REMOTE_QUERY)
+  const promotionModuleService: IPromotionModuleService = req.scope.resolve(
+    ModuleRegistrationName.PROMOTION
+  )
 
-  const queryObject = remoteQueryObjectFromString({
-    entryPoint: "promotion",
-    variables: {
-      filters: req.filterableFields,
-      ...req.remoteQueryConfig.pagination,
-    },
-    fields: req.remoteQueryConfig.fields,
-  })
+  const [promotions, count] = await promotionModuleService.listAndCount(
+    req.filterableFields,
+    req.listConfig
+  )
 
-  const { rows: promotions, metadata } = await remoteQuery(queryObject)
+  const { limit, offset } = req.validatedQuery
 
   res.json({
+    count,
     promotions,
-    count: metadata.count,
-    offset: metadata.skip,
-    limit: metadata.take,
+    offset,
+    limit,
   })
 }
 
 export const POST = async (
-  req: AuthenticatedMedusaRequest<AdminCreatePromotionType>,
+  req: AuthenticatedMedusaRequest<CreatePromotionDTO>,
   res: MedusaResponse
 ) => {
   const createPromotions = createPromotionsWorkflow(req.scope)
-  const promotionsData = [req.validatedBody] as any
+  const promotionsData = [req.validatedBody]
 
   const { result, errors } = await createPromotions.run({
     input: { promotionsData },
@@ -54,11 +46,5 @@ export const POST = async (
     throw errors[0].error
   }
 
-  const promotion = await refetchPromotion(
-    result[0].id,
-    req.scope,
-    req.remoteQueryConfig.fields
-  )
-
-  res.status(200).json({ promotion })
+  res.status(200).json({ promotion: result[0] })
 }

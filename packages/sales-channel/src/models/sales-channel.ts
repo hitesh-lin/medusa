@@ -1,4 +1,4 @@
-import { DALUtils, Searchable, generateEntityId } from "@medusajs/utils"
+import { DALUtils, generateEntityId } from "@medusajs/utils"
 
 import { DAL } from "@medusajs/types"
 import {
@@ -22,11 +22,9 @@ export default class SalesChannel {
   @PrimaryKey({ columnType: "text" })
   id!: string
 
-  @Searchable()
   @Property({ columnType: "text" })
   name!: string
 
-  @Searchable()
   @Property({ columnType: "text", nullable: true })
   description: string | null = null
 

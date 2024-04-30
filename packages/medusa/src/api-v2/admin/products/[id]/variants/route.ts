@@ -3,24 +3,21 @@ import {
   MedusaResponse,
 } from "../../../../../types/routing"
 
+import { CreateProductVariantDTO } from "@medusajs/types"
 import { createProductVariantsWorkflow } from "@medusajs/core-flows"
-import {
-  remoteQueryObjectFromString,
-  ContainerRegistrationKeys,
-} from "@medusajs/utils"
+import { remoteQueryObjectFromString } from "@medusajs/utils"
 import {
   refetchProduct,
   remapKeysForVariant,
-  remapProductResponse,
-  remapVariantResponse,
+  remapProduct,
+  remapVariant,
 } from "../../helpers"
-import { AdminCreateProductVariantType } from "../../validators"
 
 export const GET = async (
   req: AuthenticatedMedusaRequest,
   res: MedusaResponse
 ) => {
-  const remoteQuery = req.scope.resolve(ContainerRegistrationKeys.REMOTE_QUERY)
+  const remoteQuery = req.scope.resolve("remoteQuery")
   const productId = req.params.id
 
   const queryObject = remoteQueryObjectFromString({
@@ -37,7 +34,7 @@ export const GET = async (
   const { rows: variants, metadata } = await remoteQuery(queryObject)
 
   res.json({
-    variants: variants.map(remapVariantResponse),
+    variants: variants.map(remapVariant),
     count: metadata.count,
     offset: metadata.skip,
     limit: metadata.take,
@@ -45,7 +42,7 @@ export const GET = async (
 }
 
 export const POST = async (
-  req: AuthenticatedMedusaRequest<AdminCreateProductVariantType>,
+  req: AuthenticatedMedusaRequest<CreateProductVariantDTO>,
   res: MedusaResponse
 ) => {
   const productId = req.params.id
@@ -72,5 +69,5 @@ export const POST = async (
     req.scope,
     req.remoteQueryConfig.fields
   )
-  res.status(200).json({ product: remapProductResponse(product) })
+  res.status(200).json({ product: remapProduct(product) })
 }

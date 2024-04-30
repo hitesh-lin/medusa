@@ -89,9 +89,7 @@ describe.skip("CreateProduct workflow", function () {
       {
         action: "fail_step",
         handlerType: "invoke",
-        error: expect.objectContaining({
-          message: `Failed to create products`,
-        }),
+        error: new Error(`Failed to create products`),
       },
     ])
 

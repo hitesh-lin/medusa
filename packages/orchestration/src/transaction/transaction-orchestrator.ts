@@ -16,9 +16,7 @@ import {
 import { MedusaError, promiseAll, TransactionStepState } from "@medusajs/utils"
 import { EventEmitter } from "events"
 import {
-  isErrorLike,
   PermanentStepFailureError,
-  serializeError,
   TransactionStepTimeoutError,
   TransactionTimeoutError,
 } from "./errors"
@@ -481,10 +479,6 @@ export class TransactionOrchestrator extends EventEmitter {
   ): Promise<void> {
     step.failures++
 
-    if (isErrorLike(error)) {
-      error = serializeError(error)
-    }
-
     if (
       !isTimeout &&
       step.getStates().status !== TransactionStepStatus.PERMANENT_FAILURE
@@ -637,41 +631,27 @@ export class TransactionOrchestrator extends EventEmitter {
           transaction,
         })
 
-        const isAsync = step.isCompensating()
-          ? step.definition.compensateAsync
-          : step.definition.async
-
         const setStepFailure = async (
           error: Error | any,
           { endRetry }: { endRetry?: boolean } = {}
         ) => {
-          await TransactionOrchestrator.setStepFailure(
+          return TransactionOrchestrator.setStepFailure(
             transaction,
             step,
             error,
             endRetry ? 0 : step.definition.maxRetries
           )
-
-          if (isAsync) {
-            await transaction.scheduleRetry(
-              step,
-              step.definition.retryInterval ?? 0
-            )
-          }
         }
+
+        const isAsync = step.isCompensating()
+          ? step.definition.compensateAsync
+          : step.definition.async
 
         if (!isAsync) {
           hasSyncSteps = true
           execution.push(
             transaction
-              .handler(
-                step.definition.action + "",
-                type,
-                payload,
-                transaction,
-                step,
-                this
-              )
+              .handler(step.definition.action + "", type, payload, transaction)
               .then(async (response: any) => {
                 if (this.hasExpired({ transaction, step }, Date.now())) {
                   await this.checkStepTimeout(transaction, step)
@@ -714,34 +694,8 @@ export class TransactionOrchestrator extends EventEmitter {
                   step.definition.action + "",
                   type,
                   payload,
-                  transaction,
-                  step,
-                  this
+                  transaction
                 )
-                .then(async (response: any) => {
-                  if (!step.definition.backgroundExecution) {
-                    return
-                  }
-
-                  if (this.hasExpired({ transaction, step }, Date.now())) {
-                    await this.checkStepTimeout(transaction, step)
-                    await this.checkTransactionTimeout(
-                      transaction,
-                      nextSteps.next.includes(step) ? nextSteps.next : [step]
-                    )
-                  }
-
-                  await TransactionOrchestrator.setStepSuccess(
-                    transaction,
-                    step,
-                    response
-                  )
-
-                  await transaction.scheduleRetry(
-                    step,
-                    step.definition.retryInterval ?? 0
-                  )
-                })
                 .catch(async (error) => {
                   if (
                     PermanentStepFailureError.isPermanentStepFailureError(error)
@@ -752,9 +706,6 @@ export class TransactionOrchestrator extends EventEmitter {
 
                   await setStepFailure(error)
                 })
-
-              const eventName = DistributedTransactionEvent.STEP_AWAITING
-              transaction.emit(eventName, { step, transaction })
             })
           )
         }

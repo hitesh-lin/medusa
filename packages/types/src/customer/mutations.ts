@@ -75,7 +75,7 @@ export interface CreateCustomerAddressDTO {
   /**
    * Holds custom data in key-value pairs.
    */
-  metadata?: Record<string, unknown> | null
+  metadata?: Record<string, unknown>
 }
 
 /**
@@ -90,7 +90,7 @@ export interface UpdateCustomerAddressDTO {
   /**
    * The address's name.
    */
-  address_name?: string | null
+  address_name?: string
 
   /**
    * Whether the address is the default for shipping.
@@ -105,62 +105,62 @@ export interface UpdateCustomerAddressDTO {
   /**
    * The associated customer's ID.
    */
-  customer_id?: string | null
+  customer_id?: string
 
   /**
    * The company.
    */
-  company?: string | null
+  company?: string
 
   /**
    * The first name.
    */
-  first_name?: string | null
+  first_name?: string
 
   /**
    * The last name.
    */
-  last_name?: string | null
+  last_name?: string
 
   /**
    * The address 1.
    */
-  address_1?: string | null
+  address_1?: string
 
   /**
    * The address 2.
    */
-  address_2?: string | null
+  address_2?: string
 
   /**
    * The city.
    */
-  city?: string | null
+  city?: string
 
   /**
    * The country code.
    */
-  country_code?: string | null
+  country_code?: string
 
   /**
    * The province.
    */
-  province?: string | null
+  province?: string
 
   /**
    * The postal code.
    */
-  postal_code?: string | null
+  postal_code?: string
 
   /**
    * The phone.
    */
-  phone?: string | null
+  phone?: string
 
   /**
    * Holds custom data in key-value pairs.
    */
-  metadata?: Record<string, unknown> | null
+  metadata?: Record<string, unknown>
 }
 
 /**
@@ -284,6 +284,26 @@ export interface CustomerUpdatableFields {
 }
 
 /**
+ * The customer group to be created.
+ */
+export interface CreateCustomerGroupDTO {
+  /**
+   * The name of the customer group.
+   */
+  name: string
+
+  /**
+   * Holds custom data in key-value pairs.
+   */
+  metadata?: Record<string, unknown> | null
+
+  /**
+   * Who the customer group.
+   */
+  created_by?: string
+}
+
+/**
  * The updatable fields of a customer group.
  */
 export interface CustomerGroupUpdatableFields {
@@ -338,8 +358,7 @@ export interface CreateCustomerGroupDTO {
   metadata?: Record<string, unknown> | null
 
   /**
-   * Who created the customer group. For example,
-   * the ID of the user that created the customer group.
+   * Who created the customer group.
    */
   created_by?: string
 }

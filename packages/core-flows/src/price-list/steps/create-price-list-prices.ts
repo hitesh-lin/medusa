@@ -41,7 +41,7 @@ export const createPriceListPricesStep = createStep(
     )
 
     return new StepResponse(
-      createdPrices,
+      null,
       createdPrices.map((p) => p.id)
     )
   },

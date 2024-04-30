@@ -50,11 +50,7 @@ medusaIntegrationTestRunner({
             () =>
               api
                 .get("/admin/stores", adminHeaders)
-                .then((r) =>
-                  r.data.stores.find(
-                    (s) => s.default_sales_channel_id === "sc_12345"
-                  )
-                )
+                .then((r) => r.data.stores[0])
           )
 
           expect(store).toEqual(
@@ -246,35 +242,6 @@ medusaIntegrationTestRunner({
               created_at: expect.any(String),
               updated_at: expect.any(String),
             })
-          )
-        })
-      })
-
-      describe("GET /admin/store", () => {
-        it("supports searching of stores", async () => {
-          await breaking(
-            () => {},
-            async () => {
-              const service = container.resolve(ModuleRegistrationName.STORE)
-              const secondStore = await service.create({
-                name: "Second Store",
-                supported_currency_codes: ["eur"],
-                default_currency_code: "eur",
-              })
-
-              const response = await api.get(
-                "/admin/stores?q=second",
-                adminHeaders
-              )
-
-              expect(response.status).toEqual(200)
-              expect(response.data.stores).toEqual([
-                expect.objectContaining({
-                  id: secondStore.id,
-                  name: "Second Store",
-                }),
-              ])
-            }
           )
         })
       })

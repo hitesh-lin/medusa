@@ -1,10 +1,13 @@
+export const defaultAdminCampaignRelations = ["budget"]
+export const allowedAdminCampaignRelations = [
+  ...defaultAdminCampaignRelations,
+  "promotions",
+]
 export const defaultAdminCampaignFields = [
-  "id",
   "name",
   "description",
   "currency",
   "campaign_identifier",
-  "*budget",
   "starts_at",
   "ends_at",
   "created_at",
@@ -13,7 +16,9 @@ export const defaultAdminCampaignFields = [
 ]
 
 export const retrieveTransformQueryConfig = {
-  defaults: defaultAdminCampaignFields,
+  defaultFields: defaultAdminCampaignFields,
+  defaultRelations: defaultAdminCampaignRelations,
+  allowedRelations: allowedAdminCampaignRelations,
   isList: false,
 }
 

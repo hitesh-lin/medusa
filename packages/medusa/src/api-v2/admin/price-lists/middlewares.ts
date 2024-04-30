@@ -1,17 +1,14 @@
+import { transformBody, transformQuery } from "../../../api/middlewares"
 import { MiddlewareRoute } from "../../../loaders/helpers/routing/types"
 import { authenticate } from "../../../utils/authenticate-middleware"
-import { validateAndTransformBody } from "../../utils/validate-body"
-import { validateAndTransformQuery } from "../../utils/validate-query"
-import { createBatchBody, createLinkBody } from "../../utils/validators"
 import * as QueryConfig from "./query-config"
 import {
-  AdminCreatePriceList,
-  AdminCreatePriceListPrice,
-  AdminGetPriceListParams,
-  AdminGetPriceListPricesParams,
   AdminGetPriceListsParams,
-  AdminUpdatePriceList,
-  AdminUpdatePriceListPrice,
+  AdminGetPriceListsPriceListParams,
+  AdminPostPriceListsPriceListPricesBatchAddReq,
+  AdminPostPriceListsPriceListPricesBatchRemoveReq,
+  AdminPostPriceListsPriceListReq,
+  AdminPostPriceListsReq,
 } from "./validators"
 
 export const adminPriceListsRoutesMiddlewares: MiddlewareRoute[] = [
@@ -24,9 +21,9 @@ export const adminPriceListsRoutesMiddlewares: MiddlewareRoute[] = [
     method: ["GET"],
     matcher: "/admin/price-lists",
     middlewares: [
-      validateAndTransformQuery(
+      transformQuery(
         AdminGetPriceListsParams,
-        QueryConfig.listPriceListQueryConfig
+        QueryConfig.adminListTransformQueryConfig
       ),
     ],
   },
@@ -34,56 +31,32 @@ export const adminPriceListsRoutesMiddlewares: MiddlewareRoute[] = [
     method: ["GET"],
     matcher: "/admin/price-lists/:id",
     middlewares: [
-      validateAndTransformQuery(
-        AdminGetPriceListParams,
-        QueryConfig.retrivePriceListQueryConfig
+      transformQuery(
+        AdminGetPriceListsPriceListParams,
+        QueryConfig.adminRetrieveTransformQueryConfig
       ),
     ],
   },
   {
     method: ["POST"],
     matcher: "/admin/price-lists",
-    middlewares: [
-      validateAndTransformBody(AdminCreatePriceList),
-      validateAndTransformQuery(
-        AdminGetPriceListPricesParams,
-        QueryConfig.retrivePriceListQueryConfig
-      ),
-    ],
+    middlewares: [transformBody(AdminPostPriceListsReq)],
   },
   {
     method: ["POST"],
     matcher: "/admin/price-lists/:id",
-    middlewares: [
-      validateAndTransformBody(AdminUpdatePriceList),
-      validateAndTransformQuery(
-        AdminGetPriceListPricesParams,
-        QueryConfig.retrivePriceListQueryConfig
-      ),
-    ],
+    middlewares: [transformBody(AdminPostPriceListsPriceListReq)],
   },
   {
     method: ["POST"],
-    matcher: "/admin/price-lists/:id/products",
-    middlewares: [
-      validateAndTransformBody(createLinkBody()),
-      validateAndTransformQuery(
-        AdminGetPriceListParams,
-        QueryConfig.listPriceListQueryConfig
-      ),
-    ],
+    matcher: "/admin/price-lists/:id/prices/batch/add",
+    middlewares: [transformBody(AdminPostPriceListsPriceListPricesBatchAddReq)],
   },
   {
     method: ["POST"],
-    matcher: "/admin/price-lists/:id/prices/batch",
+    matcher: "/admin/price-lists/:id/prices/batch/remove",
     middlewares: [
-      validateAndTransformBody(
-        createBatchBody(AdminCreatePriceListPrice, AdminUpdatePriceListPrice)
-      ),
-      validateAndTransformQuery(
-        AdminGetPriceListPricesParams,
-        QueryConfig.listPriceListPriceQueryConfig
-      ),
+      transformBody(AdminPostPriceListsPriceListPricesBatchRemoveReq),
     ],
   },
 ]

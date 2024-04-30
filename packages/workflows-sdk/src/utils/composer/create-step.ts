@@ -1,8 +1,6 @@
 import {
   TransactionStepsDefinition,
   WorkflowManager,
-  WorkflowStepHandler,
-  WorkflowStepHandlerArguments,
 } from "@medusajs/orchestration"
 import { OrchestrationUtils, deepCopy, isString } from "@medusajs/utils"
 import { ulid } from "ulid"
@@ -122,23 +120,21 @@ function applyStep<
     }
 
     const handler = {
-      invoke: async (stepArguments: WorkflowStepHandlerArguments) => {
-        const metadata = stepArguments.metadata
-        const idempotencyKey = metadata.idempotency_key
-
-        stepArguments.context!.idempotencyKey = idempotencyKey
+      invoke: async (transactionContext) => {
         const executionContext: StepExecutionContext = {
-          workflowId: metadata.model_id,
-          stepName: metadata.action,
+          workflowId: transactionContext.model_id,
+          stepName: transactionContext.action,
           action: "invoke",
-          idempotencyKey,
-          attempt: metadata.attempt,
-          container: stepArguments.container,
-          metadata,
-          context: stepArguments.context!,
+          idempotencyKey: transactionContext.idempotency_key,
+          attempt: transactionContext.attempt,
+          container: transactionContext.container,
+          metadata: transactionContext.metadata,
+          context: transactionContext.context,
         }
 
-        const argInput = input ? await resolveValue(input, stepArguments) : {}
+        const argInput = input
+          ? await resolveValue(input, transactionContext)
+          : {}
         const stepResponse: StepResponse<any, any> = await invokeFn.apply(
           this,
           [argInput, executionContext]
@@ -155,24 +151,19 @@ function applyStep<
         }
       },
       compensate: compensateFn
-        ? async (stepArguments: WorkflowStepHandlerArguments) => {
-            const metadata = stepArguments.metadata
-            const idempotencyKey = metadata.idempotency_key
-
-            stepArguments.context!.idempotencyKey = idempotencyKey
-
+        ? async (transactionContext) => {
             const executionContext: StepExecutionContext = {
-              workflowId: metadata.model_id,
-              stepName: metadata.action,
+              workflowId: transactionContext.model_id,
+              stepName: transactionContext.action,
               action: "compensate",
-              idempotencyKey,
-              attempt: metadata.attempt,
-              container: stepArguments.container,
-              metadata,
-              context: stepArguments.context!,
+              idempotencyKey: transactionContext.idempotency_key,
+              attempt: transactionContext.attempt,
+              container: transactionContext.container,
+              metadata: transactionContext.metadata,
+              context: transactionContext.context,
             }
 
-            const stepOutput = (stepArguments.invoke[stepName] as any)?.output
+            const stepOutput = transactionContext.invoke[stepName]?.output
             const invokeResult =
               stepOutput?.__type ===
               OrchestrationUtils.SymbolWorkflowStepResponse
@@ -188,8 +179,6 @@ function applyStep<
           }
         : undefined,
     }
-
-    wrapAsyncHandler(stepConfig, handler)
 
     stepConfig.uuid = ulid()
     stepConfig.noCompensation = !compensateFn
@@ -228,62 +217,6 @@ function applyStep<
     }
 
     return proxify(ret)
-  }
-}
-
-/**
- * @internal
- *
- * Internal function to handle async steps to be automatically marked as completed after they are executed.
- *
- * @param stepConfig
- * @param handle
- */
-function wrapAsyncHandler(
-  stepConfig: TransactionStepsDefinition,
-  handle: {
-    invoke: WorkflowStepHandler
-    compensate?: WorkflowStepHandler
-  }
-) {
-  if (stepConfig.async) {
-    if (typeof handle.invoke === "function") {
-      const originalInvoke = handle.invoke
-
-      handle.invoke = async (stepArguments: WorkflowStepHandlerArguments) => {
-        const response = (await originalInvoke(stepArguments)) as any
-        if (
-          response?.output?.__type !==
-          OrchestrationUtils.SymbolWorkflowStepResponse
-        ) {
-          return
-        }
-
-        stepArguments.step.definition.backgroundExecution = true
-        return response
-      }
-    }
-  }
-
-  if (stepConfig.compensateAsync) {
-    if (typeof handle.compensate === "function") {
-      const originalCompensate = handle.compensate!
-      handle.compensate = async (
-        stepArguments: WorkflowStepHandlerArguments
-      ) => {
-        const response = (await originalCompensate(stepArguments)) as any
-
-        if (
-          response?.output?.__type !==
-          OrchestrationUtils.SymbolWorkflowStepResponse
-        ) {
-          return
-        }
-        stepArguments.step.definition.backgroundExecution = true
-
-        return response
-      }
-    }
   }
 }
 

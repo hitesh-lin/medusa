@@ -3,30 +3,28 @@ import {
   MedusaResponse,
 } from "../../../types/routing"
 
+import { CreateProductCollectionDTO } from "@medusajs/types"
 import { createCollectionsWorkflow } from "@medusajs/core-flows"
-import {
-  ContainerRegistrationKeys,
-  remoteQueryObjectFromString,
-} from "@medusajs/utils"
-import { AdminCreateCollectionType } from "./validators"
-import { refetchCollection } from "./helpers"
+import { remoteQueryObjectFromString } from "@medusajs/utils"
 
 export const GET = async (
   req: AuthenticatedMedusaRequest,
   res: MedusaResponse
 ) => {
-  const remoteQuery = req.scope.resolve(ContainerRegistrationKeys.REMOTE_QUERY)
+  const remoteQuery = req.scope.resolve("remoteQuery")
 
-  const query = remoteQueryObjectFromString({
+  const queryObject = remoteQueryObjectFromString({
     entryPoint: "product_collection",
     variables: {
       filters: req.filterableFields,
-      ...req.remoteQueryConfig.pagination,
+      order: req.listConfig.order,
+      skip: req.listConfig.skip,
+      take: req.listConfig.take,
     },
-    fields: req.remoteQueryConfig.fields,
+    fields: req.listConfig.select as string[],
   })
 
-  const { rows: collections, metadata } = await remoteQuery(query)
+  const { rows: collections, metadata } = await remoteQuery(queryObject)
 
   res.json({
     collections,
@@ -37,7 +35,7 @@ export const GET = async (
 }
 
 export const POST = async (
-  req: AuthenticatedMedusaRequest<AdminCreateCollectionType>,
+  req: AuthenticatedMedusaRequest<CreateProductCollectionDTO>,
   res: MedusaResponse
 ) => {
   const input = [
@@ -55,11 +53,5 @@ export const POST = async (
     throw errors[0].error
   }
 
-  const collection = await refetchCollection(
-    result[0].id,
-    req.scope,
-    req.remoteQueryConfig.fields
-  )
-
-  res.status(200).json({ collection })
+  res.status(200).json({ collection: result[0] })
 }

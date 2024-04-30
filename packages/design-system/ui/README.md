@@ -36,7 +36,7 @@
 ### Installation
 
 ```sh
-yarn add @medusajs/ui
+yarn add @medusajs/medusa-ui
 ```
 
 ### Usage

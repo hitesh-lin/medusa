@@ -19,7 +19,6 @@ import {
  * it extends the {@link FunctionKindGenerator} class.
  */
 class MedusaReactHooksKindGenerator extends FunctionKindGenerator {
-  public name = "medusa-react"
   /**
    * Checks whether the generator can retrieve the docblock of the specified node. It uses the parent generator
    * to check that the node is a function, then checks if the function is a mutation using the {@link isMutation} method,
@@ -81,12 +80,9 @@ class MedusaReactHooksKindGenerator extends FunctionKindGenerator {
    * @param {FunctionNode & ts.VariableDeclaration} node - The node to retrieve its docblock.
    * @returns {string} The node's docblock.
    */
-  async getDocBlock(
-    node: FunctionNode & ts.VariableDeclaration
-  ): Promise<string> {
-    // TODO use the AiGenerator to generate summary + examples
+  getDocBlock(node: FunctionNode & ts.VariableDeclaration): string {
     if (!this.isAllowed(node)) {
-      return await super.getDocBlock(node)
+      return super.getDocBlock(node)
     }
 
     const actualNode = ts.isVariableStatement(node)
@@ -94,29 +90,25 @@ class MedusaReactHooksKindGenerator extends FunctionKindGenerator {
       : node
 
     if (!actualNode) {
-      return await super.getDocBlock(node)
+      return super.getDocBlock(node)
     }
     const isMutation = this.isMutation(actualNode)
 
-    let str = `${DOCBLOCK_START}This hook ${this.getFunctionSummary({
-      node,
-    })}`
+    let str = `${DOCBLOCK_START}This hook ${this.getFunctionSummary(node)}`
 
     // add example
-    str += this.getFunctionPlaceholderExample()
+    str += this.getFunctionExample()
 
     // loop over parameters that aren't query/mutation parameters
     // and add docblock to them
-    await Promise.all(
-      this.getActualParameters(actualNode).map(async (parameter) => {
-        ts.addSyntheticLeadingComment(
-          parameter,
-          ts.SyntaxKind.MultiLineCommentTrivia,
-          await super.getDocBlock(parameter),
-          true
-        )
-      })
-    )
+    this.getActualParameters(actualNode).forEach((parameter) => {
+      ts.addSyntheticLeadingComment(
+        parameter,
+        ts.SyntaxKind.MultiLineCommentTrivia,
+        super.getDocBlock(parameter),
+        true
+      )
+    })
 
     // check if mutation parameter is an intrinsic type and, if so, add the `@typeParamDefinition`
     // tag to the hook

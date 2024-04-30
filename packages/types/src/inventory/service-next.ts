@@ -6,53 +6,77 @@ import { IModuleService } from "../modules-sdk"
 import { InventoryNext } from "."
 
 /**
- * The main service interface for the Inventory Module.
+ * The main service interface for the inventory module.
  */
 export interface IInventoryServiceNext extends IModuleService {
   /**
-   * This method retrieves a paginated list of inventory items based on optional filters and configuration.
-   *
+   * This method is used to retrieve a paginated list of inventory items along with the total count of available inventory items satisfying the provided filters.
    * @param {FilterableInventoryItemProps} selector - The filters to apply on the retrieved inventory items.
-   * @param {FindConfig<InventoryItemDTO>} config - The configurations determining how the inventory item is retrieved. Its properties, such as `select` or `relations`, accept the
+   * @param {FindConfig<InventoryItemDTO>} config -
+   * The configurations determining how the inventory items are retrieved. Its properties, such as `select` or `relations`, accept the
    * attributes or relations associated with a inventory item.
    * @param {Context} context - A context used to share resources, such as transaction manager, between the application and the module.
-   * @returns {Promise<InventoryItemDTO[]>} The list of inventory items.
+   * @return {Promise<[InventoryItemDTO[], number]>} The list of inventory items along with the total count.
    *
    * @example
    * To retrieve a list of inventory items using their IDs:
    *
    * ```ts
-   * const inventoryItems = await inventoryModuleService.list({
-   *   id: ["iitem_123", "iitem_321"],
-   * })
+   * import {
+   *   initialize as initializeInventoryModule,
+   * } from "@medusajs/inventory"
+   *
+   * async function retrieveInventoryItems (ids: string[]) {
+   *   const inventoryModule = await initializeInventoryModule({})
+   *
+   *   const [inventoryItems, count] = await inventoryModule.listInventoryItems({
+   *     id: ids
+   *   })
+   *
+   *   // do something with the inventory items or return them
+   * }
    * ```
    *
    * To specify relations that should be retrieved within the inventory items:
    *
    * ```ts
-   * const inventoryItems = await inventoryModuleService.list(
-   *   {
-   *     id: ["iitem_123", "iitem_321"],
-   *   },
-   *   {
-   *     relations: ["location_levels"],
-   *   }
-   * )
+   * import {
+   *   initialize as initializeInventoryModule,
+   * } from "@medusajs/inventory"
+   *
+   * async function retrieveInventoryItems (ids: string[]) {
+   *   const inventoryModule = await initializeInventoryModule({})
+   *
+   *   const [inventoryItems, count] = await inventoryModule.listInventoryItems({
+   *     id: ids
+   *   }, {
+   *     relations: ["inventory_level"]
+   *   })
+   *
+   *   // do something with the inventory items or return them
+   * }
    * ```
    *
    * By default, only the first `10` records are retrieved. You can control pagination by specifying the `skip` and `take` properties of the `config` parameter:
    *
    * ```ts
-   * const inventoryItems = await inventoryModuleService.list(
-   *   {
-   *     id: ["iitem_123", "iitem_321"],
-   *   },
-   *   {
-   *     relations: ["location_levels"],
-   *     take: 20,
-   *     skip: 2,
-   *   }
-   * )
+   * import {
+   *   initialize as initializeInventoryModule,
+   * } from "@medusajs/inventory"
+   *
+   * async function retrieveInventoryItems (ids: string[], skip: number, take: number) {
+   *   const inventoryModule = await initializeInventoryModule({})
+   *
+   *   const [inventoryItems, count] = await inventoryModule.listInventoryItems({
+   *     id: ids
+   *   }, {
+   *     relations: ["inventory_level"],
+   *     skip,
+   *     take
+   *   })
+   *
+   *   // do something with the inventory items or return them
+   * }
    * ```
    */
   list(
@@ -61,55 +85,6 @@ export interface IInventoryServiceNext extends IModuleService {
     context?: Context
   ): Promise<InventoryNext.InventoryItemDTO[]>
 
-  /**
-   * This method retrieves a paginated list of inventory items along with the total count of available inventory items satisfying the provided filters.
-   *
-   * @param {FilterableInventoryItemProps} selector - The filters to apply on the retrieved inventory items.
-   * @param {FindConfig<InventoryItemDTO>} config - The configurations determining how the inventory item is retrieved. Its properties, such as `select` or `relations`, accept the
-   * attributes or relations associated with a inventory item.
-   * @param {Context} context - A context used to share resources, such as transaction manager, between the application and the module.
-   * @returns {Promise<[InventoryItemDTO[], number]>} The list of inventory items along with their total count.
-   *
-   * @example
-   * To retrieve a list of inventory items using their IDs:
-   *
-   * ```ts
-   * const [inventoryItems, count] =
-   *   await inventoryModuleService.listAndCount({
-   *     id: ["iitem_123", "iitem_321"],
-   *   })
-   * ```
-   *
-   * To specify relations that should be retrieved within the inventory items:
-   *
-   * ```ts
-   * const [inventoryItems, count] =
-   *   await inventoryModuleService.listAndCount(
-   *     {
-   *       id: ["iitem_123", "iitem_321"],
-   *     },
-   *     {
-   *       relations: ["location_levels"],
-   *     }
-   *   )
-   * ```
-   *
-   * By default, only the first `10` records are retrieved. You can control pagination by specifying the `skip` and `take` properties of the `config` parameter:
-   *
-   * ```ts
-   * const [inventoryItems, count] =
-   *   await inventoryModuleService.listAndCount(
-   *     {
-   *       id: ["iitem_123", "iitem_321"],
-   *     },
-   *     {
-   *       relations: ["location_levels"],
-   *       take: 20,
-   *       skip: 2,
-   *     }
-   *   )
-   * ```
-   */
   listAndCount(
     selector: InventoryNext.FilterableInventoryItemProps,
     config?: FindConfig<InventoryNext.InventoryItemDTO>,
@@ -117,52 +92,73 @@ export interface IInventoryServiceNext extends IModuleService {
   ): Promise<[InventoryNext.InventoryItemDTO[], number]>
 
   /**
-   * This method retrieves a paginated list of reservation items based on optional filters and configuration.
-   *
+   * This method is used to retrieve a paginated list of reservation items along with the total count of available reservation items satisfying the provided filters.
    * @param {FilterableReservationItemProps} selector - The filters to apply on the retrieved reservation items.
-   * @param {FindConfig<ReservationItemDTO>} config - The configurations determining how the reservation item is retrieved. Its properties, such as `select` or `relations`, accept the
+   * @param {FindConfig<ReservationItemDTO>} config -
+   * The configurations determining how the reservation items are retrieved. Its properties, such as `select` or `relations`, accept the
    * attributes or relations associated with a reservation item.
    * @param {Context} context - A context used to share resources, such as transaction manager, between the application and the module.
-   * @returns {Promise<ReservationItemDTO[]>} The list of reservation items.
+   * @return {Promise<[ReservationItemDTO[], number]>} The list of reservation items along with the total count.
    *
    * @example
    * To retrieve a list of reservation items using their IDs:
    *
    * ```ts
-   * const reservationItems =
-   *   await inventoryModuleService.listReservationItems({
-   *     id: ["resitem_123", "resitem_321"],
+   * import {
+   *   initialize as initializeInventoryModule,
+   * } from "@medusajs/inventory"
+   *
+   * async function retrieveReservationItems (ids: string[]) {
+   *   const inventoryModule = await initializeInventoryModule({})
+   *
+   *   const [reservationItems, count] = await inventoryModule.listReservationItems({
+   *     id: ids
    *   })
+   *
+   *   // do something with the reservation items or return them
+   * }
    * ```
    *
    * To specify relations that should be retrieved within the reservation items:
    *
    * ```ts
-   * const reservationItems =
-   *   await inventoryModuleService.listReservationItems(
-   *     {
-   *       id: ["resitem_123", "resitem_321"],
-   *     },
-   *     {
-   *       relations: ["inventory_item"],
-   *     }
-   *   )
+   * import {
+   *   initialize as initializeInventoryModule,
+   * } from "@medusajs/inventory"
+   *
+   * async function retrieveReservationItems (ids: string[]) {
+   *   const inventoryModule = await initializeInventoryModule({})
+   *
+   *   const [reservationItems, count] = await inventoryModule.listReservationItems({
+   *     id: ids
+   *   }, {
+   *     relations: ["inventory_item"]
+   *   })
+   *
+   *   // do something with the reservation items or return them
+   * }
    * ```
    *
    * By default, only the first `10` records are retrieved. You can control pagination by specifying the `skip` and `take` properties of the `config` parameter:
    *
    * ```ts
-   * const reservationItems =
-   *   await inventoryModuleService.listReservationItems(
-   *     {
-   *       id: ["resitem_123", "resitem_321"],
-   *     },
-   *     {
-   *       relations: ["inventory_item"],
-   *       take: 20,
-   *       skip: 2,
-   *     }
-   *   )
+   * import {
+   *   initialize as initializeInventoryModule,
+   * } from "@medusajs/inventory"
+   *
+   * async function retrieveReservationItems (ids: string[], skip: number, take: number) {
+   *   const inventoryModule = await initializeInventoryModule({})
+   *
+   *   const [reservationItems, count] = await inventoryModule.listReservationItems({
+   *     id: ids
+   *   }, {
+   *     relations: ["inventory_item"],
+   *     skip,
+   *     take
+   *   })
+   *
+   *   // do something with the reservation items or return them
+   * }
    * ```
    */
   listReservationItems(
@@ -171,55 +167,6 @@ export interface IInventoryServiceNext extends IModuleService {
     context?: Context
   ): Promise<InventoryNext.ReservationItemDTO[]>
 
-  /**
-   * This method retrieves a paginated list of reservation items along with the total count of available reservation items satisfying the provided filters.
-   *
-   * @param {FilterableReservationItemProps} selector - The filters to apply on the retrieved reservation items.
-   * @param {FindConfig<ReservationItemDTO>} config - The configurations determining how the reservation item is retrieved. Its properties, such as `select` or `relations`, accept the
-   * attributes or relations associated with a reservation item.
-   * @param {Context} context - A context used to share resources, such as transaction manager, between the application and the module.
-   * @returns {Promise<[ReservationItemDTO[], number]>} The list of reservation items along with their total count.
-   *
-   * @example
-   * To retrieve a list of reservation items using their IDs:
-   *
-   * ```ts
-   * const [reservationItems, count] =
-   *   await inventoryModuleService.listAndCountReservationItems({
-   *     id: ["resitem_123", "resitem_321"],
-   *   })
-   * ```
-   *
-   * To specify relations that should be retrieved within the reservation items:
-   *
-   * ```ts
-   * const [reservationItems, count] =
-   *   await inventoryModuleService.listAndCountReservationItems(
-   *     {
-   *       id: ["resitem_123", "resitem_321"],
-   *     },
-   *     {
-   *       relations: ["inventory_item"],
-   *     }
-   *   )
-   * ```
-   *
-   * By default, only the first `10` records are retrieved. You can control pagination by specifying the `skip` and `take` properties of the `config` parameter:
-   *
-   * ```ts
-   * const [reservationItems, count] =
-   *   await inventoryModuleService.listAndCountReservationItems(
-   *     {
-   *       id: ["resitem_123", "resitem_321"],
-   *     },
-   *     {
-   *       relations: ["inventory_item"],
-   *       take: 20,
-   *       skip: 2,
-   *     }
-   *   )
-   * ```
-   */
   listAndCountReservationItems(
     selector: InventoryNext.FilterableReservationItemProps,
     config?: FindConfig<InventoryNext.ReservationItemDTO>,
@@ -227,52 +174,73 @@ export interface IInventoryServiceNext extends IModuleService {
   ): Promise<[InventoryNext.ReservationItemDTO[], number]>
 
   /**
-   * This method retrieves a paginated list of inventory levels based on optional filters and configuration.
-   *
+   * This method is used to retrieve a paginated list of inventory levels along with the total count of available inventory levels satisfying the provided filters.
    * @param {FilterableInventoryLevelProps} selector - The filters to apply on the retrieved inventory levels.
-   * @param {FindConfig<InventoryLevelDTO>} config - The configurations determining how the inventory level is retrieved. Its properties, such as `select` or `relations`, accept the
+   * @param {FindConfig<InventoryLevelDTO>} config -
+   * The configurations determining how the inventory levels are retrieved. Its properties, such as `select` or `relations`, accept the
    * attributes or relations associated with a inventory level.
    * @param {Context} context - A context used to share resources, such as transaction manager, between the application and the module.
-   * @returns {Promise<InventoryLevelDTO[]>} The list of inventory levels.
+   * @return {Promise<[InventoryLevelDTO[], number]>} The list of inventory levels along with the total count.
    *
    * @example
-   * To retrieve a list of inventory levels using the IDs of their associated inventory items:
+   * To retrieve a list of inventory levels using their IDs:
    *
    * ```ts
-   * const inventoryLevels =
-   *   await inventoryModuleService.listInventoryLevels({
-   *     inventory_item_id: ["iitem_123", "iitem_321"],
+   * import {
+   *   initialize as initializeInventoryModule,
+   * } from "@medusajs/inventory"
+   *
+   * async function retrieveInventoryLevels (inventoryItemIds: string[]) {
+   *   const inventoryModule = await initializeInventoryModule({})
+   *
+   *   const [inventoryLevels, count] = await inventoryModule.listInventoryLevels({
+   *     inventory_item_id: inventoryItemIds
    *   })
+   *
+   *   // do something with the inventory levels or return them
+   * }
    * ```
    *
    * To specify relations that should be retrieved within the inventory levels:
    *
    * ```ts
-   * const inventoryLevels =
-   *   await inventoryModuleService.listInventoryLevels(
-   *     {
-   *       inventory_item_id: ["iitem_123", "iitem_321"],
-   *     },
-   *     {
-   *       relations: ["inventory_item"],
-   *     }
-   *   )
+   * import {
+   *   initialize as initializeInventoryModule,
+   * } from "@medusajs/inventory"
+   *
+   * async function retrieveInventoryLevels (inventoryItemIds: string[]) {
+   *   const inventoryModule = await initializeInventoryModule({})
+   *
+   *   const [inventoryLevels, count] = await inventoryModule.listInventoryLevels({
+   *     inventory_item_id: inventoryItemIds
+   *   }, {
+   *     relations: ["inventory_item"]
+   *   })
+   *
+   *   // do something with the inventory levels or return them
+   * }
    * ```
    *
    * By default, only the first `10` records are retrieved. You can control pagination by specifying the `skip` and `take` properties of the `config` parameter:
    *
    * ```ts
-   * const inventoryLevels =
-   *   await inventoryModuleService.listInventoryLevels(
-   *     {
-   *       inventory_item_id: ["iitem_123", "iitem_321"],
-   *     },
-   *     {
-   *       relations: ["inventory_item"],
-   *       take: 20,
-   *       skip: 2,
-   *     }
-   *   )
+   * import {
+   *   initialize as initializeInventoryModule,
+   * } from "@medusajs/inventory"
+   *
+   * async function retrieveInventoryLevels (inventoryItemIds: string[], skip: number, take: number) {
+   *   const inventoryModule = await initializeInventoryModule({})
+   *
+   *   const [inventoryLevels, count] = await inventoryModule.listInventoryLevels({
+   *     inventory_item_id: inventoryItemIds
+   *   }, {
+   *     relations: ["inventory_item"],
+   *     skip,
+   *     take
+   *   })
+   *
+   *   // do something with the inventory levels or return them
+   * }
    * ```
    */
   listInventoryLevels(
@@ -281,55 +249,6 @@ export interface IInventoryServiceNext extends IModuleService {
     context?: Context
   ): Promise<InventoryNext.InventoryLevelDTO[]>
 
-  /**
-   * This method retrieves a paginated list of inventory levels along with the total count of available inventory levels satisfying the provided filters.
-   *
-   * @param {FilterableInventoryLevelProps} selector - The filters to apply on the retrieved inventory levels.
-   * @param {FindConfig<InventoryLevelDTO>} config - The configurations determining how the inventory level is retrieved. Its properties, such as `select` or `relations`, accept the
-   * attributes or relations associated with a inventory level.
-   * @param {Context} context - A context used to share resources, such as transaction manager, between the application and the module.
-   * @returns {Promise<[InventoryLevelDTO[], number]>} The list of inventory levels along with their total count.
-   *
-   * @example
-   * To retrieve a list of inventory levels using the IDs of their associated inventory items:
-   *
-   * ```ts
-   * const [inventoryLevels, count] =
-   *   await inventoryModuleService.listAndCountInventoryLevels(
-   *     {
-   *       inventory_item_id: ["iitem_123", "iitem_321"],
-   *     },
-   *     {
-   *       relations: ["inventory_item"],
-   *       take: 20,
-   *       skip: 2,
-   *     }
-   *   )
-   * ```
-   *
-   * To specify relations that should be retrieved within the inventory levels:
-   *
-   * ```ts
-   * const [inventoryLevels, count] =
-   *   await inventoryModuleService.listAndCountInventoryLevels(
-   *     {
-   *       inventory_item_id: ["iitem_123", "iitem_321"],
-   *     },
-   *     {
-   *       relations: ["inventory_item"],
-   *     }
-   *   )
-   * ```
-   *
-   * By default, only the first `10` records are retrieved. You can control pagination by specifying the `skip` and `take` properties of the `config` parameter:
-   *
-   * ```ts
-   * const [inventoryLevels, count] =
-   *   await inventoryModuleService.listAndCountInventoryLevels({
-   *     inventory_item_id: ["iitem_123", "iitem_321"],
-   *   })
-   * ```
-   */
   listAndCountInventoryLevels(
     selector: InventoryNext.FilterableInventoryLevelProps,
     config?: FindConfig<InventoryNext.InventoryLevelDTO>,
@@ -337,10 +256,11 @@ export interface IInventoryServiceNext extends IModuleService {
   ): Promise<[InventoryNext.InventoryLevelDTO[], number]>
 
   /**
-   * This method retrieves an inventory item by its ID.
+   * This method is used to retrieve an inventory item by its ID
    *
-   * @param {string} inventoryItemId - The inventory item's ID.
-   * @param {FindConfig<InventoryItemDTO>} config - The configurations determining how the inventory item is retrieved. Its properties, such as `select` or `relations`, accept the
+   * @param {string} inventoryItemId - The ID of the inventory item to retrieve.
+   * @param {FindConfig<InventoryItemDTO>} config -
+   * The configurations determining how the inventory item is retrieved. Its properties, such as `select` or `relations`, accept the
    * attributes or relations associated with a inventory item.
    * @param {Context} context - A context used to share resources, such as transaction manager, between the application and the module.
    * @returns {Promise<InventoryItemDTO>} The retrieved inventory item.
@@ -349,19 +269,35 @@ export interface IInventoryServiceNext extends IModuleService {
    * A simple example that retrieves a inventory item by its ID:
    *
    * ```ts
-   * const inventoryItem =
-   *   await inventoryModuleService.retrieve("iitem_123")
+   * import {
+   *   initialize as initializeInventoryModule,
+   * } from "@medusajs/inventory"
+   *
+   * async function retrieveInventoryItem (id: string) {
+   *   const inventoryModule = await initializeInventoryModule({})
+   *
+   *   const inventoryItem = await inventoryModule.retrieveInventoryItem(id)
+   *
+   *   // do something with the inventory item or return it
+   * }
    * ```
    *
    * To specify relations that should be retrieved:
    *
    * ```ts
-   * const inventoryItem = await inventoryModuleService.retrieve(
-   *   "iitem_123",
-   *   {
-   *     relations: ["location_levels"],
-   *   }
-   * )
+   * import {
+   *   initialize as initializeInventoryModule,
+   * } from "@medusajs/inventory"
+   *
+   * async function retrieveInventoryItem (id: string) {
+   *   const inventoryModule = await initializeInventoryModule({})
+   *
+   *   const inventoryItem = await inventoryModule.retrieveInventoryItem(id, {
+   *     relations: ["inventory_level"]
+   *   })
+   *
+   *   // do something with the inventory item or return it
+   * }
    * ```
    */
   retrieve(
@@ -371,19 +307,31 @@ export interface IInventoryServiceNext extends IModuleService {
   ): Promise<InventoryNext.InventoryItemDTO>
 
   /**
-   * This method retrieves an inventory level based on its associated inventory item and location.
+   * This method is used to retrieve an inventory level for an inventory item and a location.
    *
-   * @param {string} inventoryItemId - The inventory item's ID.
-   * @param {string} locationId - The location's ID.
+   * @param {string} inventoryItemId - The ID of the inventory item.
+   * @param {string} locationId - The ID of the location.
    * @param {Context} context - A context used to share resources, such as transaction manager, between the application and the module.
    * @returns {Promise<InventoryLevelDTO>} The retrieved inventory level.
    *
    * @example
-   * const inventoryLevel =
-   *   await inventoryModuleService.retrieveInventoryLevelByItemAndLocation(
-   *     "iitem_123",
-   *     "loc_123"
+   * import {
+   *   initialize as initializeInventoryModule,
+   * } from "@medusajs/inventory"
+   *
+   * async function retrieveInventoryLevel (
+   *   inventoryItemId: string,
+   *   locationId: string
+   * ) {
+   *   const inventoryModule = await initializeInventoryModule({})
+   *
+   *   const inventoryLevel = await inventoryModule.retrieveInventoryLevel(
+   *     inventoryItemId,
+   *     locationId
    *   )
+   *
+   *   // do something with the inventory level or return it
+   * }
    */
   retrieveInventoryLevelByItemAndLocation(
     inventoryItemId: string,
@@ -391,37 +339,6 @@ export interface IInventoryServiceNext extends IModuleService {
     context?: Context
   ): Promise<InventoryNext.InventoryLevelDTO>
 
-  /**
-   * This method retrieves an inventory level by its ID.
-   *
-   * @param {string} inventoryLevelId - The inventory level's ID.
-   * @param {FindConfig<InventoryLevelDTO>} config - The configurations determining how the inventory level is retrieved. Its properties, such as `select` or `relations`, accept the
-   * attributes or relations associated with a inventory level.
-   * @param {Context} context - A context used to share resources, such as transaction manager, between the application and the module.
-   * @returns {Promise<InventoryLevelDTO>} The retrieved inventory level.
-   *
-   * @example
-   * A simple example that retrieves a inventory level by its ID:
-   *
-   * ```ts
-   * const inventoryLevel =
-   *   await inventoryModuleService.retrieveInventoryLevel(
-   *     "iitem_123"
-   *   )
-   * ```
-   *
-   * To specify relations that should be retrieved:
-   *
-   * ```ts
-   * const inventoryLevel =
-   *   await inventoryModuleService.retrieveInventoryLevel(
-   *     "iitem_123",
-   *     {
-   *       relations: ["inventory_item"],
-   *     }
-   *   )
-   * ```
-   */
   retrieveInventoryLevel(
     inventoryLevelId: string,
     config?: FindConfig<InventoryNext.InventoryLevelDTO>,
@@ -429,35 +346,24 @@ export interface IInventoryServiceNext extends IModuleService {
   ): Promise<InventoryNext.InventoryLevelDTO>
 
   /**
-   * This method retrieves a reservation item by its ID.
+   * This method is used to retrieve a reservation item by its ID.
    *
-   * @param {string} reservationId - The reservation's ID.
-   * @param {FindConfig<ReservationItemDTO>} config - The configurations determining how the reservation item is retrieved. Its properties, such as `select` or `relations`, accept the
-   * attributes or relations associated with a reservation item.
+   * @param {string} reservationId - The ID of the reservation item.
    * @param {Context} context - A context used to share resources, such as transaction manager, between the application and the module.
    * @returns {Promise<ReservationItemDTO>} The retrieved reservation item.
    *
    * @example
-   * A simple example that retrieves a reservation item by its ID:
+   * import {
+   *   initialize as initializeInventoryModule,
+   * } from "@medusajs/inventory"
    *
-   * ```ts
-   * const reservationItem =
-   *   await inventoryModuleService.retrieveReservationItem(
-   *     "resitem"
-   *   )
-   * ```
+   * async function retrieveReservationItem (id: string) {
+   *   const inventoryModule = await initializeInventoryModule({})
    *
-   * To specify relations that should be retrieved:
+   *   const reservationItem = await inventoryModule.retrieveReservationItem(id)
    *
-   * ```ts
-   * const reservationItem =
-   *   await inventoryModuleService.retrieveReservationItem(
-   *     "resitem",
-   *     {
-   *       relations: ["inventory_item"],
-   *     }
-   *   )
-   * ```
+   *   // do something with the reservation item or return it
+   * }
    */
   retrieveReservationItem(
     reservationId: string,
@@ -466,267 +372,241 @@ export interface IInventoryServiceNext extends IModuleService {
   ): Promise<InventoryNext.ReservationItemDTO>
 
   /**
-   * This method creates reservation items.
+   * This method is used to create reservation items.
    *
-   * @param {CreateReservationItemInput[]} input - The details of the reservation items to be created.
+   * @param {CreateReservationItemInput[]} input - The details of the reservation items to create.
    * @param {Context} context - A context used to share resources, such as transaction manager, between the application and the module.
-   * @returns {Promise<ReservationItemDTO[]>} The created reservation items.
+   * @returns { Promise<ReservationItemDTO[]>} The created reservation items' details.
    *
    * @example
-   * const reservationItems =
-   *   await inventoryModuleService.createReservationItems([
-   *     {
-   *       inventory_item_id: "iitem_123",
-   *       location_id: "loc_123",
-   *       quantity: 10,
-   *     },
-   *   ])
+   * import {
+   *   initialize as initializeInventoryModule,
+   * } from "@medusajs/inventory"
+   *
+   * async function createReservationItems (items: {
+   *   inventory_item_id: string,
+   *   location_id: string,
+   *   quantity: number
+   * }[]) {
+   *   const inventoryModule = await initializeInventoryModule({})
+   *
+   *   const reservationItems = await inventoryModule.createReservationItems(
+   *     items
+   *   )
+   *
+   *   // do something with the reservation items or return them
+   * }
    */
   createReservationItems(
     input: InventoryNext.CreateReservationItemInput[],
     context?: Context
   ): Promise<InventoryNext.ReservationItemDTO[]>
-
-  /**
-   * This method creates a reservation item.
-   *
-   * @param {CreateReservationItemInput} input - The details of the reservation item to be created.
-   * @param {Context} context - A context used to share resources, such as transaction manager, between the application and the module.
-   * @returns {Promise<ReservationItemDTO>} The created reservation item.
-   *
-   * @example
-   * const reservationItem =
-   *   await inventoryModuleService.createReservationItems({
-   *     inventory_item_id: "iitem_123",
-   *     location_id: "loc_123",
-   *     quantity: 10,
-   *   })
-   */
   createReservationItems(
     input: InventoryNext.CreateReservationItemInput,
     context?: Context
   ): Promise<InventoryNext.ReservationItemDTO>
 
   /**
-   * This method creates inventory items.
+   * This method is used to create inventory items.
    *
-   * @param {CreateInventoryItemInput[]} input - The details of the inventory items to be created.
+   * @param {CreateInventoryItemInput[]} input - The details of the inventory items to create.
    * @param {Context} context - A context used to share resources, such as transaction manager, between the application and the module.
-   * @returns {Promise<InventoryItemDTO[]>} The created inventory items.
+   * @returns {Promise<InventoryItemDTO[]>} The created inventory items' details.
    *
    * @example
-   * const inventoryItems = await inventoryModuleService.create([
-   *   {
-   *     sku: "SHIRT",
-   *   },
-   * ])
+   * import {
+   *   initialize as initializeInventoryModule,
+   * } from "@medusajs/inventory"
+   *
+   * async function createInventoryItems (items: {
+   *   sku: string,
+   *   requires_shipping: boolean
+   * }[]) {
+   *   const inventoryModule = await initializeInventoryModule({})
+   *
+   *   const inventoryItems = await inventoryModule.createInventoryItems(
+   *     items
+   *   )
+   *
+   *   // do something with the inventory items or return them
+   * }
    */
   create(
     input: InventoryNext.CreateInventoryItemInput[],
     context?: Context
   ): Promise<InventoryNext.InventoryItemDTO[]>
-
-  /**
-   * This method creates an inventory item.
-   *
-   * @param {CreateInventoryItemInput} input - The details of the inventory item to be created.
-   * @param {Context} context - A context used to share resources, such as transaction manager, between the application and the module.
-   * @returns {Promise<InventoryItemDTO>} The created inventory item.
-   *
-   * @example
-   * const inventoryItem = await inventoryModuleService.create({
-   *   sku: "SHIRT",
-   * })
-   */
   create(
     input: InventoryNext.CreateInventoryItemInput,
     context?: Context
   ): Promise<InventoryNext.InventoryItemDTO>
 
   /**
-   * This method creates inventory levels.
+   * This method is used to create inventory levels.
    *
-   * @param {CreateInventoryLevelInput[]} data - The details of the inventory levels to be created.
+   * @param {CreateInventoryLevelInput[]} data - The details of the inventory levels to create.
    * @param {Context} context - A context used to share resources, such as transaction manager, between the application and the module.
-   * @returns {Promise<InventoryLevelDTO[]>} The created inventory levels.
+   * @returns {Promise<InventoryLevelDTO[]>} The created inventory levels' details.
    *
    * @example
-   * const inventoryLevels =
-   *   await inventoryModuleService.createInventoryLevels([
-   *     {
-   *       inventory_item_id: "iitem_123",
-   *       location_id: "loc_123",
-   *       stocked_quantity: 10,
-   *     },
-   *     {
-   *       inventory_item_id: "iitem_321",
-   *       location_id: "loc_321",
-   *       stocked_quantity: 20,
-   *       reserved_quantity: 10,
-   *     },
-   *   ])
+   * import {
+   *   initialize as initializeInventoryModule,
+   * } from "@medusajs/inventory"
+   *
+   * async function createInventoryLevels (items: {
+   *   inventory_item_id: string
+   *   location_id: string
+   *   stocked_quantity: number
+   * }[]) {
+   *   const inventoryModule = await initializeInventoryModule({})
+   *
+   *   const inventoryLevels = await inventoryModule.createInventoryLevels(
+   *     items
+   *   )
+   *
+   *   // do something with the inventory levels or return them
+   * }
    */
   createInventoryLevels(
     data: InventoryNext.CreateInventoryLevelInput[],
     context?: Context
   ): Promise<InventoryNext.InventoryLevelDTO[]>
-
-  /**
-   * This method creates an inventory level.
-   *
-   * @param {CreateInventoryLevelInput} data - The details of the inventory level to be created.
-   * @param {Context} context - A context used to share resources, such as transaction manager, between the application and the module.
-   * @returns {Promise<InventoryLevelDTO>} The created inventory level.
-   *
-   * @example
-   * const inventoryLevels =
-   *   await inventoryModuleService.createInventoryLevels({
-   *     inventory_item_id: "iitem_123",
-   *     location_id: "loc_123",
-   *     stocked_quantity: 10,
-   *   })
-   */
   createInventoryLevels(
     data: InventoryNext.CreateInventoryLevelInput,
     context?: Context
   ): Promise<InventoryNext.InventoryLevelDTO>
 
   /**
-   * This method updates existing inventory levels.
+   * This method is used to update inventory levels. Each inventory level is identified by the IDs of its associated inventory item and location.
    *
-   * @param {BulkUpdateInventoryLevelInput[]} updates - The list of The attributes to update in an inventory level. The inventory level is identified by the IDs of its associated inventory item and location.
+   * @param {BulkUpdateInventoryLevelInput} updates - The attributes to update in each inventory level.
    * @param {Context} context - A context used to share resources, such as transaction manager, between the application and the module.
-   * @returns {Promise<InventoryLevelDTO[]>} The updated inventory levels.
+   * @returns {Promise<InventoryLevelDTO[]>} The updated inventory levels' details.
    *
    * @example
-   * const inventoryLevels =
-   *   await inventoryModuleService.updateInventoryLevels([
-   *     {
-   *       inventory_item_id: "iitem_123",
-   *       location_id: "loc_123",
-   *       id: "ilev_123",
-   *       stocked_quantity: 20,
-   *     },
-   *   ])
+   * import {
+   *   initialize as initializeInventoryModule,
+   * } from "@medusajs/inventory"
+   *
+   * async function updateInventoryLevels (items: {
+   *   inventory_item_id: string,
+   *   location_id: string,
+   *   stocked_quantity: number
+   * }[]) {
+   *   const inventoryModule = await initializeInventoryModule({})
+   *
+   *   const inventoryLevels = await inventoryModule.updateInventoryLevels(
+   *     items
+   *   )
+   *
+   *   // do something with the inventory levels or return them
+   * }
    */
   updateInventoryLevels(
     updates: InventoryNext.BulkUpdateInventoryLevelInput[],
     context?: Context
   ): Promise<InventoryNext.InventoryLevelDTO[]>
-
-  /**
-   * This method updates an existing inventory level.
-   *
-   * @param {BulkUpdateInventoryLevelInput} updates - The attributes to update in an inventory level. The inventory level is identified by the IDs of its associated inventory item and location.
-   * @param {Context} context - A context used to share resources, such as transaction manager, between the application and the module.
-   * @returns {Promise<InventoryLevelDTO>} The updated inventory level.
-   *
-   * @example
-   * const inventoryLevel =
-   *   await inventoryModuleService.updateInventoryLevels({
-   *     inventory_item_id: "iitem_123",
-   *     location_id: "loc_123",
-   *     stocked_quantity: 20,
-   *   })
-   */
   updateInventoryLevels(
     updates: InventoryNext.BulkUpdateInventoryLevelInput,
     context?: Context
   ): Promise<InventoryNext.InventoryLevelDTO>
 
   /**
-   * This method updates an existing inventory item.
+   * This method is used to update an inventory item.
    *
-   * @param {UpdateInventoryItemInput} input - The attributes to update in the inventory item.
+   * @param {string} inventoryItemId - The ID of the inventory item.
+   * @param {Partial<CreateInventoryItemInput>} input - The attributes to update in the inventory item.
    * @param {Context} context - A context used to share resources, such as transaction manager, between the application and the module.
-   * @returns {Promise<InventoryItemDTO>} The updated inventory item.
+   * @returns {Promise<InventoryItemDTO>} The updated inventory item's details.
    *
    * @example
-   * const inventoryItem = await inventoryModuleService.update({
-   *   id: "iitem_123",
-   *   title: "Medusa Shirt Inventory",
-   * })
+   * import {
+   *   initialize as initializeInventoryModule,
+   * } from "@medusajs/inventory"
+   *
+   * async function updateInventoryItem (
+   *   inventoryItemId: string,
+   *   sku: string
+   * ) {
+   *   const inventoryModule = await initializeInventoryModule({})
+   *
+   *   const inventoryItem = await inventoryModule.updateInventoryItem(
+   *     inventoryItemId,
+   *     {
+   *       sku
+   *     }
+   *   )
+   *
+   *   // do something with the inventory item or return it
+   * }
    */
   update(
     input: InventoryNext.UpdateInventoryItemInput,
     context?: Context
   ): Promise<InventoryNext.InventoryItemDTO>
-
-  /**
-   * This method updates existing inventory items.
-   *
-   * @param {UpdateInventoryItemInput[]} input - The attributes to update in the inventory items.
-   * @param {Context} context - A context used to share resources, such as transaction manager, between the application and the module.
-   * @returns {Promise<InventoryItemDTO[]>} The updated inventory items.
-   *
-   * @example
-   * const inventoryItems = await inventoryModuleService.update([
-   *   {
-   *     id: "iitem_123",
-   *     title: "Medusa Shirt Inventory",
-   *   },
-   *   {
-   *     id: "iitem_321",
-   *     description: "The inventory of Medusa pants",
-   *   },
-   * ])
-   */
   update(
     input: InventoryNext.UpdateInventoryItemInput[],
     context?: Context
   ): Promise<InventoryNext.InventoryItemDTO[]>
 
   /**
-   * This method updates an existing reservation item.
+   * This method is used to update a reservation item.
    *
-   * @param {UpdateReservationItemInput} input - The attributes to update in a reservation item.
+   * @param {string} reservationItemId - The ID of the reservation item.
+   * @param {UpdateReservationItemInput} input - The attributes to update in the reservation item.
    * @param {Context} context - A context used to share resources, such as transaction manager, between the application and the module.
    * @returns {Promise<ReservationItemDTO>} The updated reservation item.
    *
    * @example
-   * const reservationItem =
-   *   await inventoryModuleService.updateReservationItems({
-   *     id: "resitem_123",
-   *     quantity: 10,
-   *   })
+   * import {
+   *   initialize as initializeInventoryModule,
+   * } from "@medusajs/inventory"
+   *
+   * async function updateReservationItem (
+   *   reservationItemId: string,
+   *   quantity: number
+   * ) {
+   *   const inventoryModule = await initializeInventoryModule({})
+   *
+   *   const reservationItem = await inventoryModule.updateReservationItem(
+   *     reservationItemId,
+   *     {
+   *       quantity
+   *     }
+   *   )
+   *
+   *   // do something with the reservation item or return it
+   * }
    */
   updateReservationItems(
     input: InventoryNext.UpdateReservationItemInput,
     context?: Context
   ): Promise<InventoryNext.ReservationItemDTO>
-
-  /**
-   * This method updates existing reservation items.
-   *
-   * @param {UpdateReservationItemInput[]} input - The attributes to update in the reservation items.
-   * @param {Context} context - A context used to share resources, such as transaction manager, between the application and the module.
-   * @returns {Promise<ReservationItemDTO[]>} The updated reservation items.
-   *
-   * @example
-   * const reservationItems =
-   *   await inventoryModuleService.updateReservationItems([
-   *     {
-   *       id: "resitem_123",
-   *       quantity: 10,
-   *     },
-   *   ])
-   */
   updateReservationItems(
     input: InventoryNext.UpdateReservationItemInput[],
     context?: Context
   ): Promise<InventoryNext.ReservationItemDTO[]>
 
   /**
-   * This method deletes a reservation item by its associated line item.
+   * This method is used to delete the reservation items associated with a line item or multiple line items.
    *
-   * @param {string | string[]} lineItemId - The line item's ID.
-   * @param {Context} context - A context used to share resources, such as transaction manager, between the application and the module.
-   * @returns {Promise<void>} Resolves when the reservation item is deleted.
+   * @param {string | string[]} lineItemId - The ID(s) of the line item(s).
+   * @param {Context} context - A context used to share re9sources, such as transaction manager, between the application and the module.
+   * @returns {Promise<void>} Resolves when the reservation items are successfully deleted.
    *
    * @example
-   * await inventoryModuleService.deleteReservationItemByLocationId(
-   *   "cali_123"
-   * )
+   * import {
+   *   initialize as initializeInventoryModule,
+   * } from "@medusajs/inventory"
+   *
+   * async function deleteReservationItemsByLineItem (
+   *   lineItemIds: string[]
+   * ) {
+   *   const inventoryModule = await initializeInventoryModule({})
+   *
+   *   await inventoryModule.deleteReservationItemsByLineItem(
+   *     lineItemIds
+   *   )
+   * }
    */
   deleteReservationItemsByLineItem(
     lineItemId: string | string[],
@@ -734,16 +614,26 @@ export interface IInventoryServiceNext extends IModuleService {
   ): Promise<void>
 
   /**
-   * This method deletes reservation items by their IDs.
+   * This method is used to delete a reservation item or multiple reservation items by their IDs.
    *
-   * @param {string | string[]} reservationItemId - The reservation items' IDs.
+   * @param {string | string[]} reservationItemId - The ID(s) of the reservation item(s) to delete.
    * @param {Context} context - A context used to share resources, such as transaction manager, between the application and the module.
-   * @returns {Promise<void>} Resolves when the reservation item is deleted.
+   * @returns {Promise<void>} Resolves when the reservation item(s) are successfully deleted.
    *
    * @example
-   * await inventoryModuleService.deleteReservationItems(
-   *   "resitem_123"
-   * )
+   * import {
+   *   initialize as initializeInventoryModule,
+   * } from "@medusajs/inventory"
+   *
+   * async function deleteReservationItems (
+   *   reservationItemIds: string[]
+   * ) {
+   *   const inventoryModule = await initializeInventoryModule({})
+   *
+   *   await inventoryModule.deleteReservationItem(
+   *     reservationItemIds
+   *   )
+   * }
    */
   deleteReservationItems(
     reservationItemId: string | string[],
@@ -751,105 +641,63 @@ export interface IInventoryServiceNext extends IModuleService {
   ): Promise<void>
 
   /**
-   * This method soft deletes reservations by their IDs.
+   * This method is used to delete an inventory item or multiple inventory items. The inventory items are only soft deleted and can be restored using the
+   * {@link restoreInventoryItem} method.
    *
-   * @param {string[]} inventoryLevelIds - The reservations' IDs.
-   * @param {SoftDeleteReturn<TReturnableLinkableKeys>} config - An object that is used to specify an entity's related entities that should be soft-deleted when the main entity is soft-deleted.
-   * @param {Context} sharedContext - A context used to share resources, such as transaction manager, between the application and the module.
-   * @returns {Promise<void | Record<string, string[]>>} An object that includes the IDs of related records that were also soft deleted.
-   * If there are no related records, the promise resolves to `void`.
-   *
-   * @example
-   * await inventoryModuleService.softDeleteReservationItems([
-   *   "ilev_123",
-   * ])
-   */
-  softDeleteReservationItems<TReturnableLinkableKeys extends string = string>(
-    ReservationItemIds: string[],
-    config?: SoftDeleteReturn<TReturnableLinkableKeys>,
-    sharedContext?: Context
-  ): Promise<Record<string, string[]> | void>
-
-  /**
-   * This method restores soft deleted reservations by their IDs.
-   *
-   * @param {string[]} ReservationItemIds - The reservations' IDs.
-   * @param {RestoreReturn<TReturnableLinkableKeys>} config - Configurations determining which relations to restore along with each of the reservation. You can pass to its `returnLinkableKeys`
-   * property any of the reservation's relation attribute names, such as `{type relation name}`.
-   * @param {Context} sharedContext - A context used to share resources, such as transaction manager, between the application and the module.
-   * @returns {Promise<void | Record<string, string[]>>} An object that includes the IDs of related records that were restored.
-   * If there are no related records restored, the promise resolves to `void`.
-   *
-   * @example
-   * await inventoryModuleService.restoreReservationItems([
-   *   "ilev_123",
-   * ])
-   */
-  restoreReservationItems<TReturnableLinkableKeys extends string = string>(
-    ReservationItemIds: string[],
-    config?: RestoreReturn<TReturnableLinkableKeys>,
-    sharedContext?: Context
-  ): Promise<Record<string, string[]> | void>
-
-  /**
-   * This method deletes inventory items by their IDs.
-   *
-   * @param {string | string[]} inventoryItemId - The inventory item's ID.
+   * @param {string | string[]} inventoryItemId - The ID(s) of the inventory item(s) to delete.
    * @param {Context} context - A context used to share resources, such as transaction manager, between the application and the module.
-   * @returns {Promise<void>} Resolves when the inventory items are deleted.
+   * @returns {Promise<void>} Resolves when the inventory item(s) are successfully deleted.
    *
    * @example
-   * await inventoryModuleService.delete("iitem_123")
+   * import {
+   *   initialize as initializeInventoryModule,
+   * } from "@medusajs/inventory"
+   *
+   * async function deleteInventoryItem (
+   *   inventoryItems: string[]
+   * ) {
+   *   const inventoryModule = await initializeInventoryModule({})
+   *
+   *   await inventoryModule.deleteInventoryItem(
+   *     inventoryItems
+   *   )
+   * }
    */
   delete(inventoryItemId: string | string[], context?: Context): Promise<void>
 
   /**
-   * This method soft deletes inventory items by their IDs.
-   *
-   * @param {string[]} inventoryItemIds - The inventory items' IDs.
-   * @param {SoftDeleteReturn<TReturnableLinkableKeys>} config - An object that is used to specify an entity's related entities that should be soft-deleted when the main entity is soft-deleted.
-   * @param {Context} sharedContext - A context used to share resources, such as transaction manager, between the application and the module.
-   * @returns {Promise<void | Record<string, string[]>>} An object that includes the IDs of related records that were also soft deleted, such as the ID of the associated location levels.
-   * The object's keys are the ID attribute names of the inventory service next entity's relations, such as `location_level_id`, and its value is an array of strings, each being the ID of a record associated
-   * with the inventory item through this relation, such as the IDs of associated location levels.
-   *
-   * If there are no related records, the promise resolves to `void`.
-   *
-   * @example
-   * await inventoryModuleService.softDelete(
-   *   ["iitem_123", "iitem_321"],
-   *   {
-   *     returnLinkableKeys: ["location_level"],
-   *   }
-   * )
+   * Soft delete inventory items
+   * @param inventoryItemIds
+   * @param config
+   * @param sharedContext
    */
   softDelete<TReturnableLinkableKeys extends string = string>(
     inventoryItemIds: string[],
     config?: SoftDeleteReturn<TReturnableLinkableKeys>,
     sharedContext?: Context
   ): Promise<Record<string, string[]> | void>
-
   /**
-   * This method restores soft deleted inventory items by their IDs.
+   * This method is used to restore an inventory item or multiple inventory items that were previously deleted using the {@link deleteInventoryItem} method.
    *
-   * @param {string[]} inventoryItemIds - The inventory items' IDs.
-   * @param {RestoreReturn<TReturnableLinkableKeys>} config - Configurations determining which relations to restore along with each of the inventory items. You can pass to its `returnLinkableKeys`
-   * property any of the inventory item's relation attribute names, such as `location_levels`.
-   * @param {Context} sharedContext - A context used to share resources, such as transaction manager, between the application and the module.
-   * @returns {Promise<void | Record<string, string[]>>} An object that includes the IDs of related records that were restored, such as the ID of associated location levels.
-   * The object's keys are the ID attribute names of the inventory item entity's relations, such as `location_level_id`,
-   * and its value is an array of strings, each being the ID of the record associated with the inventory item through this relation,
-   * such as the IDs of associated location levels.
-   *
-   * If there are no related records restored, the promise resolves to `void`.
+   * @param {string[]} inventoryItemId - The ID(s) of the inventory item(s) to restore.
+   * @param {RestoreReturn<TReturnableLinkableKeys>} config - Restore config
+   * @param {Context} context - A context used to share resources, such as transaction manager, between the application and the module.
+   * @returns {Promise<void>} Resolves when the inventory item(s) are successfully restored.
    *
    * @example
-   * await inventoryModuleService.restore(
-   *   ["iitem_123", "iitem_321"],
-   *   {
-   *     returnLinkableKeys: ["location_level"],
-   *   }
-   * )
+   * import {
+   *   initialize as initializeInventoryModule,
+   * } from "@medusajs/inventory"
+   *
+   * async function restoreInventoryItem (
+   *   inventoryItems: string[]
+   * ) {
+   *   const inventoryModule = await initializeInventoryModule({})
+   *
+   *   await inventoryModule.restoreInventoryItem(
+   *     inventoryItems
+   *   )
+   * }
    */
   restore<TReturnableLinkableKeys extends string = string>(
     inventoryItemIds: string[],
@@ -858,17 +706,26 @@ export interface IInventoryServiceNext extends IModuleService {
   ): Promise<Record<string, string[]> | void>
 
   /**
-   * This method soft deletes inventory item's level by the associated location.
+   * This method deletes the inventory item level(s) for the ID(s) of associated location(s).
    *
-   * @param {string | string[]} locationId - The locations' IDs.
+   * @param {string | string[]} locationId - The ID(s) of the associated location(s).
    * @param {Context} context - A context used to share resources, such as transaction manager, between the application and the module.
-   * @returns {Promise<[object[], Record<string, unknown[]>]>} An array, where the first item is an array includes the soft-deleted inventory levels,
-   * and the second is an object that includes the IDs of related records that were soft-deleted.
+   * @returns {Promise<void>} Resolves when the inventory item level(s) are successfully restored.
    *
    * @example
-   * await inventoryModuleService.deleteInventoryItemLevelByLocationId(
-   *   "loc_123"
-   * )
+   * import {
+   *   initialize as initializeInventoryModule,
+   * } from "@medusajs/inventory"
+   *
+   * async function deleteInventoryItemLevelByLocationId (
+   *   locationIds: string[]
+   * ) {
+   *   const inventoryModule = await initializeInventoryModule({})
+   *
+   *   await inventoryModule.deleteInventoryItemLevelByLocationId(
+   *     locationIds
+   *   )
+   * }
    */
   deleteInventoryItemLevelByLocationId(
     locationId: string | string[],
@@ -876,16 +733,26 @@ export interface IInventoryServiceNext extends IModuleService {
   ): Promise<[object[], Record<string, unknown[]>]>
 
   /**
-   * This method deletes reservation items by their associated location.
+   * This method deletes reservation item(s) by the ID(s) of associated location(s).
    *
-   * @param {string | string[]} locationId - The location's ID.
+   * @param {string | string[]} locationId - The ID(s) of the associated location(s).
    * @param {Context} context - A context used to share resources, such as transaction manager, between the application and the module.
-   * @returns {Promise<void>} Resolves when then reservation items are deleted successfully.
+   * @returns {Promise<void>} Resolves when the reservation item(s) are successfully restored.
    *
    * @example
-   * await inventoryModuleService.deleteReservationItemByLocationId(
-   *   "loc_123"
-   * )
+   * import {
+   *   initialize as initializeInventoryModule,
+   * } from "@medusajs/inventory"
+   *
+   * async function deleteReservationItemByLocationId (
+   *   locationIds: string[]
+   * ) {
+   *   const inventoryModule = await initializeInventoryModule({})
+   *
+   *   await inventoryModule.deleteReservationItemByLocationId(
+   *     locationIds
+   *   )
+   * }
    */
   deleteReservationItemByLocationId(
     locationId: string | string[],
@@ -893,18 +760,29 @@ export interface IInventoryServiceNext extends IModuleService {
   ): Promise<void>
 
   /**
-   * This method deletes an inventory level by its associated inventory item and location.
+   * This method is used to delete an inventory level. The inventory level is identified by the IDs of its associated inventory item and location.
    *
-   * @param {string} inventoryItemId - The inventory item's ID.
-   * @param {string} locationId - The location's ID.
+   * @param {string} inventoryItemId - The ID of the associated inventory item.
+   * @param {string} locationId - The ID of the associated location.
    * @param {Context} context - A context used to share resources, such as transaction manager, between the application and the module.
-   * @returns {Promise<void>} Resolves when the inventory level is deleted successfully.
+   * @returns {Promise<void>} Resolves when the inventory level(s) are successfully restored.
    *
    * @example
-   * await inventoryModuleService.deleteInventoryLevel(
-   *   "iitem_123",
-   *   "loc_123"
-   * )
+   * import {
+   *   initialize as initializeInventoryModule,
+   * } from "@medusajs/inventory"
+   *
+   * async function deleteInventoryLevel (
+   *   inventoryItemId: string,
+   *   locationId: string
+   * ) {
+   *   const inventoryModule = await initializeInventoryModule({})
+   *
+   *   await inventoryModule.deleteInventoryLevel(
+   *     inventoryItemId,
+   *     locationId
+   *   )
+   * }
    */
   deleteInventoryLevel(
     inventoryItemId: string,
@@ -912,87 +790,51 @@ export interface IInventoryServiceNext extends IModuleService {
     context?: Context
   ): Promise<void>
 
-  /**
-   * This method deletes inventory levels by their IDs.
-   *
-   * @param {string | string[]} inventoryLevelIds - The inventory levels' IDs.
-   * @param {Context} context - A context used to share resources, such as transaction manager, between the application and the module.
-   * @returns {Promise<void>} Resolves when the inventory levels are deleted.
-   *
-   * @example
-   * await inventoryModuleService.deleteInventoryLevels("ilev_123")
-   */
   deleteInventoryLevels(
     inventoryLevelIds: string | string[],
     context?: Context
   ): Promise<void>
 
-  /**
-   * This method soft deletes inventory levels by their IDs.
-   *
-   * @param {string[]} inventoryLevelIds - The inventory levels' IDs.
-   * @param {SoftDeleteReturn<TReturnableLinkableKeys>} config - An object that is used to specify an entity's related entities that should be soft-deleted when the main entity is soft-deleted.
-   * @param {Context} sharedContext - A context used to share resources, such as transaction manager, between the application and the module.
-   * @returns {Promise<void | Record<string, string[]>>} An object that includes the IDs of related records that were also soft deleted.
-   * If there are no related records, the promise resolves to `void`.
-   *
-   * @example
-   * await inventoryModuleService.softDeleteInventoryLevels([
-   *   "ilev_123",
-   * ])
-   */
   softDeleteInventoryLevels<TReturnableLinkableKeys extends string = string>(
     inventoryLevelIds: string[],
     config?: SoftDeleteReturn<TReturnableLinkableKeys>,
     sharedContext?: Context
   ): Promise<Record<string, string[]> | void>
 
-  /**
-   * This method restores soft deleted inventory levels by their IDs.
-   *
-   * @param {string[]} inventoryLevelIds - The inventory levels' IDs.
-   * @param {RestoreReturn<TReturnableLinkableKeys>} config - Configurations determining which relations to restore along with each of the inventory level. You can pass to its `returnLinkableKeys`
-   * property any of the inventory level's relation attribute names, such as `{type relation name}`.
-   * @param {Context} sharedContext - A context used to share resources, such as transaction manager, between the application and the module.
-   * @returns {Promise<void | Record<string, string[]>>} An object that includes the IDs of related records that were restored.
-   * If there are no related records restored, the promise resolves to `void`.
-   *
-   * @example
-   * await inventoryModuleService.restoreInventoryLevels([
-   *   "ilev_123",
-   * ])
-   */
   restoreInventoryLevels<TReturnableLinkableKeys extends string = string>(
     inventoryLevelIds: string[],
     config?: RestoreReturn<TReturnableLinkableKeys>,
     sharedContext?: Context
   ): Promise<Record<string, string[]> | void>
-
   /**
-   * This method adjusts the inventory quantity of an item in a location.
+   * This method is used to adjust the inventory level's stocked quantity. The inventory level is identified by the IDs of its associated inventory item and location.
    *
-   * @param {string} inventoryItemId - The inventory item's ID.
-   * @param {string} locationId - The location's ID.
-   * @param {number} adjustment - the adjustment to make to the quantity.
+   * @param {string} inventoryItemId - The ID of the associated inventory item.
+   * @param {string} locationId - The ID of the associated location.
+   * @param {number} adjustment - A positive or negative number used to adjust the inventory level's stocked quantity.
    * @param {Context} context - A context used to share resources, such as transaction manager, between the application and the module.
-   * @returns {Promise<InventoryLevelDTO>} The updated inventory level.
+   * @returns {Promise<InventoryLevelDTO>} The inventory level's details.
    *
    * @example
-   * // add to the inventory quantity
-   * const inventoryLevel1 =
-   *   await inventoryModuleService.adjustInventory(
-   *     "iitem_123",
-   *     "loc_123",
-   *     5
+   * import {
+   *   initialize as initializeInventoryModule,
+   * } from "@medusajs/inventory"
+   *
+   * async function adjustInventory (
+   *   inventoryItemId: string,
+   *   locationId: string,
+   *   adjustment: number
+   * ) {
+   *   const inventoryModule = await initializeInventoryModule({})
+   *
+   *   const inventoryLevel = await inventoryModule.adjustInventory(
+   *     inventoryItemId,
+   *     locationId,
+   *     adjustment
    *   )
    *
-   * // subtract from the inventory quantity
-   * const inventoryLevel2 =
-   *   await inventoryModuleService.adjustInventory(
-   *     "iitem_123",
-   *     "loc_123",
-   *     -5
-   *   )
+   *   // do something with the inventory level or return it.
+   * }
    */
   adjustInventory(
     inventoryItemId: string,
@@ -1002,21 +844,32 @@ export interface IInventoryServiceNext extends IModuleService {
   ): Promise<InventoryNext.InventoryLevelDTO>
 
   /**
-   * This method confirms that a quantity is available of an inventory item in the specified locations.
+   * This method is used to confirm whether the specified quantity of an inventory item is available in the specified locations.
    *
-   * @param {string} inventoryItemId - The inventory item's ID.
-   * @param {string[]} locationIds - The locations' IDs.
-   * @param {number} quantity - The quantity to confirm its availability.
+   * @param {string} inventoryItemId - The ID of the inventory item to check its availability.
+   * @param {string[]} locationIds - The IDs of the locations to check the quantity availability in.
+   * @param {number} quantity - The quantity to check if available for the inventory item in the specified locations.
    * @param {Context} context - A context used to share resources, such as transaction manager, between the application and the module.
-   * @returns {Promise<boolean>} Whether the quantity is available.
+   * @returns {Promise<boolean>} Whether the specified quantity is available for the inventory item in the specified locations.
    *
    * @example
-   * const isAvailable =
-   *   await inventoryModuleService.confirmInventory(
-   *     "iitem_123",
-   *     ["loc_123", "loc_321"],
-   *     10
+   * import {
+   *   initialize as initializeInventoryModule,
+   * } from "@medusajs/inventory"
+   *
+   * async function confirmInventory (
+   *   inventoryItemId: string,
+   *   locationIds: string[],
+   *   quantity: number
+   * ) {
+   *   const inventoryModule = await initializeInventoryModule({})
+   *
+   *   return await inventoryModule.confirmInventory(
+   *     inventoryItemId,
+   *     locationIds,
+   *     quantity
    *   )
+   * }
    */
   confirmInventory(
     inventoryItemId: string,
@@ -1026,19 +879,31 @@ export interface IInventoryServiceNext extends IModuleService {
   ): Promise<boolean>
 
   /**
-   * This method retrieves the available quantity of an inventory item in the specified locations.
+   * This method is used to retrieve the available quantity of an inventory item within the specified locations.
    *
-   * @param {string} inventoryItemId - The inventory item's ID.
-   * @param {string[]} locationIds - The locations' IDs.
+   * @param {string} inventoryItemId - The ID of the inventory item to retrieve its quantity.
+   * @param {string[]} locationIds - The IDs of the locations to retrieve the available quantity from.
    * @param {Context} context - A context used to share resources, such as transaction manager, between the application and the module.
-   * @returns {Promise<number>} The available quantity of the item.
+   * @returns {Promise<number>} The available quantity of the inventory item in the specified locations.
    *
    * @example
-   * const availableQuantity =
-   *   await inventoryModuleService.retrieveAvailableQuantity(
-   *     "iitem_123",
-   *     ["loc_123", "loc_321"]
+   * import {
+   *   initialize as initializeInventoryModule,
+   * } from "@medusajs/inventory"
+   *
+   * async function retrieveAvailableQuantity (
+   *   inventoryItemId: string,
+   *   locationIds: string[],
+   * ) {
+   *   const inventoryModule = await initializeInventoryModule({})
+   *
+   *   const quantity = await inventoryModule.retrieveAvailableQuantity(
+   *     inventoryItemId,
+   *     locationIds,
    *   )
+   *
+   *   // do something with the quantity or return it
+   * }
    */
   retrieveAvailableQuantity(
     inventoryItemId: string,
@@ -1047,19 +912,31 @@ export interface IInventoryServiceNext extends IModuleService {
   ): Promise<number>
 
   /**
-   * This method retrieves the stocked quantity of an inventory item in the specified location.
+   * This method is used to retrieve the stocked quantity of an inventory item within the specified locations.
    *
-   * @param {string} inventoryItemId - The inventory item's ID.
-   * @param {string[]} locationIds - The locations' IDs.
+   * @param {string} inventoryItemId - The ID of the inventory item to retrieve its stocked quantity.
+   * @param {string[]} locationIds - The IDs of the locations to retrieve the stocked quantity from.
    * @param {Context} context - A context used to share resources, such as transaction manager, between the application and the module.
-   * @returns {Promise<number>} The stocked quantity of the item.
+   * @returns {Promise<number>} The stocked quantity of the inventory item in the specified locations.
    *
    * @example
-   * const stockedQuantity =
-   *   await inventoryModuleService.retrieveStockedQuantity(
-   *     "iitem_123",
-   *     ["loc_123", "loc_321"]
+   * import {
+   *   initialize as initializeInventoryModule,
+   * } from "@medusajs/inventory"
+   *
+   * async function retrieveStockedQuantity (
+   *   inventoryItemId: string,
+   *   locationIds: string[],
+   * ) {
+   *   const inventoryModule = await initializeInventoryModule({})
+   *
+   *   const quantity = await inventoryModule.retrieveStockedQuantity(
+   *     inventoryItemId,
+   *     locationIds,
    *   )
+   *
+   *   // do something with the quantity or return it
+   * }
    */
   retrieveStockedQuantity(
     inventoryItemId: string,
@@ -1068,19 +945,31 @@ export interface IInventoryServiceNext extends IModuleService {
   ): Promise<number>
 
   /**
-   * This method retrieves the reserved quantity of an inventory item in the specified location.
+   * This method is used to retrieve the reserved quantity of an inventory item within the specified locations.
    *
-   * @param {string} inventoryItemId - The inventory item's ID.
-   * @param {string[]} locationIds - The locations' IDs.
+   * @param {string} inventoryItemId - The ID of the inventory item to retrieve its reserved quantity.
+   * @param {string[]} locationIds - The IDs of the locations to retrieve the reserved quantity from.
    * @param {Context} context - A context used to share resources, such as transaction manager, between the application and the module.
-   * @returns {Promise<number>} The reserved quantity of the item.
+   * @returns {Promise<number>} The reserved quantity of the inventory item in the specified locations.
    *
    * @example
-   * const reservedQuantity =
-   *   await inventoryModuleService.retrieveReservedQuantity(
-   *     "iitem_123",
-   *     ["loc_123", "loc_321"]
+   * import {
+   *   initialize as initializeInventoryModule,
+   * } from "@medusajs/inventory"
+   *
+   * async function retrieveReservedQuantity (
+   *   inventoryItemId: string,
+   *   locationIds: string[],
+   * ) {
+   *   const inventoryModule = await initializeInventoryModule({})
+   *
+   *   const quantity = await inventoryModule.retrieveReservedQuantity(
+   *     inventoryItemId,
+   *     locationIds,
    *   )
+   *
+   *   // do something with the quantity or return it
+   * }
    */
   retrieveReservedQuantity(
     inventoryItemId: string,

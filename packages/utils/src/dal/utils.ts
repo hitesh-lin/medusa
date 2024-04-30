@@ -1,8 +1,8 @@
 import { isObject } from "../common"
 
 export async function transactionWrapper<TManager = unknown>(
-  manager: any,
-  task: (transactionManager: any) => Promise<any>,
+  this: any,
+  task: (transactionManager: unknown) => Promise<any>,
   {
     transaction,
     isolationLevel,
@@ -28,8 +28,12 @@ export async function transactionWrapper<TManager = unknown>(
     Object.assign(options, { isolationLevel })
   }
 
-  const transactionMethod = manager.transaction ?? manager.transactional
-  return await transactionMethod.bind(manager)(task, options)
+  const freshManager = this.getFreshManager
+    ? this.getFreshManager()
+    : this.manager_
+  const transactionMethod =
+    freshManager.transaction ?? freshManager.transactional
+  return await transactionMethod.bind(freshManager)(task, options)
 }
 
 /**

@@ -1,7 +1,3 @@
-import { FindConfig } from "../common"
-import { RestoreReturn, SoftDeleteReturn } from "../dal"
-import { IModuleService } from "../modules-sdk"
-import { Context } from "../shared-context"
 import {
   AddPriceListPricesDTO,
   AddPricesDTO,
@@ -35,11 +31,15 @@ import {
   UpdatePriceRuleDTO,
   UpdatePriceSetDTO,
   UpdateRuleTypeDTO,
-  UpsertPriceSetDTO,
 } from "./common"
 
+import { FindConfig } from "../common"
+import { RestoreReturn, SoftDeleteReturn } from "../dal"
+import { IModuleService } from "../modules-sdk"
+import { Context } from "../shared-context"
+
 /**
- * The main service interface for the Pricing Module.
+ * The main service interface for the pricing module.
  */
 export interface IPricingModuleService extends IModuleService {
   /**
@@ -56,48 +56,69 @@ export interface IPricingModuleService extends IModuleService {
    * When you calculate prices, you must at least specify the currency code:
    *
    * ```ts
-   * const price = await pricingModuleService.calculatePrices(
-   *   {
-   *     id: ["pset_123", "pset_321"],
-   *   },
-   *   {
-   *     context: {
-   *       currency_code: "usd",
-   *     },
-   *   }
-   * )
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   * async function calculatePrice (priceSetId: string, currencyCode: string) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const price = await pricingService.calculatePrices(
+   *     { id: [priceSetId] },
+   *     {
+   *       context: {
+   *         currency_code: currencyCode
+   *       }
+   *     }
+   *   )
+   *
+   *   // do something with the price or return it
+   * }
    * ```
    *
    * To calculate prices for specific minimum and/or maximum quantity:
    *
    * ```ts
-   * const price = await pricingModuleService.calculatePrices(
-   *   {
-   *     id: ["pset_123", "pset_321"],
-   *   },
-   *   {
-   *     context: {
-   *       currency_code: "usd",
-   *       min_quantity: 4,
-   *     },
-   *   }
-   * )
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   * async function calculatePrice (priceSetId: string, currencyCode: string) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const price = await pricingService.calculatePrices(
+   *     { id: [priceSetId] },
+   *     {
+   *       context: {
+   *         currency_code: currencyCode,
+   *         min_quantity: 4
+   *       }
+   *     }
+   *   )
+   *
+   *   // do something with the price or return it
+   * }
    * ```
    *
    * To calculate prices for custom rule types:
    *
    * ```ts
-   * const price = await pricingModuleService.calculatePrices(
-   *   {
-   *     id: ["pset_123", "pset_321"],
-   *   },
-   *   {
-   *     context: {
-   *       currency_code: "usd",
-   *       region_id: "US",
-   *     },
-   *   }
-   * )
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   * async function calculatePrice (priceSetId: string, currencyCode: string) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const price = await pricingService.calculatePrices(
+   *     { id: [priceSetId] },
+   *     {
+   *       context: {
+   *         currency_code: currencyCode,
+   *         region_id: "US"
+   *       }
+   *     }
+   *   )
+   *
+   *   // do something with the price or return it
+   * }
    * ```
    */
   calculatePrices(
@@ -120,19 +141,40 @@ export interface IPricingModuleService extends IModuleService {
    * A simple example that retrieves a price set by its ID:
    *
    * ```ts
-   * const priceSet =
-   *   await pricingModuleService.retrieve("pset_123")
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function retrievePriceSet (priceSetId: string) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const priceSet = await pricingService.retrieve(
+   *     priceSetId
+   *   )
+   *
+   *   // do something with the price set or return it
+   * }
    * ```
    *
    * To specify relations that should be retrieved:
    *
    * ```ts
-   * const priceSet = await pricingModuleService.retrieve(
-   *   "pset_123",
-   *   {
-   *     relations: ["prices"],
-   *   }
-   * )
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function retrievePriceSet (priceSetId: string) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const priceSet = await pricingService.retrieve(
+   *     priceSetId,
+   *     {
+   *       relations: ["prices"]
+   *     }
+   *   )
+   *
+   *   // do something with the price set or return it
+   * }
    * ```
    */
   retrieve(
@@ -156,37 +198,103 @@ export interface IPricingModuleService extends IModuleService {
    * To retrieve a list of price sets using their IDs:
    *
    * ```ts
-   * const priceSets = await pricingModuleService.list({
-   *   id: ["pset_123", "pset_321"],
-   * })
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function retrievePriceSets (priceSetIds: string[]) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const priceSets = await pricingService.list(
+   *     {
+   *       id: priceSetIds
+   *     },
+   *   )
+   *
+   *   // do something with the price sets or return them
+   * }
    * ```
    *
    * To specify relations that should be retrieved within the price sets:
    *
    * ```ts
-   * const priceSets = await pricingModuleService.list(
-   *   {
-   *     id: ["pset_123", "pset_321"],
-   *   },
-   *   {
-   *     relations: ["prices"],
-   *   }
-   * )
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function retrievePriceSets (priceSetIds: string[]) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const priceSets = await pricingService.list(
+   *     {
+   *       id: priceSetIds
+   *     },
+   *     {
+   *       relations: ["prices"]
+   *     }
+   *   )
+   *
+   *   // do something with the price sets or return them
+   * }
    * ```
    *
    * By default, only the first `15` records are retrieved. You can control pagination by specifying the `skip` and `take` properties of the `config` parameter:
    *
    * ```ts
-   * const priceSets = await pricingModuleService.list(
-   *   {
-   *     id: ["pset_123", "pset_321"],
-   *   },
-   *   {
-   *     relations: ["prices"],
-   *     take: 20,
-   *     skip: 2,
-   *   }
-   * )
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function retrievePriceSets (priceSetIds: string[], skip: number, take: number) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const priceSets = await pricingService.list(
+   *     {
+   *       id: priceSetIds
+   *     },
+   *     {
+   *       relations: ["prices"],
+   *       skip,
+   *       take
+   *     }
+   *   )
+   *
+   *   // do something with the price sets or return them
+   * }
+   * ```
+   *
+   * You can also use the `$and` or `$or` properties of the `filter` parameter to use and/or conditions in your filters. For example:
+   *
+   * ```ts
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function retrievePriceSets (priceSetIds: string[], priceIds: string[], skip: number, take: number) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const priceSets = await pricingService.list(
+   *     {
+   *       $and: [
+   *         {
+   *           id: priceSetIds
+   *         },
+   *         {
+   *           prices: {
+   *             id: priceIds
+   *           }
+   *         }
+   *       ]
+   *     },
+   *     {
+   *       relations: ["prices"],
+   *       skip,
+   *       take
+   *     }
+   *   )
+   *
+   *   // do something with the price sets or return them
+   * }
    * ```
    */
   list(
@@ -210,40 +318,103 @@ export interface IPricingModuleService extends IModuleService {
    * To retrieve a list of prices sets using their IDs:
    *
    * ```ts
-   * const [priceSets, count] =
-   *   await pricingModuleService.listAndCount({
-   *     id: ["pset_123", "pset_321"],
-   *   })
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function retrievePriceSets (priceSetIds: string[]) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const [priceSets, count] = await pricingService.listAndCount(
+   *     {
+   *       id: priceSetIds
+   *     },
+   *   )
+   *
+   *   // do something with the price sets or return them
+   * }
    * ```
    *
    * To specify relations that should be retrieved within the price sets:
    *
    * ```ts
-   * const [priceSets, count] =
-   *   await pricingModuleService.listAndCount(
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function retrievePriceSets (priceSetIds: string[]) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const [priceSets, count] = await pricingService.listAndCount(
    *     {
-   *       id: ["pset_123", "pset_321"],
+   *       id: priceSetIds
    *     },
    *     {
-   *       relations: ["prices"],
+   *       relations: ["prices"]
    *     }
    *   )
+   *
+   *   // do something with the price sets or return them
+   * }
    * ```
    *
    * By default, only the first `15` records are retrieved. You can control pagination by specifying the `skip` and `take` properties of the `config` parameter:
    *
    * ```ts
-   * const [priceSets, count] =
-   *   await pricingModuleService.listAndCount(
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function retrievePriceSets (priceSetIds: string[], skip: number, take: number) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const [priceSets, count] = await pricingService.listAndCount(
    *     {
-   *       id: ["pset_123", "pset_321"],
+   *       id: priceSetIds
    *     },
    *     {
    *       relations: ["prices"],
-   *       take: 20,
-   *       skip: 2,
+   *       skip,
+   *       take
    *     }
    *   )
+   *
+   *   // do something with the price sets or return them
+   * }
+   * ```
+   *
+   * You can also use the `$and` or `$or` properties of the `filter` parameter to use and/or conditions in your filters. For example:
+   *
+   * ```ts
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function retrievePriceSets (priceSetIds: string[], priceIds: string[], skip: number, take: number) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const [priceSets, count] = await pricingService.listAndCount(
+   *     {
+   *       $and: [
+   *         {
+   *           id: priceSetIds
+   *         },
+   *         {
+   *           prices: {
+   *             id: priceIds
+   *           }
+   *         }
+   *       ]
+   *     },
+   *     {
+   *       relations: ["prices"],
+   *       skip,
+   *       take
+   *     }
+   *   )
+   *
+   *   // do something with the price sets or return them
+   * }
    * ```
    */
   listAndCount(
@@ -263,65 +434,88 @@ export interface IPricingModuleService extends IModuleService {
    * To create a default price set, don't pass any rules. For example:
    *
    * ```ts
-   * const priceSet = await pricingModuleService.create({
-   *   rules: [],
-   *   prices: [
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function createPriceSet () {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const priceSet = await pricingService.create(
    *     {
-   *       amount: 500,
-   *       currency_code: "USD",
-   *       min_quantity: 0,
-   *       max_quantity: 4,
-   *       rules: {},
+   *       rules: [],
+   *       prices: [
+   *         {
+   *           amount: 500,
+   *           currency_code: "USD",
+   *           min_quantity: 0,
+   *           max_quantity: 4,
+   *           rules: {},
+   *         },
+   *         {
+   *           amount: 400,
+   *           currency_code: "USD",
+   *           min_quantity: 5,
+   *           max_quantity: 10,
+   *           rules: {},
+   *         },
+   *       ],
    *     },
-   *     {
-   *       amount: 400,
-   *       currency_code: "USD",
-   *       min_quantity: 5,
-   *       max_quantity: 10,
-   *       rules: {},
-   *     },
-   *   ],
-   * })
+   *   )
+   *
+   *   // do something with the price set or return it
+   * }
    * ```
    *
    * To create a price set and associate it with rule types:
    *
    * ```ts
-   * const priceSet = await pricingModuleService.create({
-   *   rules: [
-   *     { rule_attribute: "region_id" },
-   *     { rule_attribute: "city" },
-   *   ],
-   *   prices: [
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function createPriceSet () {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const priceSet = await pricingService.create(
    *     {
-   *       amount: 300,
-   *       currency_code: "EUR",
-   *       rules: {
-   *         region_id: "PL",
-   *         city: "krakow",
-   *       },
+   *       rules: [{ rule_attribute: "region_id" }, { rule_attribute: "city" }],
+   *       prices: [
+   *         {
+   *           amount: 300,
+   *           currency_code: "EUR",
+   *           rules: {
+   *             region_id: "PL",
+   *             city: "krakow"
+   *           },
+   *         },
+   *         {
+   *           amount: 400,
+   *           currency_code: "EUR",
+   *           rules: {
+   *             region_id: "PL"
+   *           },
+   *         },
+   *         {
+   *           amount: 450,
+   *           currency_code: "EUR",
+   *           rules: {
+   *             city: "krakow"
+   *           },
+   *         }
+   *       ],
    *     },
-   *     {
-   *       amount: 400,
-   *       currency_code: "EUR",
-   *       rules: {
-   *         region_id: "PL",
-   *       },
-   *     },
-   *     {
-   *       amount: 450,
-   *       currency_code: "EUR",
-   *       rules: {
-   *         city: "krakow",
-   *       },
-   *     },
-   *   ],
-   * })
+   *   )
+   *
+   *   // do something with the price set or return it
+   * }
    * ```
    */
   create(data: CreatePriceSetDTO, sharedContext?: Context): Promise<PriceSetDTO>
 
   /**
+   * @overload
+   *
    * This method is used to create multiple price sets.
    *
    * @param {CreatePriceSetDTO[]} data - The price sets to create.
@@ -329,59 +523,78 @@ export interface IPricingModuleService extends IModuleService {
    * @returns {Promise<PriceSetDTO[]>} The list of created price sets.
    *
    * @example
-   * const priceSets = await pricingModuleService.create([
-   *   // default price set
-   *   {
-   *     rules: [],
-   *     prices: [
-   *       {
-   *         amount: 500,
-   *         currency_code: "USD",
-   *         min_quantity: 0,
-   *         max_quantity: 4,
-   *         rules: {},
-   *       },
-   *       {
-   *         amount: 400,
-   *         currency_code: "USD",
-   *         min_quantity: 5,
-   *         max_quantity: 10,
-   *         rules: {},
-   *       },
-   *     ],
-   *   },
-   *   // price set with rules
-   *   {
-   *     rules: [
-   *       { rule_attribute: "region_id" },
-   *       { rule_attribute: "city" },
-   *     ],
-   *     prices: [
-   *       {
-   *         amount: 300,
-   *         currency_code: "EUR",
-   *         rules: {
-   *           region_id: "PL",
-   *           city: "krakow",
+   * To create price sets with a default price, don't pass any rules and make sure to pass the `currency_code` of the price. For example:
+   *
+   * ```ts
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function createPriceSets () {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const priceSets = await pricingService.create([
+   *     {
+   *       rules: [],
+   *       prices: [
+   *         {
+   *           amount: 500,
+   *           currency_code: "USD",
+   *           rules: {},
    *         },
-   *       },
-   *       {
-   *         amount: 400,
-   *         currency_code: "EUR",
-   *         rules: {
-   *           region_id: "PL",
+   *       ],
+   *     },
+   *   ])
+   *
+   *   // do something with the price sets or return them
+   * }
+   * ```
+   *
+   * To create price sets and associate them with rule types:
+   *
+   * ```ts
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function createPriceSets () {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const priceSets = await pricingService.create([
+   *     {
+   *       rules: [{ rule_attribute: "region_id" }, { rule_attribute: "city" }],
+   *       prices: [
+   *         {
+   *           amount: 300,
+   *           currency_code: "EUR",
+   *           rules: {
+   *             region_id: "PL",
+   *             city: "krakow"
+   *           },
    *         },
-   *       },
-   *       {
-   *         amount: 450,
-   *         currency_code: "EUR",
-   *         rules: {
-   *           city: "krakow",
+   *         {
+   *           amount: 400,
+   *           currency_code: "EUR",
+   *           min_quantity: 0,
+   *           max_quantity: 4,
+   *           rules: {
+   *             region_id: "PL"
+   *           },
    *         },
-   *       },
-   *     ],
-   *   },
-   * ])
+   *         {
+   *           amount: 450,
+   *           currency_code: "EUR",
+   *           rules: {
+   *             city: "krakow"
+   *           },
+   *         }
+   *       ],
+   *     },
+   *   ])
+   *
+   *   // do something with the price sets or return them
+   * }
+   * ```
    */
   create(
     data: CreatePriceSetDTO[],
@@ -389,91 +602,18 @@ export interface IPricingModuleService extends IModuleService {
   ): Promise<PriceSetDTO[]>
 
   /**
-   * This method updates existing price sets, or creates new ones if they don't exist.
+   * @ignore
+   * @privateRemarks
+   * The update method shouldn't be documented at the moment
    *
-   * @param {UpsertPriceSetDTO[]} data - The attributes to update or create for each price set.
+   * This method is used to update existing price sets.
+   *
+   * @param {UpdatePriceSetDTO[]} data - The price sets to update, each having the attributes that should be updated in a price set.
    * @param {Context} sharedContext - A context used to share resources, such as transaction manager, between the application and the module.
-   * @returns {Promise<PriceSetDTO[]>} The updated and created price sets.
-   *
-   * @example
-   * const priceSets = await pricingModuleService.upsert([
-   *   {
-   *     prices: [
-   *       {
-   *         amount: 100,
-   *         currency_code: "USD",
-   *       },
-   *     ],
-   *   },
-   *   {
-   *     id: "pset_123",
-   *     rules: [{ rule_attribute: "region_id" }],
-   *   },
-   * ])
-   */
-  upsert(
-    data: UpsertPriceSetDTO[],
-    sharedContext?: Context
-  ): Promise<PriceSetDTO[]>
-
-  /**
-   * This method updates the price set if it exists, or creates a new ones if it doesn't.
-   *
-   * @param {UpsertPriceSetDTO} data - The attributes to update or create for the new price set.
-   * @param {Context} sharedContext - A context used to share resources, such as transaction manager, between the application and the module.
-   * @returns {Promise<PriceSetDTO>} The updated or created price set.
-   *
-   * @example
-   * const priceSet = await pricingModuleService.upsert({
-   *   id: "pset_123",
-   *   rules: [{ rule_attribute: "region_id" }],
-   * })
-   */
-  upsert(data: UpsertPriceSetDTO, sharedContext?: Context): Promise<PriceSetDTO>
-
-  /**
-   * This method is used to update a price set.
-   *
-   * @param {string} id - The ID of the price set to be updated.
-   * @param {UpdatePriceSetDTO} data - The attributes of the price set to be updated
-   * @param {Context} sharedContext - A context used to share resources, such as transaction manager, between the application and the module.
-   * @returns {Promise<PriceSetDTO>} The updated price set.
-   *
-   * @example
-   * const priceSet = await pricingModuleService.update(
-   *   "pset_123",
-   *   {
-   *     rules: [{ rule_attribute: "region_id" }],
-   *   }
-   * )
+   * @returns {Promise<PriceSetDTO[]>} The list of updated price sets.
    */
   update(
-    id: string,
-    data: UpdatePriceSetDTO,
-    sharedContext?: Context
-  ): Promise<PriceSetDTO>
-
-  /**
-   * This method is used to update a list of price sets determined by the selector filters.
-   *
-   * @param {FilterablePriceSetProps} selector - The filters that will determine which price sets will be updated.
-   * @param {UpdatePriceSetDTO} data - The attributes to be updated on the selected price sets
-   * @param {Context} sharedContext - A context used to share resources, such as transaction manager, between the application and the module.
-   * @returns {Promise<PriceSetDTO[]>} The updated price sets.
-   *
-   * @example
-   * const priceSets = await pricingModuleService.update(
-   *   {
-   *     id: ["pset_123", "pset_321"],
-   *   },
-   *   {
-   *     rules: [{ rule_attribute: "region_id" }],
-   *   }
-   * )
-   */
-  update(
-    selector: FilterablePriceSetProps,
-    data: UpdatePriceSetDTO,
+    data: UpdatePriceSetDTO[],
     sharedContext?: Context
   ): Promise<PriceSetDTO[]>
 
@@ -485,12 +625,20 @@ export interface IPricingModuleService extends IModuleService {
    * @returns {Promise<void>} Resolves when rules are successfully removed.
    *
    * @example
-   * await pricingModuleService.removeRules([
-   *   {
-   *     id: "pset_123",
-   *     rules: ["region_id"],
-   *   },
-   * ])
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function removePriceSetRule (priceSetId: string, ruleAttributes: []) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   await pricingService.removeRules([
+   *     {
+   *       id: priceSetId,
+   *       rules: ruleAttributes
+   *     },
+   *   ])
+   * }
    */
   removeRules(
     data: RemovePriceSetRulesDTO[],
@@ -505,7 +653,15 @@ export interface IPricingModuleService extends IModuleService {
    * @returns {Promise<void>} Resolves when the price sets are successfully deleted.
    *
    * @example
-   * await pricingModuleService.delete(["pset_123", "pset_321"])
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function removePriceSetRule (priceSetIds: string[]) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   await pricingService.delete(priceSetIds)
+   * }
    */
   delete(ids: string[], sharedContext?: Context): Promise<void>
 
@@ -521,50 +677,70 @@ export interface IPricingModuleService extends IModuleService {
    * To add a default price to a price set, don't pass it any rules and make sure to pass it the `currency_code`:
    *
    * ```ts
-   * const priceSet = await pricingModuleService.addPrices({
-   *   priceSetId: "pset_123",
-   *   prices: [
-   *     {
-   *       amount: 500,
-   *       currency_code: "USD",
-   *       rules: {},
-   *     },
-   *   ],
-   * })
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function addPricesToPriceSet (priceSetId: string) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const priceSet = await pricingService.addPrices({
+   *     priceSetId,
+   *     prices: [
+   *      {
+   *         amount: 500,
+   *         currency_code: "USD",
+   *         rules: {},
+   *       },
+   *     ],
+   *   })
+   *
+   *   // do something with the price set or return it
+   * }
    * ```
    *
    * To add prices with rules:
    *
    * ```ts
-   * const priceSet = await pricingModuleService.addPrices({
-   *   priceSetId: "pset_123",
-   *   prices: [
-   *     {
-   *       amount: 300,
-   *       currency_code: "EUR",
-   *       rules: {
-   *         region_id: "PL",
-   *         city: "krakow",
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function addPricesToPriceSet (priceSetId: string) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const priceSet = await pricingService.addPrices({
+   *     priceSetId,
+   *     prices: [
+   *       {
+   *         amount: 300,
+   *         currency_code: "EUR",
+   *         rules: {
+   *           region_id: "PL",
+   *           city: "krakow"
+   *         },
    *       },
-   *     },
-   *     {
-   *       amount: 400,
-   *       currency_code: "EUR",
-   *       min_quantity: 0,
-   *       max_quantity: 4,
-   *       rules: {
-   *         region_id: "PL",
+   *       {
+   *         amount: 400,
+   *         currency_code: "EUR",
+   *         min_quantity: 0,
+   *         max_quantity: 4,
+   *         rules: {
+   *           region_id: "PL"
+   *         },
    *       },
-   *     },
-   *     {
-   *       amount: 450,
-   *       currency_code: "EUR",
-   *       rules: {
-   *         city: "krakow",
-   *       },
-   *     },
-   *   ],
-   * })
+   *       {
+   *         amount: 450,
+   *         currency_code: "EUR",
+   *         rules: {
+   *           city: "krakow"
+   *         },
+   *       }
+   *     ],
+   *   })
+   *
+   *   // do something with the price set or return it
+   * }
    * ```
    */
   addPrices(data: AddPricesDTO, sharedContext?: Context): Promise<PriceSetDTO>
@@ -577,34 +753,75 @@ export interface IPricingModuleService extends IModuleService {
    * @returns {Promise<PriceSetDTO[]>} The list of the price sets that prices were added to.
    *
    * @example
-   * const priceSets = await pricingModuleService.addPrices([
-   *   {
-   *     priceSetId: "pset_123",
+   *
+   * To add a default price to a price set, don't pass it any rules and make sure to pass it the `currency_code`:
+   *
+   * ```ts
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function addPricesToPriceSet (priceSetId: string) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const priceSets = await pricingService.addPrices([{
+   *     priceSetId,
    *     prices: [
-   *       // default price because it doesn't
-   *       // have rules
-   *       {
+   *      {
    *         amount: 500,
    *         currency_code: "USD",
    *         rules: {},
    *       },
    *     ],
-   *   },
-   *   {
-   *     priceSetId: "pset_321",
+   *   }])
+   *
+   *   // do something with the price sets or return them
+   * }
+   * ```
+   *
+   * To add prices with rules:
+   *
+   * ```ts
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function addPricesToPriceSet (priceSetId: string) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const priceSets = await pricingService.addPrices([{
+   *     priceSetId,
    *     prices: [
-   *       // prices with rules
    *       {
    *         amount: 300,
    *         currency_code: "EUR",
    *         rules: {
    *           region_id: "PL",
-   *           city: "krakow",
+   *           city: "krakow"
    *         },
    *       },
+   *       {
+   *         amount: 400,
+   *         currency_code: "EUR",
+   *         min_quantity: 0,
+   *         max_quantity: 4,
+   *         rules: {
+   *           region_id: "PL"
+   *         },
+   *       },
+   *       {
+   *         amount: 450,
+   *         currency_code: "EUR",
+   *         rules: {
+   *           city: "krakow"
+   *         },
+   *       }
    *     ],
-   *   },
-   * ])
+   *   }])
+   *
+   *   // do something with the price sets or return them
+   * }
+   * ```
    */
   addPrices(
     data: AddPricesDTO[],
@@ -619,14 +836,22 @@ export interface IPricingModuleService extends IModuleService {
    * @returns {Promise<PriceSetDTO>} The price set that the rules were added to.
    *
    * @example
-   * const priceSet = await pricingModuleService.addRules({
-   *   priceSetId: "pset_123",
-   *   rules: [
-   *     {
-   *       attribute: "region_id",
-   *     },
-   *   ],
-   * })
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function addRulesToPriceSet (priceSetId: string) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const priceSet = await pricingService.addRules({
+   *     priceSetId,
+   *     rules: [{
+   *       attribute: "region_id"
+   *     }]
+   *   })
+   *
+   *   // do something with the price set or return it
+   * }
    */
   addRules(data: AddRulesDTO, sharedContext?: Context): Promise<PriceSetDTO>
 
@@ -638,24 +863,22 @@ export interface IPricingModuleService extends IModuleService {
    * @returns {Promise<PriceSetDTO[]>} The list of the price sets that the rules were added to.
    *
    * @example
-   * const priceSets = await pricingModuleService.addRules([
-   *   {
-   *     priceSetId: "pset_123",
-   *     rules: [
-   *       {
-   *         attribute: "region_id",
-   *       },
-   *     ],
-   *   },
-   *   {
-   *     priceSetId: "pset_321",
-   *     rules: [
-   *       {
-   *         attribute: "customer_group_id",
-   *       },
-   *     ],
-   *   },
-   * ])
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function addRulesToPriceSet (priceSetId: string) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const priceSets = await pricingService.addRules([{
+   *     priceSetId,
+   *     rules: [{
+   *       attribute: "region_id"
+   *     }]
+   *   }])
+   *
+   *   // do something with the price sets or return them
+   * }
    */
   addRules(data: AddRulesDTO[], sharedContext?: Context): Promise<PriceSetDTO[]>
 
@@ -673,19 +896,35 @@ export interface IPricingModuleService extends IModuleService {
    * A simple example that retrieves a rule type by its code:
    *
    * ```ts
-   * const ruleType =
-   *   await pricingModuleService.retrieveRuleType("rul-typ_123")
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function retrieveRuleType (ruleTypeId: string) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const ruleType = await pricingService.retrieveRuleType(ruleTypeId)
+   *
+   *   // do something with the rule type or return it
+   * }
    * ```
    *
-   * To specify relations that should be retrieved:
+   * To specify attributes that should be retrieved:
    *
    * ```ts
-   * const ruleType = await pricingModuleService.retrieveRuleType(
-   *   "rul-typ_123",
-   *   {
-   *     relations: ["price_sets"],
-   *   }
-   * )
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function retrieveRuleType (ruleTypeId: string) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const ruleType = await pricingService.retrieveRuleType(ruleTypeId, {
+   *     select: ["name"]
+   *   })
+   *
+   *   // do something with the rule type or return it
+   * }
    * ```
    */
   retrieveRuleType(
@@ -709,37 +948,96 @@ export interface IPricingModuleService extends IModuleService {
    * To retrieve a list of rule types using their IDs:
    *
    * ```ts
-   * const ruleTypes = await pricingModuleService.listRuleTypes({
-   *   id: ["rul-typ_123", "rul-typ_321"],
-   * })
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function retrieveRuleTypes (ruleTypeId: string) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const ruleTypes = await pricingService.listRuleTypes({
+   *     id: [
+   *       ruleTypeId
+   *     ]
+   *   })
+   *
+   *   // do something with the rule types or return them
+   * }
    * ```
    *
-   * To specify relations that should be retrieved:
+   * To specify attributes that should be retrieved within the rule types:
    *
    * ```ts
-   * const ruleTypes = await pricingModuleService.listRuleTypes(
-   *   {
-   *     id: ["rul-typ_123", "rul-typ_321"],
-   *   },
-   *   {
-   *     relations: ["price_sets"],
-   *   }
-   * )
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function retrieveRuleTypes (ruleTypeId: string) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const ruleTypes = await pricingService.listRuleTypes({
+   *     id: [
+   *       ruleTypeId
+   *     ]
+   *   }, {
+   *     select: ["name"]
+   *   })
+   *
+   *   // do something with the rule types or return them
+   * }
    * ```
    *
    * By default, only the first `15` records are retrieved. You can control pagination by specifying the `skip` and `take` properties of the `config` parameter:
    *
    * ```ts
-   * const ruleTypes = await pricingModuleService.listRuleTypes(
-   *   {
-   *     id: ["rul-typ_123", "rul-typ_321"],
-   *   },
-   *   {
-   *     relations: ["price_sets"],
-   *     take: 20,
-   *     skip: 2,
-   *   }
-   * )
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function retrieveRuleTypes (ruleTypeId: string, skip: number, take: number) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const ruleTypes = await pricingService.listRuleTypes({
+   *     id: [
+   *       ruleTypeId
+   *     ]
+   *   }, {
+   *     select: ["name"],
+   *     skip,
+   *     take
+   *   })
+   *
+   *   // do something with the rule types or return them
+   * }
+   * ```
+   *
+   * You can also use the `$and` or `$or` properties of the `filter` parameter to use and/or conditions in your filters. For example:
+   *
+   * ```ts
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function retrieveRuleTypes (ruleTypeId: string[], name: string[], skip: number, take: number) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const ruleTypes = await pricingService.listRuleTypes({
+   *     $and: [
+   *       {
+   *         id: ruleTypeId
+   *       },
+   *       {
+   *         name
+   *       }
+   *     ]
+   *   }, {
+   *     select: ["name"],
+   *     skip,
+   *     take
+   *   })
+   *
+   *   // do something with the rule types or return them
+   * }
    * ```
    */
   listRuleTypes(
@@ -763,40 +1061,96 @@ export interface IPricingModuleService extends IModuleService {
    * To retrieve a list of rule types using their IDs:
    *
    * ```ts
-   * const [ruleTypes, count] =
-   *   await pricingModuleService.listAndCountRuleTypes({
-   *     id: ["rul-typ_123", "rul-typ_321"],
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function retrieveRuleTypes (ruleTypeId: string) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const [ruleTypes, count] = await pricingService.listAndCountRuleTypes({
+   *     id: [
+   *       ruleTypeId
+   *     ]
    *   })
+   *
+   *   // do something with the rule types or return them
+   * }
    * ```
    *
    * To specify attributes that should be retrieved within the rule types:
    *
    * ```ts
-   * const [ruleTypes, count] =
-   *   await pricingModuleService.listAndCountRuleTypes(
-   *     {
-   *       id: ["rul-typ_123", "rul-typ_321"],
-   *     },
-   *     {
-   *       relations: ["price_sets"],
-   *     }
-   *   )
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function retrieveRuleTypes (ruleTypeId: string) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const [ruleTypes, count] = await pricingService.listAndCountRuleTypes({
+   *     id: [
+   *       ruleTypeId
+   *     ]
+   *   }, {
+   *     select: ["name"]
+   *   })
+   *
+   *   // do something with the rule types or return them
+   * }
    * ```
    *
    * By default, only the first `15` records are retrieved. You can control pagination by specifying the `skip` and `take` properties of the `config` parameter:
    *
    * ```ts
-   * const [ruleTypes, count] =
-   *   await pricingModuleService.listAndCountRuleTypes(
-   *     {
-   *       id: ["rul-typ_123", "rul-typ_321"],
-   *     },
-   *     {
-   *       relations: ["price_sets"],
-   *       take: 20,
-   *       skip: 2,
-   *     }
-   *   )
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function retrieveRuleTypes (ruleTypeId: string, skip: number, take: number) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const [ruleTypes, count] = await pricingService.listAndCountRuleTypes({
+   *     id: [
+   *       ruleTypeId
+   *     ]
+   *   }, {
+   *     select: ["name"],
+   *     skip,
+   *     take
+   *   })
+   *
+   *   // do something with the rule types or return them
+   * }
+   * ```
+   *
+   * You can also use the `$and` or `$or` properties of the `filter` parameter to use and/or conditions in your filters. For example:
+   *
+   * ```ts
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function retrieveRuleTypes (ruleTypeId: string[], name: string[], skip: number, take: number) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const [ruleTypes, count] = await pricingService.listAndCountRuleTypes({
+   *     $and: [
+   *       {
+   *         id: ruleTypeId
+   *       },
+   *       {
+   *         name
+   *       }
+   *     ]
+   *   }, {
+   *     select: ["name"],
+   *     skip,
+   *     take
+   *   })
+   *
+   *   // do something with the rule types or return them
+   * }
    * ```
    */
   listAndCountRuleTypes(
@@ -813,16 +1167,22 @@ export interface IPricingModuleService extends IModuleService {
    * @returns {Promise<RuleTypeDTO[]>} The list of created rule types.
    *
    * @example
-   * const ruleTypes = await pricingModuleService.createRuleTypes([
-   *   {
-   *     name: "Region",
-   *     rule_attribute: "region_id",
-   *   },
-   *   {
-   *     name: "Customer Group",
-   *     rule_attribute: "customer_group_id",
-   *   },
-   * ])
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function createRuleTypes () {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const ruleTypes = await pricingService.createRuleTypes([
+   *     {
+   *       name: "Region",
+   *       rule_attribute: "region_id"
+   *     }
+   *   ])
+   *
+   *   // do something with the rule types or return them
+   * }
    */
   createRuleTypes(
     data: CreateRuleTypeDTO[],
@@ -837,16 +1197,22 @@ export interface IPricingModuleService extends IModuleService {
    * @returns {Promise<RuleTypeDTO[]>} The list of updated rule types.
    *
    * @example
-   * const ruleTypes = await pricingModuleService.updateRuleTypes([
-   *   {
-   *     id: "rul-typ_123",
-   *     name: "Region",
-   *   },
-   *   {
-   *     id: "rul-typ_321",
-   *     name: "Customer Group",
-   *   },
-   * ])
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function updateRuleTypes (ruleTypeId: string) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const ruleTypes = await pricingService.updateRuleTypes([
+   *     {
+   *       id: ruleTypeId,
+   *       name: "Region",
+   *     }
+   *   ])
+   *
+   *   // do something with the rule types or return them
+   * }
    */
   updateRuleTypes(
     data: UpdateRuleTypeDTO[],
@@ -861,10 +1227,15 @@ export interface IPricingModuleService extends IModuleService {
    * @returns {Promise<void>} Resolves once the rule types are deleted.
    *
    * @example
-   * const ruleTypes = await pricingModuleService.deleteRuleTypes([
-   *   "rul-typ_123",
-   *   "rul-typ_321",
-   * ])
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function deleteRuleTypes (ruleTypeId: string) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   await pricingService.deleteRuleTypes([ruleTypeId])
+   * }
    */
   deleteRuleTypes(ruleTypeIds: string[], sharedContext?: Context): Promise<void>
 
@@ -883,37 +1254,90 @@ export interface IPricingModuleService extends IModuleService {
    * To retrieve a list of prices using their IDs:
    *
    * ```ts
-   * const prices = await pricingModuleService.listPrices({
-   *   id: ["price_123", "price_321"],
-   * })
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function retrievePrices (id: string) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const prices = await pricingService.listPrices({
+   *     id: [id]
+   *   })
+   *
+   *   // do something with the prices or return them
+   * }
    * ```
    *
    * To specify relations that should be retrieved within the prices:
    *
    * ```ts
-   * const prices = await pricingModuleService.listPrices(
-   *   {
-   *     id: ["price_123", "price_321"],
-   *   },
-   *   {
-   *     relations: ["price_rules"],
-   *   }
-   * )
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function retrievePrices (id: string) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const prices = await pricingService.listPrices({
+   *     id: [id]
+   *   }, {
+   *     relations: ["price_rules"]
+   *   })
+   *
+   *   // do something with the prices or return them
+   * }
    * ```
    *
    * By default, only the first `15` records are retrieved. You can control pagination by specifying the `skip` and `take` properties of the `config` parameter:
    *
    * ```ts
-   * const prices = await pricingModuleService.listPrices(
-   *   {
-   *     id: ["price_123", "price_321"],
-   *   },
-   *   {
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function retrievePrices (id: string, skip: number, take: number) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const prices = await pricingService.listPrices({
+   *     id: [id]
+   *   }, {
    *     relations: ["price_rules"],
-   *     take: 20,
-   *     skip: 2,
-   *   }
-   * )
+   *     skip,
+   *     take
+   *   })
+   *
+   *   // do something with the prices or return them
+   * }
+   * ```
+   *
+   * You can also use the `$and` or `$or` properties of the `filter` parameter to use and/or conditions in your filters. For example:
+   *
+   * ```ts
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function retrievePrices (ids: string[], titles: string[], skip: number, take: number) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const prices = await pricingService.listPrices({
+   *     $and: [
+   *       {
+   *         id: ids
+   *       },
+   *       {
+   *         title: titles
+   *       }
+   *     ]
+   *   }, {
+   *     relations: ["price_rules"],
+   *     skip,
+   *     take
+   *   })
+   *
+   *   // do something with the prices or return them
+   * }
    * ```
    */
   listPrices(
@@ -922,50 +1346,12 @@ export interface IPricingModuleService extends IModuleService {
     sharedContext?: Context
   ): Promise<PriceDTO[]>
 
-  /**
-   * This method soft deletes prices by their IDs.
-   *
-   * @param {string[]} priceIds - The IDs of the prices.
-   * @param {SoftDeleteReturn<TReturnableLinkableKeys>} config - An object that is used to specify an entity's related entities that should be soft-deleted when the main entity is soft-deleted.
-   * @param {Context} sharedContext - A context used to share resources, such as transaction manager, between the application and the module.
-   * @returns {Promise<void | Record<string, string[]>>} An object that includes the IDs of related records that were also soft deleted, such as the ID of the associated price rules.
-   * The object's keys are the ID attribute names of the price entity's relations, such as `price_rule_id`, and its value is an array of strings, each being the ID of a record associated
-   * with the price through this relation, such as the IDs of associated price rule.
-   *
-   * If there are no related records, the promise resolves to `void`.
-   *
-   * @example
-   * await pricingModuleService.softDeletePrices([
-   *   "price_123",
-   *   "price_321",
-   * ])
-   */
   softDeletePrices<TReturnableLinkableKeys extends string = string>(
     priceIds: string[],
     config?: SoftDeleteReturn<TReturnableLinkableKeys>,
     sharedContext?: Context
   ): Promise<Record<string, string[]> | void>
 
-  /**
-   * This method restores soft deleted prices by their IDs.
-   *
-   * @param {string[]} priceIds - The IDs of the prices.
-   * @param {RestoreReturn<TReturnableLinkableKeys>} config - Configurations determining which relations to restore along with each of the prices. You can pass to its `returnLinkableKeys`
-   * property any of the price's relation attribute names, such as price_rules`.
-   * @param {Context} sharedContext - A context used to share resources, such as transaction manager, between the application and the module.
-   * @returns {Promise<void | Record<string, string[]>>} An object that includes the IDs of related records that were restored, such as the ID of associated price rules.
-   * The object's keys are the ID attribute names of the prices entity's relations, such as `price_rule_id`,
-   * and its value is an array of strings, each being the ID of the record associated with the prices through this relation,
-   * such as the IDs of associated price rules.
-   *
-   * If there are no related records restored, the promise resolves to `void`.
-   *
-   * @example
-   * await pricingModuleService.restorePrices([
-   *   "price_123",
-   *   "price_321",
-   * ])
-   */
   restorePrices<TReturnableLinkableKeys extends string = string>(
     priceIds: string[],
     config?: RestoreReturn<TReturnableLinkableKeys>,
@@ -988,39 +1374,90 @@ export interface IPricingModuleService extends IModuleService {
    * To retrieve a list of prices using their IDs:
    *
    * ```ts
-   * const [prices, count] = await pricingModuleService.listPrices(
-   *   {
-   *     id: ["price_123", "price_321"],
-   *   }
-   * )
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function retrievePrices (id: string) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const [prices, count] = await pricingService.listAndCountPrices({
+   *     id: [id]
+   *   })
+   *
+   *   // do something with the prices or return them
+   * }
    * ```
    *
    * To specify relations that should be retrieved within the prices:
    *
    * ```ts
-   * const [prices, count] = await pricingModuleService.listPrices(
-   *   {
-   *     id: ["price_123", "price_321"],
-   *   },
-   *   {
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function retrievePrices (id: string) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const [prices, count] = await pricingService.listAndCountPrices({
+   *     id: [id]
+   *   }, {
    *     relations: ["price_rules"],
-   *   }
-   * )
+   *   })
+   *
+   *   // do something with the prices or return them
+   * }
    * ```
    *
    * By default, only the first `15` records are retrieved. You can control pagination by specifying the `skip` and `take` properties of the `config` parameter:
    *
    * ```ts
-   * const [prices, count] = await pricingModuleService.listPrices(
-   *   {
-   *     id: ["price_123", "price_321"],
-   *   },
-   *   {
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function retrievePrices (id: string, skip: number, take: number) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const [prices, count] = await pricingService.listAndCountPrices({
+   *     id: [id]
+   *   }, {
    *     relations: ["price_rules"],
-   *     take: 20,
-   *     skip: 2,
-   *   }
-   * )
+   *     skip,
+   *     take
+   *   })
+   *
+   *   // do something with the prices or return them
+   * }
+   * ```
+   *
+   * You can also use the `$and` or `$or` properties of the `filter` parameter to use and/or conditions in your filters. For example:
+   *
+   * ```ts
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function retrievePrices (ids: string[], titles: string[], skip: number, take: number) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const [prices, count] = await pricingService.listAndCountPrices({
+   *     $and: [
+   *       {
+   *         id: ids
+   *       },
+   *       {
+   *         title: titles
+   *       }
+   *     ]
+   *   }, {
+   *     relations: ["price_rules"],
+   *     skip,
+   *     take
+   *   })
+   *
+   *   // do something with the prices or return them
+   * }
    * ```
    */
   listAndCountPrices(
@@ -1043,17 +1480,35 @@ export interface IPricingModuleService extends IModuleService {
    * A simple example that retrieves a price rule by its ID:
    *
    * ```ts
-   * const priceRule =
-   *   await pricingModuleService.retrievePriceRule("prule_123")
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function retrievePriceRule (id: string) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const priceRule = await pricingService.retrievePriceRule(id)
+   *
+   *   // do something with the price rule or return it
+   * }
    * ```
    *
    * To specify relations that should be retrieved:
    *
    * ```ts
-   * const priceRule =
-   *   await pricingModuleService.retrievePriceRule("prule_123", {
-   *     relations: ["price_set"],
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function retrievePriceRule (id: string) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const priceRule = await pricingService.retrievePriceRule(id, {
+   *     relations: ["price_set"]
    *   })
+   *
+   *   // do something with the price rule or return it
+   * }
    * ```
    */
   retrievePriceRule(
@@ -1077,37 +1532,90 @@ export interface IPricingModuleService extends IModuleService {
    * To retrieve a list of price rules using their IDs:
    *
    * ```ts
-   * const priceRules = await pricingModuleService.listPriceRules({
-   *   id: ["prule_123", "prule_321"],
-   * })
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function retrievePriceRules (id: string) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const priceRules = await pricingService.listPriceRules({
+   *     id: [id]
+   *   })
+   *
+   *   // do something with the price rules or return them
+   * }
    * ```
    *
    * To specify relations that should be retrieved within the price rules:
    *
    * ```ts
-   * const priceRules = await pricingModuleService.listPriceRules(
-   *   {
-   *     id: ["prule_123", "prule_321"],
-   *   },
-   *   {
-   *     relations: ["price_set"],
-   *   }
-   * )
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function retrievePriceRules (id: string) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const priceRules = await pricingService.listPriceRules({
+   *     id: [id],
+   *   }, {
+   *     relations: ["price_set"]
+   *   })
+   *
+   *   // do something with the price rules or return them
+   * }
    * ```
    *
    * By default, only the first `15` records are retrieved. You can control pagination by specifying the `skip` and `take` properties of the `config` parameter:
    *
    * ```ts
-   * const priceRules = await pricingModuleService.listPriceRules(
-   *   {
-   *     id: ["prule_123", "prule_321"],
-   *   },
-   *   {
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function retrievePriceRules (id: string, skip: number, take: number) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const priceRules = await pricingService.listPriceRules({
+   *     id: [id],
+   *   }, {
    *     relations: ["price_set"],
-   *     take: 20,
-   *     skip: 2,
-   *   }
-   * )
+   *     skip,
+   *     take
+   *   })
+   *
+   *   // do something with the price rules or return them
+   * }
+   * ```
+   *
+   * You can also use the `$and` or `$or` properties of the `filter` parameter to use and/or conditions in your filters. For example:
+   *
+   * ```ts
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function retrievePriceRules (ids: string[], name: string[], skip: number, take: number) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const priceRules = await pricingService.listPriceRules({
+   *     $and: [
+   *       {
+   *         id: ids
+   *       },
+   *       {
+   *         name
+   *       }
+   *     ]
+   *   }, {
+   *     relations: ["price_set"],
+   *     skip,
+   *     take
+   *   })
+   *
+   *   // do something with the price rules or return them
+   * }
    * ```
    */
   listPriceRules(
@@ -1131,40 +1639,90 @@ export interface IPricingModuleService extends IModuleService {
    * To retrieve a list of price rules using their IDs:
    *
    * ```ts
-   * const [priceRules, count] =
-   *   await pricingModuleService.listAndCountPriceListRules({
-   *     id: ["prule_123", "prule_321"],
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function retrievePriceRules (id: string) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const [priceRules, count] = await pricingService.listAndCountPriceRules({
+   *     id: [id]
    *   })
+   *
+   *   // do something with the price rules or return them
+   * }
    * ```
    *
    * To specify relations that should be retrieved within the price rules:
    *
    * ```ts
-   * const [priceRules, count] =
-   *   await pricingModuleService.listAndCountPriceListRules(
-   *     {
-   *       id: ["prule_123", "prule_321"],
-   *     },
-   *     {
-   *       relations: ["price_set"],
-   *     }
-   *   )
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function retrievePriceRules (id: string) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const [priceRules, count] = await pricingService.listAndCountPriceRules({
+   *     id: [id],
+   *   }, {
+   *     relations: ["price_set"]
+   *   })
+   *
+   *   // do something with the price rules or return them
+   * }
    * ```
    *
    * By default, only the first `15` records are retrieved. You can control pagination by specifying the `skip` and `take` properties of the `config` parameter:
    *
    * ```ts
-   * const [priceRules, count] =
-   *   await pricingModuleService.listAndCountPriceListRules(
-   *     {
-   *       id: ["prule_123", "prule_321"],
-   *     },
-   *     {
-   *       relations: ["price_set"],
-   *       take: 20,
-   *       skip: 2,
-   *     }
-   *   )
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function retrievePriceRules (id: string, skip: number, take: number) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const [priceRules, count] = await pricingService.listAndCountPriceRules({
+   *     id: [id],
+   *   }, {
+   *     relations: ["price_set"],
+   *     skip,
+   *     take
+   *   })
+   *
+   *   // do something with the price rules or return them
+   * }
+   * ```
+   *
+   * You can also use the `$and` or `$or` properties of the `filter` parameter to use and/or conditions in your filters. For example:
+   *
+   * ```ts
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function retrievePriceRules (ids: string[], name: string[], skip: number, take: number) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const [priceRules, count] = await pricingService.listAndCountPriceRules({
+   *     $and: [
+   *       {
+   *         id: ids
+   *       },
+   *       {
+   *         name
+   *       }
+   *     ]
+   *   }, {
+   *     relations: ["price_set"],
+   *     skip,
+   *     take
+   *   })
+   *
+   *   // do something with the price rules or return them
+   * }
    * ```
    */
   listAndCountPriceRules(
@@ -1181,14 +1739,33 @@ export interface IPricingModuleService extends IModuleService {
    * @returns {Promise<PriceRuleDTO[]>} The list of created price rules.
    *
    * @example
-   * const priceRules =
-   *   await pricingModuleService.createPriceRules([
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function createPriceRules (
+   *   id: string,
+   *   priceSetId: string,
+   *   ruleTypeId: string,
+   *   value: string,
+   *   priceId: string,
+   *   priceListId: string
+   * ) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const priceRules = await pricingService.createPriceRules([
    *     {
-   *       value: "VIP",
-   *       rule_type_id: "rul-typ_123",
-   *       price_set_id: "pset_123",
-   *     },
+   *       id,
+   *       price_set_id: priceSetId,
+   *       rule_type_id: ruleTypeId,
+   *       value,
+   *       price_id: priceId,
+   *       price_list_id: priceListId
+   *     }
    *   ])
+   *
+   *   // do something with the price rules or return them
+   * }
    */
   createPriceRules(
     data: CreatePriceRuleDTO[],
@@ -1203,13 +1780,25 @@ export interface IPricingModuleService extends IModuleService {
    * @returns {Promise<PriceRuleDTO[]>} The list of updated price rules.
    *
    * @example
-   * const priceRules =
-   *   await pricingModuleService.updatePriceRules([
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function updatePriceRules (
+   *   id: string,
+   *   priceSetId: string,
+   * ) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const priceRules = await pricingService.updatePriceRules([
    *     {
-   *       id: "prule_123",
-   *       price_id: "price_123",
-   *     },
+   *       id,
+   *       price_set_id: priceSetId,
+   *     }
    *   ])
+   *
+   *   // do something with the price rules or return them
+   * }
    */
   updatePriceRules(
     data: UpdatePriceRuleDTO[],
@@ -1224,10 +1813,17 @@ export interface IPricingModuleService extends IModuleService {
    * @returns {Promise<void>} Resolves once the price rules are deleted.
    *
    * @example
-   * await pricingModuleService.deletePriceRules([
-   *   "prule_123",
-   *   "prule_321",
-   * ])
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function deletePriceRules (
+   *   id: string,
+   * ) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   await pricingService.deletePriceRules([id])
+   * }
    */
   deletePriceRules(
     priceRuleIds: string[],
@@ -1248,17 +1844,40 @@ export interface IPricingModuleService extends IModuleService {
    * A simple example that retrieves a price list by its ID:
    *
    * ```ts
-   * const priceList =
-   *   await pricingModuleService.retrievePriceList("plist_123")
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function retrievePriceList (priceListId: string) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const priceList = await pricingService.retrievePriceList(
+   *     priceListId
+   *   )
+   *
+   *   // do something with the price list or return it
+   * }
    * ```
    *
    * To specify relations that should be retrieved:
    *
    * ```ts
-   * const priceList =
-   *   await pricingModuleService.retrievePriceList("plist_123", {
-   *     relations: ["prices"],
-   *   })
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function retrievePriceList (priceListId: string) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const priceList = await pricingService.retrievePriceList(
+   *     priceListId,
+   *     {
+   *       relations: ["prices"]
+   *     }
+   *   )
+   *
+   *   // do something with the price list or return it
+   * }
    * ```
    */
   retrievePriceList(
@@ -1282,37 +1901,101 @@ export interface IPricingModuleService extends IModuleService {
    * To retrieve a list of price lists using their IDs:
    *
    * ```ts
-   * const priceLists = await pricingModuleService.listPriceLists({
-   *   id: ["plist_123", "plist_321"],
-   * })
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function listPriceLists (priceListIds: string[]) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const priceLists = await pricingService.listPriceLists(
+   *     {
+   *       id: priceListIds
+   *     },
+   *   )
+   *
+   *   // do something with the price lists or return them
+   * }
    * ```
    *
    * To specify relations that should be retrieved within the price lists:
    *
    * ```ts
-   * const priceLists = await pricingModuleService.listPriceLists(
-   *   {
-   *     id: ["plist_123", "plist_321"],
-   *   },
-   *   {
-   *     relations: ["prices"],
-   *   }
-   * )
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function listPriceLists (priceListIds: string[]) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const priceLists = await pricingService.listPriceLists(
+   *     {
+   *       id: priceListIds
+   *     },
+   *     {
+   *       relations: ["prices"]
+   *     }
+   *   )
+   *
+   *   // do something with the price lists or return them
+   * }
    * ```
    *
    * By default, only the first `15` records are retrieved. You can control pagination by specifying the `skip` and `take` properties of the `config` parameter:
    *
    * ```ts
-   * const priceLists = await pricingModuleService.listPriceLists(
-   *   {
-   *     id: ["plist_123", "plist_321"],
-   *   },
-   *   {
-   *     relations: ["prices"],
-   *     take: 20,
-   *     skip: 2,
-   *   }
-   * )
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function listPriceLists (priceListIds: string[], skip: number, take: number) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const priceLists = await pricingService.listPriceLists(
+   *     {
+   *       id: priceListIds
+   *     },
+   *     {
+   *       relations: ["prices"],
+   *       skip,
+   *       take
+   *     }
+   *   )
+   *
+   *   // do something with the price lists or return them
+   * }
+   * ```
+   *
+   * You can also use the `$and` or `$or` properties of the `filter` parameter to use and/or conditions in your filters. For example:
+   *
+   * ```ts
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function listPriceLists (priceListIds: string[], titles: string[], skip: number, take: number) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const priceLists = await pricingService.listPriceLists(
+   *     {
+   *       $and: [
+   *         {
+   *           id: priceListIds
+   *         },
+   *         {
+   *           title: titles
+   *         }
+   *       ]
+   *     },
+   *     {
+   *       relations: ["prices"],
+   *       skip,
+   *       take
+   *     }
+   *   )
+   *
+   *   // do something with the price lists or return them
+   * }
    * ```
    */
   listPriceLists(
@@ -1336,40 +2019,101 @@ export interface IPricingModuleService extends IModuleService {
    * To retrieve a list of price lists using their IDs:
    *
    * ```ts
-   * const [priceLists, count] =
-   *   await pricingModuleService.listAndCountPriceLists({
-   *     id: ["plist_123", "plist_321"],
-   *   })
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function retrievePriceLists (priceListIds: string[]) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const [priceLists, count] = await pricingService.listPriceLists(
+   *     {
+   *       id: priceListIds
+   *     },
+   *   )
+   *
+   *   // do something with the price lists or return them
+   * }
    * ```
    *
    * To specify relations that should be retrieved within the price lists:
    *
    * ```ts
-   * const [priceLists, count] =
-   *   await pricingModuleService.listAndCountPriceLists(
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function retrievePriceLists (priceListIds: string[]) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const [priceLists, count] = await pricingService.listPriceLists(
    *     {
-   *       id: ["plist_123", "plist_321"],
+   *       id: priceListIds
    *     },
    *     {
-   *       relations: ["prices"],
+   *       relations: ["prices"]
    *     }
    *   )
+   *
+   *   // do something with the price lists or return them
+   * }
    * ```
    *
    * By default, only the first `15` records are retrieved. You can control pagination by specifying the `skip` and `take` properties of the `config` parameter:
    *
    * ```ts
-   * const [priceLists, count] =
-   *   await pricingModuleService.listAndCountPriceLists(
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function retrievePriceLists (priceListIds: string[], skip: number, take: number) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const [priceLists, count] = await pricingService.listPriceLists(
    *     {
-   *       id: ["plist_123", "plist_321"],
+   *       id: priceListIds
    *     },
    *     {
    *       relations: ["prices"],
-   *       take: 20,
-   *       skip: 2,
+   *       skip,
+   *       take
    *     }
    *   )
+   *
+   *   // do something with the price lists or return them
+   * }
+   * ```
+   *
+   * You can also use the `$and` or `$or` properties of the `filter` parameter to use and/or conditions in your filters. For example:
+   *
+   * ```ts
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function retrievePriceLists (priceListIds: string[], titles: string[], skip: number, take: number) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const [priceLists, count] = await pricingService.listPriceLists(
+   *     {
+   *       $and: [
+   *         {
+   *           id: priceListIds
+   *         },
+   *         {
+   *           title: titles
+   *         }
+   *       ]
+   *     },
+   *     {
+   *       relations: ["prices"],
+   *       skip,
+   *       take
+   *     }
+   *   )
+   *
+   *   // do something with the price lists or return them
+   * }
    * ```
    */
   listAndCountPriceLists(
@@ -1386,18 +2130,22 @@ export interface IPricingModuleService extends IModuleService {
    * @returns {Promise<PriceListDTO[]>} The created price lists.
    *
    * @example
-   * const priceLists =
-   *   await pricingModuleService.createPriceLists([
-   *     {
-   *       title: "Sale 1",
-   *       description: "Summer sale",
-   *     },
-   *     {
-   *       title: "Sale 2",
-   *       description: "Winter sale",
-   *       starts_at: "2024-12-21",
-   *     },
-   *   ])
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function createPriceList (items: {
+   *   title: string
+   *   description: string
+   *   starts_at?: string
+   *   ends_at?: string
+   * }[]) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const priceList = await pricingService.createPriceLists(items)
+   *
+   *   // do something with the price lists or return them
+   * }
    */
   createPriceLists(
     data: CreatePriceListDTO[],
@@ -1407,22 +2155,28 @@ export interface IPricingModuleService extends IModuleService {
   /**
    * This method is used to update price lists.
    *
-   * @param {UpdatePriceListDTO[]} data - The attributes to update in each price list. The price list is identifed by the `id` field.
+   * @param {UpdatePriceListDTO[]} data - The attributes to update in each price list.
    * @param {Context} sharedContext - A context used to share resources, such as transaction manager, between the application and the module.
    * @returns {Promise<PriceListDTO[]>} The updated price lists.
    *
    * @example
-   * const priceLists =
-   *   await pricingModuleService.updatePriceLists([
-   *     {
-   *       id: "plist_123",
-   *       title: "Sale 1",
-   *     },
-   *     {
-   *       id: "plist_321",
-   *       description: "Winter sale",
-   *     },
-   *   ])
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function updatePriceLists (items: {
+   *   id: string
+   *   title: string
+   *   description: string
+   *   starts_at?: string
+   *   ends_at?: string
+   * }[]) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const priceList = await pricingService.updatePriceLists(items)
+   *
+   *   // do something with the price lists or return them
+   * }
    */
   updatePriceLists(
     data: UpdatePriceListDTO[],
@@ -1437,60 +2191,27 @@ export interface IPricingModuleService extends IModuleService {
    * @returns {Promise<void>} Resolves when the price lists are deleted successfully.
    *
    * @example
-   * await pricingModuleService.deletePriceLists([
-   *   "plist_123",
-   *   "plist_321",
-   * ])
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function deletePriceLists (ids: string[]) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   await pricingService.deletePriceLists(ids)
+   * }
    */
   deletePriceLists(
     priceListIds: string[],
     sharedContext?: Context
   ): Promise<void>
 
-  /**
-   * This method soft deletes price lists by their IDs.
-   *
-   * @param {string[]} priceListIds - The IDs of the price lists.
-   * @param {SoftDeleteReturn<TReturnableLinkableKeys>} config - An object that is used to specify an entity's related entities that should be soft-deleted when the main entity is soft-deleted.
-   * @param {Context} sharedContext - A context used to share resources, such as transaction manager, between the application and the module.
-   * @returns {Promise<void | Record<string, string[]>>} An object that includes the IDs of related records that were also soft deleted, such as the ID of the associated price list rules.
-   * The object's keys are the ID attribute names of the price list entity's relations, such as `price_list_rule_id`, and its value is an array of strings, each being the ID of a record associated
-   * with the price list through this relation, such as the IDs of associated price list rule.
-   *
-   * If there are no related records, the promise resolves to `void`.
-   *
-   * @example
-   * await pricingModuleService.softDeletePriceLists([
-   *   "plist_123",
-   *   "plist_321",
-   * ])
-   */
   softDeletePriceLists<TReturnableLinkableKeys extends string = string>(
     priceListIds: string[],
     config?: SoftDeleteReturn<TReturnableLinkableKeys>,
     sharedContext?: Context
   ): Promise<Record<string, string[]> | void>
 
-  /**
-   * This method restores a soft deleted price lists by its IDs.
-   *
-   * @param {string[]} priceListIds - The list of {summary}
-   * @param {RestoreReturn<TReturnableLinkableKeys>} config - Configurations determining which relations to restore along with each of the price lists. You can pass to its `returnLinkableKeys`
-   * property any of the price list's relation attribute names, such as `price_list_rules`.
-   * @param {Context} sharedContext - A context used to share resources, such as transaction manager, between the application and the module.
-   * @returns {Promise<void | Record<string, string[]>>} An object that includes the IDs of related records that were restored, such as the ID of associated price list rules.
-   * The object's keys are the ID attribute names of the price list entity's relations, such as `price_list_rule_id`,
-   * and its value is an array of strings, each being the ID of the record associated with the price list through this relation,
-   * such as the IDs of associated price list rules.
-   *
-   * If there are no related records restored, the promise resolves to `void`.
-   *
-   * @example
-   * await pricingModuleService.restorePriceLists([
-   *   "plist_123",
-   *   "plist_321",
-   * ])
-   */
   restorePriceLists<TReturnableLinkableKeys extends string = string>(
     priceListIds: string[],
     config?: RestoreReturn<TReturnableLinkableKeys>,
@@ -1511,22 +2232,40 @@ export interface IPricingModuleService extends IModuleService {
    * A simple example that retrieves a price list rule by its ID:
    *
    * ```ts
-   * const priceListRule =
-   *   await pricingModuleService.retrievePriceListRule(
-   *     "plrule_123"
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function retrievePriceListRule (priceListRuleId: string) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const priceListRule = await pricingService.retrievePriceListRule(
+   *     priceListRuleId
    *   )
+   *
+   *   // do something with the price list rule or return it
+   * }
    * ```
    *
    * To specify relations that should be retrieved:
    *
    * ```ts
-   * const priceListRule =
-   *   await pricingModuleService.retrievePriceListRule(
-   *     "plrule_123",
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function retrievePriceListRule (priceListRuleId: string) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const priceListRule = await pricingService.retrievePriceListRule(
+   *     priceListRuleId,
    *     {
-   *       relations: ["price_list"],
+   *       relations: ["price_list"]
    *     }
    *   )
+   *
+   *   // do something with the price list rule or return it
+   * }
    * ```
    */
   retrievePriceListRule(
@@ -1550,40 +2289,101 @@ export interface IPricingModuleService extends IModuleService {
    * To retrieve a list of price list vs using their IDs:
    *
    * ```ts
-   * const priceListRules =
-   *   await pricingModuleService.listPriceListRules({
-   *     id: ["plrule_123", "plrule_321"],
-   *   })
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function listPriceListRules (priceListRuleIds: string[]) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const priceListRules = await pricingService.listPriceListRules(
+   *     {
+   *       id: priceListRuleIds
+   *     },
+   *   )
+   *
+   *   // do something with the price list rules or return them
+   * }
    * ```
    *
    * To specify relations that should be retrieved within the price list rules:
    *
    * ```ts
-   * const priceListRules =
-   *   await pricingModuleService.listPriceListRules(
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function listPriceListRules (priceListRuleIds: string[]) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const priceListRules = await pricingService.listPriceListRules(
    *     {
-   *       id: ["plrule_123", "plrule_321"],
+   *       id: priceListRuleIds
    *     },
    *     {
-   *       relations: ["price_list_rule_values"],
+   *       relations: ["price_list_rule_values"]
    *     }
    *   )
+   *
+   *   // do something with the price list rules or return them
+   * }
    * ```
    *
    * By default, only the first `15` records are retrieved. You can control pagination by specifying the `skip` and `take` properties of the `config` parameter:
    *
    * ```ts
-   * const priceListRules =
-   *   await pricingModuleService.listPriceListRules(
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function listPriceListRules (priceListRuleIds: string[], skip: number, take: number) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const priceListRules = await pricingService.listPriceListRules(
    *     {
-   *       id: ["plrule_123", "plrule_321"],
+   *       id: priceListRuleIds
    *     },
    *     {
    *       relations: ["price_list_rule_values"],
-   *       take: 20,
-   *       skip: 2,
+   *       skip,
+   *       take
    *     }
    *   )
+   *
+   *   // do something with the price list rules or return them
+   * }
+   * ```
+   *
+   * You can also use the `$and` or `$or` properties of the `filter` parameter to use and/or conditions in your filters. For example:
+   *
+   * ```ts
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function listPriceListRules (priceListRuleIds: string[], ruleTypeIDs: string[], skip: number, take: number) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const priceListRules = await pricingService.listPriceListRules(
+   *     {
+   *       $and: [
+   *         {
+   *           id: priceListRuleIds
+   *         },
+   *         {
+   *           rule_types: ruleTypeIDs
+   *         }
+   *       ]
+   *     },
+   *     {
+   *       relations: ["price_list_rule_values"],
+   *       skip,
+   *       take
+   *     }
+   *   )
+   *
+   *   // do something with the price list rules or return them
+   * }
    * ```
    */
   listPriceListRules(
@@ -1607,40 +2407,101 @@ export interface IPricingModuleService extends IModuleService {
    * To retrieve a list of price list vs using their IDs:
    *
    * ```ts
-   * const [priceListRules, count] =
-   *   await pricingModuleService.listAndCountPriceListRules({
-   *     id: ["plrule_123", "plrule_321"],
-   *   })
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function listAndCountPriceListRules (priceListRuleIds: string[]) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const [priceListRules, count] = await pricingService.listAndCountPriceListRules(
+   *     {
+   *       id: priceListRuleIds
+   *     },
+   *   )
+   *
+   *   // do something with the price list rules or return them
+   * }
    * ```
    *
    * To specify relations that should be retrieved within the price list rules:
    *
    * ```ts
-   * const [priceListRules, count] =
-   *   await pricingModuleService.listAndCountPriceListRules(
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function listAndCountPriceListRules (priceListRuleIds: string[]) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const [priceListRules, count] = await pricingService.listAndCountPriceListRules(
    *     {
-   *       id: ["plrule_123", "plrule_321"],
+   *       id: priceListRuleIds
    *     },
    *     {
-   *       relations: ["price_list_rule_values"],
+   *       relations: ["price_list_rule_values"]
    *     }
    *   )
+   *
+   *   // do something with the price list rules or return them
+   * }
    * ```
    *
    * By default, only the first `15` records are retrieved. You can control pagination by specifying the `skip` and `take` properties of the `config` parameter:
    *
    * ```ts
-   * const [priceListRules, count] =
-   *   await pricingModuleService.listAndCountPriceListRules(
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function listAndCountPriceListRules (priceListRuleIds: string[], skip: number, take: number) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const [priceListRules, count] = await pricingService.listAndCountPriceListRules(
    *     {
-   *       id: ["plrule_123", "plrule_321"],
+   *       id: priceListRuleIds
    *     },
    *     {
    *       relations: ["price_list_rule_values"],
-   *       take: 20,
-   *       skip: 2,
+   *       skip,
+   *       take
    *     }
    *   )
+   *
+   *   // do something with the price list rules or return them
+   * }
+   * ```
+   *
+   * You can also use the `$and` or `$or` properties of the `filter` parameter to use and/or conditions in your filters. For example:
+   *
+   * ```ts
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function listAndCountPriceListRules (priceListRuleIds: string[], ruleTypeIDs: string[], skip: number, take: number) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const [priceListRules, count] = await pricingService.listAndCountPriceListRules(
+   *     {
+   *       $and: [
+   *         {
+   *           id: priceListRuleIds
+   *         },
+   *         {
+   *           rule_types: ruleTypeIDs
+   *         }
+   *       ]
+   *     },
+   *     {
+   *       relations: ["price_list_rule_values"],
+   *       skip,
+   *       take
+   *     }
+   *   )
+   *
+   *   // do something with the price list rules or return them
+   * }
    * ```
    */
   listAndCountPriceListRules(
@@ -1657,13 +2518,20 @@ export interface IPricingModuleService extends IModuleService {
    * @returns {Promise<PriceListRuleDTO[]>} The created price list rules.
    *
    * @example
-   * const priceListRules =
-   *   await pricingModuleService.createPriceListRules([
-   *     {
-   *       rule_type_id: "rul-typ_123",
-   *       price_list_id: "plist_123",
-   *     },
-   *   ])
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function createPriceListRules (items: {
+   *   rule_type_id: string
+   *   price_list_id: string
+   * }[]) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const priceListRules = await pricingService.createPriceListRules(items)
+   *
+   *   // do something with the price list rule or return them
+   * }
    */
   createPriceListRules(
     data: CreatePriceListRuleDTO[],
@@ -1673,18 +2541,26 @@ export interface IPricingModuleService extends IModuleService {
   /**
    * This method is used to update price list rules.
    *
-   * @param {UpdatePriceListRuleDTO[]} data - The attributes to update for each price list rule. The price list rule is identified by the `id` property.
+   * @param {UpdatePriceListRuleDTO[]} data - The attributes to update for each price list rule.
    * @param {Context} sharedContext - A context used to share resources, such as transaction manager, between the application and the module.
    * @returns {Promise<PriceListRuleDTO[]>} The updated price list rules.
    *
    * @example
-   * const priceListRules =
-   *   await pricingModuleService.updatePriceListRules([
-   *     {
-   *       id: "plrule_123",
-   *       rule_type_id: "rul-typ_123",
-   *     },
-   *   ])
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function updatePriceListRules (items: {
+   *   id: string
+   *   rule_type_id?: string
+   *   price_list_id?: string
+   * }[]) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const priceListRules = await pricingService.updatePriceListRules(items)
+   *
+   *   // do something with the price list rule or return them
+   * }
    */
   updatePriceListRules(
     data: UpdatePriceListRuleDTO[],
@@ -1699,10 +2575,15 @@ export interface IPricingModuleService extends IModuleService {
    * @returns {Promise<void>} Resolves successfully when the price list rules are deleted.
    *
    * @example
-   * await pricingModuleService.deletePriceListRules([
-   *   "plrule_123",
-   *   "plrule_321",
-   * ])
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function deletePriceListRules (priceListRuleIds: string[]) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   await pricingService.deletePriceListRules(priceListRuleIds)
+   * }
    */
   deletePriceListRules(
     priceListRuleIds: string[],
@@ -1717,70 +2598,59 @@ export interface IPricingModuleService extends IModuleService {
    * @returns {Promise<PriceListDTO[]>} The updated price lists.
    *
    * @example
-   * const priceLists =
-   *   await pricingModuleService.addPriceListPrices([
-   *     {
-   *       price_list_id: "plist_123",
-   *       prices: [
-   *         {
-   *           currency_code: "usd",
-   *           amount: 500,
-   *           price_set_id: "pset_123",
-   *         },
-   *       ],
-   *     },
-   *   ])
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function addPriceListPrices (items: {
+   *   priceListId: string,
+   *   prices: {
+   *     currency_code: string,
+   *     amount: number,
+   *     price_set_id: string
+   *   }[]
+   * }[]) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const priceLists = await pricingService.addPriceListPrices(items)
+   *
+   *   // do something with the price lists or return them
+   * }
    */
   addPriceListPrices(
     data: AddPriceListPricesDTO[],
     sharedContext?: Context
-  ): Promise<PriceDTO[]>
+  ): Promise<PriceListDTO[]>
 
-  /**
-   * This method updates existing price list's prices.
-   *
-   * @param {UpdatePriceListPricesDTO[]} data - The attributes to update in a price list's prices. The price list's ID is specified
-   * in the `price_list_id` field.
-   * @param {Context} sharedContext - A context used to share resources, such as transaction manager, between the application and the module.
-   * @returns {Promise<PriceDTO[]>} The updated price list's prices.
-   *
-   * @example
-   * const priceLists =
-   *   await pricingModuleService.updatePriceListPrices([
-   *     {
-   *       price_list_id: "plist_123",
-   *       prices: [
-   *         {
-   *           id: "price_123",
-   *           currency_code: "usd",
-   *           amount: 500,
-   *           price_set_id: "pset_123",
-   *         },
-   *       ],
-   *     },
-   *   ])
-   */
   updatePriceListPrices(
     data: UpdatePriceListPricesDTO[],
     sharedContext?: Context
-  ): Promise<PriceDTO[]>
+  ): Promise<PriceListDTO[]>
 
   /**
-   * This method is used to set the rules of a price list. Previous rules are removed.
+   * This method is used to set the rules of a price list.
    *
-   * @param {SetPriceListRulesDTO} data - The rules to set for a price list. The price list is identified by the
-   * `price_list_id` property.
+   * @param {SetPriceListRulesDTO} data - The rules to set for a price list.
    * @param {Context} sharedContext - A context used to share resources, such as transaction manager, between the application and the module.
-   * @returns {Promise<PriceDTO>} The updated price list's prices.
+   * @returns {Promise<PriceListDTO>} The updated price lists.
    *
    * @example
-   * const priceList =
-   *   await pricingModuleService.setPriceListRules({
-   *     price_list_id: "plist_123",
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function setPriceListRules (priceListId: string) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const priceList = await pricingService.setPriceListRules({
+   *     priceListId,
    *     rules: {
-   *       region_id: "reg_123",
-   *     },
+   *       region_id: "US"
+   *     }
    *   })
+   *
+   *   // do something with the price list or return it
+   * }
    */
   setPriceListRules(
     data: SetPriceListRulesDTO,
@@ -1790,35 +2660,30 @@ export interface IPricingModuleService extends IModuleService {
   /**
    * This method is used to remove rules from a price list.
    *
-   * @param {RemovePriceListRulesDTO} data - The rules to remove from a price list. The price list is identified by the
-   * `price_list_id` property.
+   * @param {RemovePriceListRulesDTO} data - The rules to remove from a price list.
    * @param {Context} sharedContext - A context used to share resources, such as transaction manager, between the application and the module.
    * @returns {Promise<PriceListDTO>} The updated price lists.
    *
    * @example
-   * const priceList =
-   *   await pricingModuleService.removePriceListRules({
-   *     price_list_id: "plist_123",
-   *     rules: ["region_id"],
+   * import {
+   *   initialize as initializePricingModule,
+   * } from "@medusajs/pricing"
+   *
+   * async function setPriceListRules (priceListId: string) {
+   *   const pricingService = await initializePricingModule()
+   *
+   *   const priceList = await pricingService.removePriceListRules({
+   *     priceListId,
+   *     rules: ["region_id"]
    *   })
+   *
+   *   // do something with the price list or return it
+   * }
    */
   removePriceListRules(
     data: RemovePriceListRulesDTO,
     sharedContext?: Context
   ): Promise<PriceListDTO>
 
-  /**
-   * This method deletes prices by their IDs.
-   *
-   * @param {string[]} ids - The IDs of the prices.
-   * @param {Context} sharedContext - A context used to share resources, such as transaction manager, between the application and the module.
-   * @returns {Promise<void>} Resolves when the prices are deleted successfully.
-   *
-   * @example
-   * await pricingModuleService.removePrices([
-   *   "price_123",
-   *   "price_321",
-   * ])
-   */
   removePrices(ids: string[], sharedContext?: Context): Promise<void>
 }

@@ -17,6 +17,7 @@ export const defaultAdminStockLocationFields = [
 
 export const retrieveTransformQueryConfig = {
   defaults: defaultAdminStockLocationFields,
+  allowed: defaultAdminStockLocationFields,
   isList: false,
 }
 

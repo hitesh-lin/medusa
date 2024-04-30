@@ -106,7 +106,7 @@ moduleIntegrationTestRunner({
             ],
           }
           await expect(service.create(customerData)).rejects.toThrow(
-            /Customer address with customer_id: .*? already exists./
+            "A default shipping address already exists"
           )
         })
 
@@ -727,9 +727,7 @@ moduleIntegrationTestRunner({
               country_code: "US",
               is_default_shipping: true,
             })
-          ).rejects.toThrow(
-            /Customer address with customer_id: .*? already exists./
-          )
+          ).rejects.toThrow("A default shipping address already exists")
         })
 
         it("should only be possible to add one default billing address per customer", async () => {
@@ -763,9 +761,7 @@ moduleIntegrationTestRunner({
               country_code: "US",
               is_default_billing: true,
             })
-          ).rejects.toThrow(
-            /Customer address with customer_id: .*? already exists./
-          )
+          ).rejects.toThrow("A default billing address already exists")
         })
       })
 
@@ -903,9 +899,7 @@ moduleIntegrationTestRunner({
 
           await expect(
             service.updateAddresses(address.id, { is_default_shipping: true })
-          ).rejects.toThrow(
-            /Customer address with customer_id: .*? already exists./
-          )
+          ).rejects.toThrow("A default shipping address already exists")
         })
       })
 

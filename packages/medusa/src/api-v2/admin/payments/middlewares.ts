@@ -1,28 +1,24 @@
+import { transformBody, transformQuery } from "../../../api/middlewares"
 import { MiddlewareRoute } from "../../../types/middlewares"
 import { authenticate } from "../../../utils/authenticate-middleware"
-import { unlessPath } from "../../utils/unless-path"
-import { validateAndTransformBody } from "../../utils/validate-body"
-import { validateAndTransformQuery } from "../../utils/validate-query"
 import * as queryConfig from "./query-config"
 import {
-  AdminCreatePaymentCapture,
-  AdminCreatePaymentRefund,
-  AdminGetPaymentParams,
-  AdminGetPaymentProvidersParams,
   AdminGetPaymentsParams,
+  AdminPostPaymentsCapturesReq,
+  AdminPostPaymentsRefundsReq,
 } from "./validators"
 
 export const adminPaymentRoutesMiddlewares: MiddlewareRoute[] = [
   {
     method: "ALL",
     matcher: "/admin/payments",
-    middlewares: [authenticate("admin", ["session", "bearer", "api-key"])],
+    middlewares: [authenticate("admin", ["session", "bearer"])],
   },
   {
     method: ["GET"],
     matcher: "/admin/payments",
     middlewares: [
-      validateAndTransformQuery(
+      transformQuery(
         AdminGetPaymentsParams,
         queryConfig.listTransformQueryConfig
       ),
@@ -30,47 +26,22 @@ export const adminPaymentRoutesMiddlewares: MiddlewareRoute[] = [
   },
   {
     method: ["GET"],
-    matcher: "/admin/payments/payment-providers",
-    middlewares: [
-      validateAndTransformQuery(
-        AdminGetPaymentProvidersParams,
-        queryConfig.listTransformPaymentProvidersQueryConfig
-      ),
-    ],
-  },
-  {
-    method: ["GET"],
     matcher: "/admin/payments/:id",
     middlewares: [
-      unlessPath(
-        /.*\/payments\/payment-providers/,
-        validateAndTransformQuery(
-          AdminGetPaymentParams,
-          queryConfig.retrieveTransformQueryConfig
-        )
+      transformQuery(
+        AdminGetPaymentsParams,
+        queryConfig.retrieveTransformQueryConfig
       ),
     ],
   },
   {
     method: ["POST"],
     matcher: "/admin/payments/:id/capture",
-    middlewares: [
-      validateAndTransformBody(AdminCreatePaymentCapture),
-      validateAndTransformQuery(
-        AdminGetPaymentParams,
-        queryConfig.retrieveTransformQueryConfig
-      ),
-    ],
+    middlewares: [transformBody(AdminPostPaymentsCapturesReq)],
   },
   {
     method: ["POST"],
     matcher: "/admin/payments/:id/refund",
-    middlewares: [
-      validateAndTransformBody(AdminCreatePaymentRefund),
-      validateAndTransformQuery(
-        AdminGetPaymentParams,
-        queryConfig.retrieveTransformQueryConfig
-      ),
-    ],
+    middlewares: [transformBody(AdminPostPaymentsRefundsReq)],
   },
 ]

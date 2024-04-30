@@ -1,9 +1,10 @@
 import { deleteTaxRateRulesWorkflow } from "@medusajs/core-flows"
+import { remoteQueryObjectFromString } from "@medusajs/utils"
+import { defaultAdminTaxRatesFields } from "../../../../../../api/routes/admin/tax-rates"
 import {
   AuthenticatedMedusaRequest,
   MedusaResponse,
 } from "../../../../../../types/routing"
-import { refetchTaxRate } from "../../../helpers"
 
 export const DELETE = async (
   req: AuthenticatedMedusaRequest,
@@ -18,16 +19,15 @@ export const DELETE = async (
     throw errors[0].error
   }
 
-  const taxRate = await refetchTaxRate(
-    req.params.id,
-    req.scope,
-    req.remoteQueryConfig.fields
-  )
+  const remoteQuery = req.scope.resolve("remoteQuery")
 
-  res.status(200).json({
-    id: req.params.rule_id,
-    object: "tax_rate_rule",
-    deleted: true,
-    parent: taxRate,
+  const queryObject = remoteQueryObjectFromString({
+    entryPoint: "tax_rate",
+    variables: { id: req.params.id },
+    fields: defaultAdminTaxRatesFields,
   })
+
+  const [taxRate] = await remoteQuery(queryObject)
+
+  res.status(200).json({ tax_rate: taxRate })
 }

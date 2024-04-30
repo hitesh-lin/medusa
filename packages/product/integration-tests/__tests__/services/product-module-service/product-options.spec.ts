@@ -103,8 +103,6 @@ moduleIntegrationTestRunner({
               product_id: productOne.id,
               product: {
                 id: productOne.id,
-                type_id: null,
-                collection_id: null,
               },
             },
           ])
@@ -177,8 +175,6 @@ moduleIntegrationTestRunner({
               product_id: productOne.id,
               product: {
                 id: productOne.id,
-                type_id: null,
-                collection_id: null,
               },
             },
           ])
@@ -207,12 +203,8 @@ moduleIntegrationTestRunner({
               id: optionOne.id,
               product: {
                 id: "product-1",
-                handle: "product-1",
                 title: "product 1",
-                type_id: null,
-                collection_id: null,
               },
-              product_id: "product-1",
             })
           )
         })
@@ -266,13 +258,17 @@ moduleIntegrationTestRunner({
           let error
 
           try {
-            await service.updateOptions("does-not-exist", {})
+            await service.upsertOptions([
+              {
+                id: "does-not-exist",
+              },
+            ])
           } catch (e) {
             error = e
           }
 
           expect(error.message).toEqual(
-            `ProductOption with id: does-not-exist was not found`
+            `Option with id "does-not-exist" does not exist, but was referenced in the update request`
           )
         })
       })

@@ -52,13 +52,7 @@ export async function runCreateDb({
   return newClient
 }
 
-async function getForDbName({
-  dbName,
-  verbose = false,
-}: {
-  dbName: string
-  verbose?: boolean
-}): Promise<{
+async function getForDbName(dbName: string): Promise<{
   client: pg.Client
   dbConnectionString: string
 }> {
@@ -72,12 +66,6 @@ async function getForDbName({
       password: postgresPassword,
     })
   } catch (e) {
-    if (verbose) {
-      logMessage({
-        message: `The following error occured when connecting to the database: ${e}`,
-        type: "verbose",
-      })
-    }
     // ask for the user's postgres credentials
     const answers = await inquirer.prompt([
       {
@@ -126,13 +114,7 @@ async function getForDbName({
   }
 }
 
-async function getForDbUrl({
-  dbUrl,
-  verbose = false,
-}: {
-  dbUrl: string
-  verbose?: boolean
-}): Promise<{
+async function getForDbUrl(dbUrl: string): Promise<{
   client: pg.Client
   dbConnectionString: string
 }> {
@@ -143,12 +125,6 @@ async function getForDbUrl({
       connectionString: dbUrl,
     })
   } catch (e) {
-    if (verbose) {
-      logMessage({
-        message: `The following error occured when connecting to the database: ${e}`,
-        type: "verbose",
-      })
-    }
     logMessage({
       message: `Couldn't connect to PostgreSQL using the database URL you passed. Make sure it's correct and try again.`,
       type: "error",
@@ -164,21 +140,13 @@ async function getForDbUrl({
 export async function getDbClientAndCredentials({
   dbName = "",
   dbUrl = "",
-  verbose = false,
 }): Promise<{
   client: pg.Client
   dbConnectionString: string
-  verbose?: boolean
 }> {
   if (dbName) {
-    return await getForDbName({
-      dbName,
-      verbose,
-    })
+    return await getForDbName(dbName)
   } else {
-    return await getForDbUrl({
-      dbUrl,
-      verbose,
-    })
+    return await getForDbUrl(dbUrl)
   }
 }

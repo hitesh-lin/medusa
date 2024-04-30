@@ -2,10 +2,9 @@ import { RepositoryTransformOptions } from "../common"
 import { Context } from "../shared-context"
 import {
   BaseFilterable,
+  FilterQuery as InternalFilterQuery,
   FilterQuery,
   FindOptions,
-  FilterQuery as InternalFilterQuery,
-  UpsertWithReplaceConfig,
 } from "./index"
 
 /**
@@ -71,12 +70,6 @@ export interface RepositoryService<T = any> extends BaseRepositoryService<T> {
   ): Promise<[T[], Record<string, unknown[]>]>
 
   upsert(data: any[], context?: Context): Promise<T[]>
-
-  upsertWithReplace(
-    data: any[],
-    config?: UpsertWithReplaceConfig<T>,
-    context?: Context
-  ): Promise<T[]>
 }
 
 export interface TreeRepositoryService<T = any>

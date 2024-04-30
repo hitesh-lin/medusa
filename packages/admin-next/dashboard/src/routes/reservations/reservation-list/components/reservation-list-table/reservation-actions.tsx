@@ -1,10 +1,9 @@
 import { PencilSquare, Trash } from "@medusajs/icons"
-import { toast, usePrompt } from "@medusajs/ui"
-
-import { ActionMenu } from "../../../../../components/common/action-menu"
 import { ExtendedReservationItem } from "@medusajs/medusa"
-import { useDeleteReservationItem } from "../../../../../hooks/api/reservations"
+import { usePrompt } from "@medusajs/ui"
+import { useAdminDeleteReservation } from "medusa-react"
 import { useTranslation } from "react-i18next"
+import { ActionMenu } from "../../../../../components/common/action-menu"
 
 export const ReservationActions = ({
   reservation,
@@ -13,7 +12,7 @@ export const ReservationActions = ({
 }) => {
   const { t } = useTranslation()
   const prompt = usePrompt()
-  const { mutateAsync } = useDeleteReservationItem(reservation.id)
+  const { mutateAsync } = useAdminDeleteReservation(reservation.id)
 
   const handleDelete = async () => {
     const res = await prompt({
@@ -27,14 +26,7 @@ export const ReservationActions = ({
       return
     }
 
-    await mutateAsync(undefined, {
-      onSuccess: () => {
-        toast.success(t("general.success"), {
-          dismissLabel: t("actions.close"),
-          description: t("inventory.reservation.deleteSuccessToast"),
-        })
-      },
-    })
+    await mutateAsync()
   }
 
   return (

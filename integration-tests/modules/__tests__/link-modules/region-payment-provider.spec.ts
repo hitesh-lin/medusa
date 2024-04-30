@@ -1,7 +1,6 @@
 import { ModuleRegistrationName, Modules } from "@medusajs/modules-sdk"
 import { IPaymentModuleService, IRegionModuleService } from "@medusajs/types"
 import { medusaIntegrationTestRunner } from "medusa-test-utils"
-import {ContainerRegistrationKeys} from "@medusajs/utils";
 
 jest.setTimeout(50000)
 
@@ -21,8 +20,8 @@ medusaIntegrationTestRunner({
         appContainer = getContainer()
         regionModule = appContainer.resolve(ModuleRegistrationName.REGION)
         paymentModule = appContainer.resolve(ModuleRegistrationName.PAYMENT)
-        remoteQuery = appContainer.resolve(ContainerRegistrationKeys.REMOTE_QUERY)
-        remoteLink = appContainer.resolve(ContainerRegistrationKeys.REMOTE_LINK)
+        remoteQuery = appContainer.resolve("remoteQuery")
+        remoteLink = appContainer.resolve("remoteLink")
       })
 
       it("should query region and payment provider link with remote query", async () => {
@@ -74,7 +73,7 @@ medusaIntegrationTestRunner({
           ])
         )
 
-        expect(otherLink).toHaveLength(2)
+        expect(otherLink).toHaveLength(1)
         expect(otherLink).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
@@ -84,10 +83,6 @@ medusaIntegrationTestRunner({
                   id: region.id,
                 }),
               ]),
-            }),
-            expect.objectContaining({
-              id: "pp_system_default_2",
-              regions: []
             }),
           ])
         )

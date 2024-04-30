@@ -1,19 +1,20 @@
+export const defaultStoreCurrencyRelations = []
+export const allowedStoreCurrencyRelations = []
 export const defaultStoreCurrencyFields = [
   "code",
   "name",
   "symbol",
   "symbol_native",
-  "decimal_digits",
-  "rounding",
 ]
 
 export const retrieveTransformQueryConfig = {
-  defaults: defaultStoreCurrencyFields,
+  defaultFields: defaultStoreCurrencyFields,
+  defaultRelations: defaultStoreCurrencyRelations,
+  allowedRelations: allowedStoreCurrencyRelations,
   isList: false,
 }
 
 export const listTransformQueryConfig = {
-  ...retrieveTransformQueryConfig,
-  defaultLimit: 50,
+  defaultLimit: 20,
   isList: true,
 }

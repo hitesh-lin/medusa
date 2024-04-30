@@ -1,18 +1,13 @@
 import { Modules } from "@medusajs/modules-sdk"
-import {
-  CreateOrderChangeActionDTO,
-  CreateOrderChangeDTO,
-  CreateOrderDTO,
-  IOrderModuleService,
-} from "@medusajs/types"
-import { BigNumber } from "@medusajs/utils"
-import { SuiteOptions, moduleIntegrationTestRunner } from "medusa-test-utils"
+import { CreateOrderDTO, IOrderModuleService } from "@medusajs/types"
+import { moduleIntegrationTestRunner, SuiteOptions } from "medusa-test-utils"
 import { ChangeActionType } from "../../src/utils"
+import { BigNumber } from "@medusajs/utils"
 
 jest.setTimeout(100000)
 
 moduleIntegrationTestRunner({
-  debug: false,
+  debug: 0,
   moduleName: Modules.ORDER,
   testSuite: ({ service }: SuiteOptions<IOrderModuleService>) => {
     describe("Order Module Service - Order Edits", () => {
@@ -137,10 +132,9 @@ moduleIntegrationTestRunner({
             version: createdOrder.version,
             internal_note: "adding an item",
             reference: "order_line_item",
-            reference_id: createdOrder.items![0].id,
+            reference_id: createdOrder.items[0].id,
             amount:
-              createdOrder.items![0].unit_price *
-              createdOrder.items![0].quantity,
+              createdOrder.items[0].unit_price * createdOrder.items[0].quantity,
             details: {
               quantity: 1,
             },
@@ -150,10 +144,9 @@ moduleIntegrationTestRunner({
             order_id: createdOrder.id,
             version: createdOrder.version,
             reference: "order_line_item",
-            reference_id: createdOrder.items![1].id,
+            reference_id: createdOrder.items[1].id,
             amount:
-              createdOrder.items![1].unit_price *
-              createdOrder.items![1].quantity,
+              createdOrder.items[1].unit_price * createdOrder.items[1].quantity,
             details: {
               quantity: 3,
             },
@@ -165,7 +158,7 @@ moduleIntegrationTestRunner({
             reference: "fullfilment",
             reference_id: "fulfill_123",
             details: {
-              reference_id: createdOrder.items![2].id,
+              reference_id: createdOrder.items[2].id,
               quantity: 1,
             },
           },
@@ -176,7 +169,7 @@ moduleIntegrationTestRunner({
             reference: "fullfilment",
             reference_id: "shipping_123",
             details: {
-              reference_id: createdOrder.items![2].id,
+              reference_id: createdOrder.items[2].id,
               quantity: 1,
             },
           },
@@ -188,7 +181,7 @@ moduleIntegrationTestRunner({
             reference: "return",
             reference_id: "return_123",
             details: {
-              reference_id: createdOrder.items![2].id,
+              reference_id: createdOrder.items[2].id,
               quantity: 1,
             },
           },
@@ -200,11 +193,11 @@ moduleIntegrationTestRunner({
             reference: "return",
             reference_id: "return_123",
             details: {
-              reference_id: createdOrder.items![2].id,
+              reference_id: createdOrder.items[2].id,
               quantity: 1,
             },
           },
-        ] as CreateOrderChangeActionDTO[])
+        ])
 
         await service.applyPendingOrderActions(createdOrder.id)
 
@@ -219,10 +212,8 @@ moduleIntegrationTestRunner({
           ],
           relations: ["items", "shipping_methods", "transactions"],
         })
-        const serializedFinalOrder = JSON.parse(JSON.stringify(finalOrder))
 
-        const serializedCreatedOrder = JSON.parse(JSON.stringify(createdOrder))
-        expect(serializedCreatedOrder.items).toEqual([
+        expect(createdOrder.items).toEqual([
           expect.objectContaining({
             title: "Item 1",
             unit_price: 8,
@@ -261,12 +252,12 @@ moduleIntegrationTestRunner({
           }),
         ])
 
-        expect(serializedFinalOrder).toEqual(
+        expect(finalOrder).toEqual(
           expect.objectContaining({
             version: 1,
           })
         )
-        expect(serializedFinalOrder.items).toEqual([
+        expect(finalOrder.items).toEqual([
           expect.objectContaining({
             title: "Item 1",
             subtitle: "Subtitle 1",
@@ -334,7 +325,7 @@ moduleIntegrationTestRunner({
         ])
       })
 
-      it("should create an order change, add actions to it, confirm the changes, revert all the changes and restore the changes again.", async function () {
+      it("should create an order change, add actions to it and confirm the changes.", async function () {
         const createdOrder = await service.create(input)
 
         const orderChange = await service.createOrderChange({
@@ -346,10 +337,10 @@ moduleIntegrationTestRunner({
             {
               action: ChangeActionType.ITEM_ADD,
               reference: "order_line_item",
-              reference_id: createdOrder.items![0].id,
+              reference_id: createdOrder.items[0].id,
               amount:
-                createdOrder.items![0].unit_price *
-                createdOrder.items![0].quantity,
+                createdOrder.items[0].unit_price *
+                createdOrder.items[0].quantity,
               details: {
                 quantity: 1,
               },
@@ -357,10 +348,10 @@ moduleIntegrationTestRunner({
             {
               action: ChangeActionType.ITEM_ADD,
               reference: "order_line_item",
-              reference_id: createdOrder.items![1].id,
+              reference_id: createdOrder.items[1].id,
               amount:
-                createdOrder.items![1].unit_price *
-                createdOrder.items![1].quantity,
+                createdOrder.items[1].unit_price *
+                createdOrder.items[1].quantity,
               details: {
                 quantity: 3,
               },
@@ -370,7 +361,7 @@ moduleIntegrationTestRunner({
               reference: "fullfilment",
               reference_id: "fulfill_123",
               details: {
-                reference_id: createdOrder.items![2].id,
+                reference_id: createdOrder.items[2].id,
                 quantity: 1,
               },
             },
@@ -379,7 +370,7 @@ moduleIntegrationTestRunner({
               reference: "fullfilment",
               reference_id: "shipping_123",
               details: {
-                reference_id: createdOrder.items![2].id,
+                reference_id: createdOrder.items[2].id,
                 quantity: 1,
               },
             },
@@ -388,7 +379,7 @@ moduleIntegrationTestRunner({
               reference: "return",
               reference_id: "return_123",
               details: {
-                reference_id: createdOrder.items![2].id,
+                reference_id: createdOrder.items[2].id,
                 quantity: 1,
               },
             },
@@ -398,15 +389,14 @@ moduleIntegrationTestRunner({
               reference: "return",
               reference_id: "return_123",
               details: {
-                reference_id: createdOrder.items![2].id,
+                reference_id: createdOrder.items[2].id,
                 quantity: 1,
               },
             },
           ],
         })
 
-        await service.confirmOrderChange({
-          id: orderChange.id,
+        await service.confirmOrderChange(orderChange.id, {
           confirmed_by: "cx_agent_123",
         })
 
@@ -426,18 +416,13 @@ moduleIntegrationTestRunner({
           relations: ["items", "shipping_methods", "transactions"],
         })
 
-        const serializedModifiedOrder = JSON.parse(JSON.stringify(modified))
-
-        expect(serializedModifiedOrder).toEqual(
+        expect(modified).toEqual(
           expect.objectContaining({
             version: 2,
           })
         )
 
-        expect(serializedModifiedOrder.shipping_methods).toHaveLength(1)
-        expect(serializedModifiedOrder.shipping_methods[0].amount).toEqual(10)
-
-        expect(serializedModifiedOrder.items).toEqual([
+        expect(modified.items).toEqual([
           expect.objectContaining({
             quantity: 2,
             detail: expect.objectContaining({
@@ -476,72 +461,6 @@ moduleIntegrationTestRunner({
             }),
           }),
         ])
-
-        // Revert Last Changes
-        await service.revertLastVersion(createdOrder.id)
-        const revertedOrder = await service.retrieve(createdOrder.id, {
-          select: [
-            "id",
-            "version",
-            "items.detail",
-            "summary",
-            "shipping_methods",
-          ],
-          relations: ["items"],
-        })
-
-        const serializedRevertedOrder = JSON.parse(
-          JSON.stringify(revertedOrder)
-        )
-        expect(serializedRevertedOrder).toEqual(
-          expect.objectContaining({
-            version: 1,
-          })
-        )
-
-        expect(serializedRevertedOrder.shipping_methods).toHaveLength(1)
-        expect(serializedRevertedOrder.shipping_methods[0].amount).toEqual(10)
-
-        expect(serializedRevertedOrder.items).toEqual([
-          expect.objectContaining({
-            quantity: 1,
-            unit_price: 8,
-            detail: expect.objectContaining({
-              version: 1,
-              quantity: 1,
-            }),
-          }),
-          expect.objectContaining({
-            title: "Item 2",
-            unit_price: 5,
-            quantity: 2,
-            detail: expect.objectContaining({
-              version: 1,
-              quantity: 2,
-              fulfilled_quantity: 0,
-              shipped_quantity: 0,
-              return_requested_quantity: 0,
-              return_received_quantity: 0,
-              return_dismissed_quantity: 0,
-              written_off_quantity: 0,
-            }),
-          }),
-          expect.objectContaining({
-            title: "Item 3",
-            unit_price: 30,
-            quantity: 1,
-            detail: expect.objectContaining({
-              version: 1,
-              quantity: 1,
-              fulfilled_quantity: 0,
-              shipped_quantity: 0,
-              return_requested_quantity: 0,
-              return_received_quantity: 0,
-              return_dismissed_quantity: 0,
-              written_off_quantity: 0,
-            }),
-          }),
-        ])
       })
 
       it("should create order changes, cancel and reject them.", async function () {
@@ -563,16 +482,16 @@ moduleIntegrationTestRunner({
             {
               action: ChangeActionType.ITEM_ADD,
               reference: "order_line_item",
-              reference_id: createdOrder.items![0].id,
+              reference_id: createdOrder.items[0].id,
               amount:
-                createdOrder.items![0].unit_price *
-                createdOrder.items![0].quantity,
+                createdOrder.items[0].unit_price *
+                createdOrder.items[0].quantity,
               details: {
                 quantity: 1,
               },
             },
           ],
-        } as CreateOrderChangeDTO)
+        })
 
         await service.cancelOrderChange({
           id: orderChange.id,

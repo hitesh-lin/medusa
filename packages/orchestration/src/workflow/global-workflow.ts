@@ -70,10 +70,6 @@ export class GlobalWorkflow extends WorkflowManager {
       transaction.once("stepFailure", this.subscribe.onStepFailure)
     }
 
-    if (this.subscribe.onStepAwaiting) {
-      transaction.once("stepAwaiting", this.subscribe.onStepAwaiting)
-    }
-
     await orchestrator.resume(transaction)
 
     return transaction

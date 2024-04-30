@@ -119,6 +119,6 @@ export class BigNumber {
   }
 
   valueOf() {
-    return this.numeric_
+    return this.bignumber_
   }
 }

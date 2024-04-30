@@ -211,8 +211,6 @@ To retrieve a list of records of an entity, use the `find` method:
 const posts = await postRepository.find()
 ```
 
-#### Pass Filters
-
 You can also filter the retrieved items by passing an object of type [FindOption](https://typeorm.io/find-options) as a first parameter:
 
 ```ts
@@ -223,8 +221,6 @@ const posts = await postRepository.find({
 })
 ```
 
-#### Configure Pagination
-
 In addition, you can pass `skip` and `take` properties to the object for pagination purposes. `skip`'s value is a number that indicates how many items to skip before retrieving the results, and `take` indicates how many items to return:
 
 ```ts
@@ -234,8 +230,6 @@ const posts = await postRepository.find({
 })
 ```
 
-#### Expand Relations
-
 To expand relations and retrieve them as part of each item in the result, you can pass the `relations` property to the parameter object:
 
 ```ts
@@ -243,16 +237,6 @@ const posts = await postRepository.find({
   relations: ["authors"],
 })
 ```
-
-To expand nested relations (a relation of another relation), use dot notation:
-
-```ts
-const posts = await postRepository.find({
-  relations: ["authors.posts"],
-})
-```
-
-#### buildQuery Utility Method
 
 Medusa provides a utility method `buildQuery` that allows you to easily format the object to pass to the `find` method. `buildQuery` accepts two parameters:
 

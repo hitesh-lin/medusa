@@ -6,16 +6,22 @@ export const defaultStoreRegionFields = [
   "updated_at",
   "deleted_at",
   "metadata",
-  "*countries",
+  "countries.id",
+  "countries.iso_2",
+  "countries.iso_3",
+  "countries.num_code",
+  "countries.name",
+  "currency.code",
+  "currency.symbol",
+  "currency.symbol_native",
+  "currency.name",
 ]
 
 export const retrieveTransformQueryConfig = {
-  defaults: defaultStoreRegionFields,
   isList: false,
 }
 
 export const listTransformQueryConfig = {
-  defaults: defaultStoreRegionFields,
   defaultLimit: 20,
   isList: true,
 }

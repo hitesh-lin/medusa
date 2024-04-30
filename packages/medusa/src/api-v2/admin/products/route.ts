@@ -8,23 +8,16 @@ import {
   AuthenticatedMedusaRequest,
   MedusaResponse,
 } from "../../../types/routing"
-import {
-  refetchProduct,
-  remapKeysForProduct,
-  remapProductResponse,
-} from "./helpers"
-import {
-  AdminCreateProductType,
-  AdminGetProductsParamsType,
-} from "./validators"
+import { refetchProduct, remapKeysForProduct, remapProduct } from "./helpers"
+import { AdminGetProductsParams } from "./validators"
 
 export const GET = async (
-  req: AuthenticatedMedusaRequest<AdminGetProductsParamsType>,
+  req: AuthenticatedMedusaRequest<AdminGetProductsParams>,
   res: MedusaResponse
 ) => {
   const remoteQuery = req.scope.resolve(ContainerRegistrationKeys.REMOTE_QUERY)
-  const selectFields = remapKeysForProduct(req.remoteQueryConfig.fields ?? [])
 
+  const selectFields = remapKeysForProduct(req.remoteQueryConfig.fields ?? [])
   const queryObject = remoteQueryObjectFromString({
     entryPoint: "product",
     variables: {
@@ -37,7 +30,7 @@ export const GET = async (
   const { rows: products, metadata } = await remoteQuery(queryObject)
 
   res.json({
-    products: products.map(remapProductResponse),
+    products: products.map(remapProduct),
     count: metadata.count,
     offset: metadata.skip,
     limit: metadata.take,
@@ -45,10 +38,14 @@ export const GET = async (
 }
 
 export const POST = async (
-  req: AuthenticatedMedusaRequest<AdminCreateProductType>,
+  req: AuthenticatedMedusaRequest<CreateProductDTO>,
   res: MedusaResponse
 ) => {
-  const input = [req.validatedBody as CreateProductDTO]
+  const input = [
+    {
+      ...req.validatedBody,
+    },
+  ]
 
   const { result, errors } = await createProductsWorkflow(req.scope).run({
     input: { products: input },
@@ -64,5 +61,5 @@ export const POST = async (
     req.scope,
     req.remoteQueryConfig.fields
   )
-  res.status(200).json({ product: remapProductResponse(product) })
+  res.status(200).json({ product: remapProduct(product) })
 }

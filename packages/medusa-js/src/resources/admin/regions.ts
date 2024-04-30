@@ -9,7 +9,6 @@ import {
   AdminPostRegionsRegionFulfillmentProvidersReq,
   AdminPostRegionsRegionPaymentProvidersReq,
   AdminGetRegionsRegionFulfillmentOptionsRes,
-  AdminGetRegionsRegionParams,
 } from "@medusajs/medusa"
 import qs from "qs"
 import { ResponsePromise } from "../../typings"
@@ -18,12 +17,12 @@ import BaseResource from "../base"
 /**
  * This class is used to send requests to [Admin Region API Routes](https://docs.medusajs.com/api/admin#regions). All its method
  * are available in the JS Client under the `medusa.admin.regions` property.
- *
+ * 
  * All methods in this class require {@link AdminAuthResource.createSession | user authentication}.
- *
+ * 
  * Regions are different countries or geographical regions that the commerce store serves customers in.
  * Admins can manage these regions, their providers, and more.
- *
+ * 
  * Related Guide: [How to manage regions](https://docs.medusajs.com/modules/regions-and-currencies/admin/manage-regions).
  */
 class AdminRegionsResource extends BaseResource {
@@ -32,7 +31,7 @@ class AdminRegionsResource extends BaseResource {
    * @param {AdminPostRegionsReq} payload - The region to create.
    * @param {Record<string, any>} customHeaders - Custom headers to attach to the request.
    * @returns {ResponsePromise<AdminRegionsRes>} Resolves to the region's details.
-   *
+   * 
    * @example
    * import Medusa from "@medusajs/medusa-js"
    * const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
@@ -69,7 +68,7 @@ class AdminRegionsResource extends BaseResource {
    * @param {AdminPostRegionsRegionReq} payload - The attributes to update in the region.
    * @param {Record<string, any>} customHeaders - Custom headers to attach to the request.
    * @returns {ResponsePromise<AdminRegionsRes>} Resolves to the region's details.
-   *
+   * 
    * @example
    * import Medusa from "@medusajs/medusa-js"
    * const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
@@ -95,7 +94,7 @@ class AdminRegionsResource extends BaseResource {
    * @param {string} id - The region's ID.
    * @param {Record<string, any>} customHeaders - Custom headers to attach to the request.
    * @returns {ResponsePromise<AdminRegionsDeleteRes>} Resolves to the deletion operation's details.
-   *
+   * 
    * @example
    * import Medusa from "@medusajs/medusa-js"
    * const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
@@ -116,10 +115,9 @@ class AdminRegionsResource extends BaseResource {
   /**
    * Retrieve a region's details.
    * @param {string} id - The region's ID.
-   * @param query - Query params
    * @param {Record<string, any>} customHeaders - Custom headers to attach to the request.
    * @returns {ResponsePromise<AdminRegionsRes>}  Resolves to the region's details.
-   *
+   * 
    * @example
    * import Medusa from "@medusajs/medusa-js"
    * const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
@@ -131,16 +129,9 @@ class AdminRegionsResource extends BaseResource {
    */
   retrieve(
     id: string,
-    query?: AdminGetRegionsRegionParams,
     customHeaders: Record<string, any> = {}
   ): ResponsePromise<AdminRegionsRes> {
-    let path = `/admin/regions/${id}`
-
-    if (query) {
-      const queryString = qs.stringify(query)
-      path = `/admin/regions/${id}?${queryString}`
-    }
-
+    const path = `/admin/regions/${id}`
     return this.client.request("GET", path, undefined, {}, customHeaders)
   }
 
@@ -149,10 +140,10 @@ class AdminRegionsResource extends BaseResource {
    * @param {AdminGetRegionsParams} query - Filters and pagination configurations to apply on the retrieved regions.
    * @param {Record<string, any>} customHeaders - Custom headers to attach to the request.
    * @returns {ResponsePromise<AdminRegionsListRes>} Resolves to the list of regions with pagination fields.
-   *
+   * 
    * @example
    * To list regions:
-   *
+   * 
    * ```ts
    * import Medusa from "@medusajs/medusa-js"
    * const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
@@ -162,9 +153,9 @@ class AdminRegionsResource extends BaseResource {
    *   console.log(regions.length);
    * })
    * ```
-   *
+   * 
    * By default, only the first `50` records are retrieved. You can control pagination by specifying the `limit` and `offset` properties:
-   *
+   * 
    * ```ts
    * import Medusa from "@medusajs/medusa-js"
    * const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
@@ -198,7 +189,7 @@ class AdminRegionsResource extends BaseResource {
    * @param {AdminPostRegionsRegionCountriesReq} payload - The country to add.
    * @param {Record<string, any>} customHeaders - Custom headers to attach to the request.
    * @returns {ResponsePromise<AdminRegionsRes>} Resolves to the region's details.
-   *
+   * 
    * @example
    * import Medusa from "@medusajs/medusa-js"
    * const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
@@ -225,7 +216,7 @@ class AdminRegionsResource extends BaseResource {
    * @param {string} country_code - The code of the country to delete from the region.
    * @param {Record<string, any>} customHeaders - Custom headers to attach to the request.
    * @returns {ResponsePromise<AdminRegionsRes>} Resolves to the region's details.
-   *
+   * 
    * @example
    * import Medusa from "@medusajs/medusa-js"
    * const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
@@ -250,7 +241,7 @@ class AdminRegionsResource extends BaseResource {
    * @param {AdminPostRegionsRegionFulfillmentProvidersReq} payload - The fulfillment provider to add.
    * @param {Record<string, any>} customHeaders - Custom headers to attach to the request.
    * @returns {ResponsePromise<AdminRegionsRes>} Resolves to the region's details.
-   *
+   * 
    * @example
    * import Medusa from "@medusajs/medusa-js"
    * const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
@@ -277,7 +268,7 @@ class AdminRegionsResource extends BaseResource {
    * @param {string} provider_id - The ID of the fulfillment provider to delete from the region.
    * @param {Record<string, any>} customHeaders - Custom headers to attach to the request.
    * @returns {ResponsePromise<AdminRegionsRes>} Resolves to the region's details.
-   *
+   * 
    * @example
    * import Medusa from "@medusajs/medusa-js"
    * const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
@@ -301,7 +292,7 @@ class AdminRegionsResource extends BaseResource {
    * @param {string} id - The region's ID.
    * @param {Record<string, any>} customHeaders - Custom headers to attach to the request.
    * @returns {ResponsePromise<AdminGetRegionsRegionFulfillmentOptionsRes>} Resolves to the list of fulfillment options.
-   *
+   * 
    * @example
    * import Medusa from "@medusajs/medusa-js"
    * const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
@@ -325,7 +316,7 @@ class AdminRegionsResource extends BaseResource {
    * @param {AdminPostRegionsRegionPaymentProvidersReq} payload - The payment provider to add.
    * @param {Record<string, any>} customHeaders - Custom headers to attach to the request.
    * @returns {ResponsePromise<AdminRegionsRes>} Resolves to the region's details.
-   *
+   * 
    * @example
    * import Medusa from "@medusajs/medusa-js"
    * const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
@@ -348,11 +339,11 @@ class AdminRegionsResource extends BaseResource {
 
   /**
    * Delete a payment provider from a region. The payment provider will still be available for usage in other regions.
-   * @param {string} id - The region's ID.
+   * @param {string} id - The region's ID. 
    * @param {string} provider_id - The ID of the payment provider to delete from the region.
    * @param {Record<string, any>} customHeaders - Custom headers to attach to the request.
    * @returns {ResponsePromise<AdminRegionsRes>} Resolves to the region's details.
-   *
+   * 
    * @example
    * import Medusa from "@medusajs/medusa-js"
    * const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })

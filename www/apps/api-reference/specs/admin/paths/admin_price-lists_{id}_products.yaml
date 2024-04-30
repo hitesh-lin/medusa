@@ -21,17 +21,9 @@ get:
         type: string
     - in: query
       name: id
-      style: form
-      explode: false
-      description: Filter by product IDs.
+      description: Filter by product ID
       schema:
-        oneOf:
-          - type: string
-            description: ID of the product.
-          - type: array
-            items:
-              type: string
-              description: ID of a product.
+        type: string
     - in: query
       name: status
       description: Filter by product status
@@ -87,7 +79,7 @@ get:
       name: is_giftcard
       description: A boolean value to filter by whether the product is a gift card or not.
       schema:
-        type: boolean
+        type: string
     - in: query
       name: type
       description: Filter product type.

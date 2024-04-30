@@ -1,14 +1,14 @@
+import { transformQuery } from "../../../api/middlewares"
 import { MiddlewareRoute } from "../../../loaders/helpers/routing/types"
-import { validateAndTransformQuery } from "../../utils/validate-query"
 import * as QueryConfig from "./query-config"
-import { StoreGetRegionParams, StoreGetRegionsParams } from "./validators"
+import { StoreGetRegionsParams, StoreRegionsRegionParams } from "./validators"
 
 export const storeRegionRoutesMiddlewares: MiddlewareRoute[] = [
   {
     method: ["GET"],
     matcher: "/store/regions",
     middlewares: [
-      validateAndTransformQuery(
+      transformQuery(
         StoreGetRegionsParams,
         QueryConfig.listTransformQueryConfig
       ),
@@ -18,10 +18,15 @@ export const storeRegionRoutesMiddlewares: MiddlewareRoute[] = [
     method: ["GET"],
     matcher: "/store/regions/:id",
     middlewares: [
-      validateAndTransformQuery(
-        StoreGetRegionParams,
+      transformQuery(
+        StoreRegionsRegionParams,
         QueryConfig.retrieveTransformQueryConfig
       ),
     ],
+  },
+  {
+    method: ["GET"],
+    matcher: "/store/regions/:id/payment-providers",
+    middlewares: [],
   },
 ]

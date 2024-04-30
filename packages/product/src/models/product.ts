@@ -9,17 +9,18 @@ import {
   ManyToOne,
   OneToMany,
   OnInit,
+  OptionalProps,
   PrimaryKey,
   Property,
+  Unique,
 } from "@mikro-orm/core"
 
+import { DAL } from "@medusajs/types"
 import {
-  createPsqlIndexStatementHelper,
   DALUtils,
   generateEntityId,
   kebabCase,
   ProductUtils,
-  Searchable,
 } from "@medusajs/utils"
 import ProductCategory from "./product-category"
 import ProductCollection from "./product-collection"
@@ -29,58 +30,36 @@ import ProductTag from "./product-tag"
 import ProductType from "./product-type"
 import ProductVariant from "./product-variant"
 
-const productHandleIndexName = "IDX_product_handle_unique"
-const productHandleIndexStatement = createPsqlIndexStatementHelper({
-  name: productHandleIndexName,
-  tableName: "product",
-  columns: ["handle"],
-  unique: true,
-  where: "deleted_at IS NULL",
-})
+type OptionalRelations = "collection" | "type"
+type OptionalFields =
+  | "collection_id"
+  | "type_id"
+  | "is_giftcard"
+  | "discountable"
+  | DAL.SoftDeletableEntityDateColumns
 
-const productTypeIndexName = "IDX_product_type_id"
-const productTypeIndexStatement = createPsqlIndexStatementHelper({
-  name: productTypeIndexName,
-  tableName: "product",
-  columns: ["type_id"],
-  unique: false,
-  where: "deleted_at IS NULL",
-})
-
-const productCollectionIndexName = "IDX_product_collection_id"
-const productCollectionIndexStatement = createPsqlIndexStatementHelper({
-  name: productCollectionIndexName,
-  tableName: "product",
-  columns: ["collection_id"],
-  unique: false,
-  where: "deleted_at IS NULL",
-})
-
-productTypeIndexStatement.MikroORMIndex()
-productCollectionIndexStatement.MikroORMIndex()
-productHandleIndexStatement.MikroORMIndex()
 @Entity({ tableName: "product" })
 @Filter(DALUtils.mikroOrmSoftDeletableFilterOptions)
 class Product {
+  [OptionalProps]?: OptionalRelations | OptionalFields
+
   @PrimaryKey({ columnType: "text" })
   id!: string
 
-  @Searchable()
   @Property({ columnType: "text" })
   title: string
 
   @Property({ columnType: "text" })
-  handle?: string
+  @Unique({
+    name: "IDX_product_handle_unique",
+    properties: ["handle"],
+  })
+  handle?: string | null
 
-  @Searchable()
   @Property({ columnType: "text", nullable: true })
   subtitle?: string | null
 
-  @Searchable()
-  @Property({
-    columnType: "text",
-    nullable: true,
-  })
+  @Property({ columnType: "text", nullable: true })
   description?: string | null
 
   @Property({ columnType: "boolean", default: false })
@@ -98,7 +77,6 @@ class Product {
   })
   options = new Collection<ProductOption>(this)
 
-  @Searchable()
   @OneToMany(() => ProductVariant, (variant) => variant.product, {
     cascade: ["soft-remove"] as any,
   })
@@ -128,47 +106,39 @@ class Product {
   @Property({ columnType: "text", nullable: true })
   material?: string | null
 
-  @Searchable()
+  @Property({ columnType: "text", nullable: true })
+  collection_id!: string
+
   @ManyToOne(() => ProductCollection, {
-    columnType: "text",
     nullable: true,
     fieldName: "collection_id",
-    mapToPk: true,
-    onDelete: "set null",
   })
-  collection_id: string | null
+  collection!: ProductCollection | null
 
-  @ManyToOne(() => ProductCollection, {
-    nullable: true,
-    persist: false,
-  })
-  collection: ProductCollection | null
+  @Property({ columnType: "text", nullable: true })
+  type_id!: string
 
   @ManyToOne(() => ProductType, {
-    columnType: "text",
     nullable: true,
+    index: "IDX_product_type_id",
     fieldName: "type_id",
-    mapToPk: true,
-    onDelete: "set null",
   })
-  type_id: string | null
-
-  @ManyToOne(() => ProductType, {
-    nullable: true,
-    persist: false,
-  })
-  type: ProductType | null
+  type!: ProductType
 
   @ManyToMany(() => ProductTag, "products", {
     owner: true,
     pivotTable: "product_tags",
     index: "IDX_product_tag_id",
+    cascade: ["soft-remove"] as any,
+    // TODO: Do we really want to remove tags if the product is deleted?
   })
   tags = new Collection<ProductTag>(this)
 
   @ManyToMany(() => ProductImage, "products", {
     owner: true,
     pivotTable: "product_images",
+    index: "IDX_product_image_id",
+    cascade: ["soft-remove"] as any,
     joinColumn: "product_id",
     inverseJoinColumn: "image_id",
   })
@@ -177,6 +147,7 @@ class Product {
   @ManyToMany(() => ProductCategory, "products", {
     owner: true,
     pivotTable: "product_category_product",
+    // TODO: rm cascade: ["soft-remove"] as any,
   })
   categories = new Collection<ProductCategory>(this)
 
@@ -209,13 +180,14 @@ class Product {
   metadata?: Record<string, unknown> | null
 
   @OnInit()
-  @BeforeCreate()
   onInit() {
     this.id = generateEntityId(this.id, "prod")
-    this.type_id ??= this.type?.id ?? null
-    this.collection_id ??= this.collection?.id ?? null
+  }
 
-    if (!this.handle && this.title) {
+  @BeforeCreate()
+  beforeCreate() {
+    this.id = generateEntityId(this.id, "prod")
+    if (!this.handle) {
       this.handle = kebabCase(this.title)
     }
   }

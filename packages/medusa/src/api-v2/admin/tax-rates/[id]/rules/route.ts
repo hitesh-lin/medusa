@@ -1,13 +1,14 @@
 import { createTaxRateRulesWorkflow } from "@medusajs/core-flows"
+import { remoteQueryObjectFromString } from "@medusajs/utils"
+import { defaultAdminTaxRatesFields } from "../../../../../api/routes/admin/tax-rates"
 import {
   AuthenticatedMedusaRequest,
   MedusaResponse,
 } from "../../../../../types/routing"
-import { AdminCreateTaxRateRuleType } from "../../validators"
-import { refetchTaxRate } from "../../helpers"
+import { AdminPostTaxRatesTaxRateRulesReq } from "../../validators"
 
 export const POST = async (
-  req: AuthenticatedMedusaRequest<AdminCreateTaxRateRuleType>,
+  req: AuthenticatedMedusaRequest<AdminPostTaxRatesTaxRateRulesReq>,
   res: MedusaResponse
 ) => {
   const { errors } = await createTaxRateRulesWorkflow(req.scope).run({
@@ -27,10 +28,15 @@ export const POST = async (
     throw errors[0].error
   }
 
-  const taxRate = await refetchTaxRate(
-    req.params.id,
-    req.scope,
-    req.remoteQueryConfig.fields
-  )
+  const remoteQuery = req.scope.resolve("remoteQuery")
+
+  const queryObject = remoteQueryObjectFromString({
+    entryPoint: "tax_rate",
+    variables: { id: req.params.id },
+    fields: defaultAdminTaxRatesFields,
+  })
+
+  const [taxRate] = await remoteQuery(queryObject)
+
   res.status(200).json({ tax_rate: taxRate })
 }

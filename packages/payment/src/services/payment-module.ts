@@ -27,11 +27,9 @@ import {
   UpsertPaymentCollectionDTO,
 } from "@medusajs/types"
 import {
-  BigNumber,
   InjectManager,
   InjectTransactionManager,
   isString,
-  MathBN,
   MedusaContext,
   MedusaError,
   ModulesSdkUtils,
@@ -45,6 +43,7 @@ import {
   PaymentSession,
   Refund,
 } from "@models"
+import BigNumber from "bignumber.js"
 import { entityNameToLinkableKeysMap, joinerConfig } from "../joiner-config"
 import PaymentProviderService from "./payment-provider"
 
@@ -533,14 +532,15 @@ export default class PaymentModuleService<
     }
 
     const capturedAmount = payment.captures.reduce((captureAmount, next) => {
-      return MathBN.add(captureAmount, next.raw_amount)
-    }, MathBN.convert(0))
+      const amountAsBigNumber = new BigNumber(next.raw_amount.value)
+      return captureAmount.plus(amountAsBigNumber)
+    }, BigNumber(0))
 
-    const authorizedAmount = new BigNumber(payment.raw_amount)
-    const newCaptureAmount = new BigNumber(data.amount)
-    const remainingToCapture = MathBN.sub(authorizedAmount, capturedAmount)
+    const authorizedAmount = BigNumber(payment.raw_amount.value)
+    const newCaptureAmount = BigNumber(data.amount)
+    const remainingToCapture = authorizedAmount.minus(capturedAmount)
 
-    if (MathBN.gt(newCaptureAmount, remainingToCapture)) {
+    if (newCaptureAmount.gt(remainingToCapture)) {
       throw new MedusaError(
         MedusaError.Types.INVALID_DATA,
         `You cannot capture more than the authorized amount substracted by what is already captured.`
@@ -567,10 +567,7 @@ export default class PaymentModuleService<
     )
 
     // When the entire authorized amount has been captured, we mark it fully capture by setting the captured_at field
-    const totalCaptured = MathBN.convert(
-      MathBN.add(capturedAmount, newCaptureAmount)
-    )
-    if (MathBN.gte(totalCaptured, authorizedAmount)) {
+    if (capturedAmount.plus(newCaptureAmount).eq(authorizedAmount)) {
       await this.paymentService_.update(
         { id: payment.id, captured_at: new Date() },
         sharedContext
@@ -603,12 +600,12 @@ export default class PaymentModuleService<
     }
 
     const capturedAmount = payment.captures.reduce((captureAmount, next) => {
-      const amountAsBigNumber = new BigNumber(next.raw_amount)
-      return MathBN.add(captureAmount, amountAsBigNumber)
-    }, MathBN.convert(0))
-    const refundAmount = new BigNumber(data.amount)
+      const amountAsBigNumber = new BigNumber(next.raw_amount.value)
+      return captureAmount.plus(amountAsBigNumber)
+    }, BigNumber(0))
+    const refundAmount = BigNumber(data.amount)
 
-    if (MathBN.lt(capturedAmount, refundAmount)) {
+    if (capturedAmount.lt(refundAmount)) {
       throw new MedusaError(
         MedusaError.Types.INVALID_DATA,
         `You cannot refund more than what is captured on the payment.`
@@ -735,25 +732,5 @@ export default class PaymentModuleService<
         populate: true,
       }
     )
-  }
-
-  @InjectManager("baseRepository_")
-  async listAndCountPaymentProviders(
-    filters: FilterablePaymentProviderProps = {},
-    config: FindConfig<PaymentProviderDTO> = {},
-    @MedusaContext() sharedContext?: Context
-  ): Promise<[PaymentProviderDTO[], number]> {
-    const [providers, count] = await this.paymentProviderService_.listAndCount(
-      filters,
-      config,
-      sharedContext
-    )
-
-    return [
-      await this.baseRepository_.serialize<PaymentProviderDTO[]>(providers, {
-        populate: true,
-      }),
-      count,
-    ]
   }
 }

@@ -809,7 +809,6 @@ export default class PaymentProviderService extends TransactionBaseService {
 
       const toCreate = {
         payment_id: payment.id,
-        order_id: payment.order_id,
         amount,
         reason,
         note,

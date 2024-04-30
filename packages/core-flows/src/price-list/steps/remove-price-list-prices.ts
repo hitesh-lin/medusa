@@ -7,7 +7,7 @@ export const removePriceListPricesStep = createStep(
   removePriceListPricesStepId,
   async (ids: string[], { container }) => {
     if (!ids.length) {
-      return new StepResponse([], [])
+      return new StepResponse(null, [])
     }
 
     const pricingModule = container.resolve<IPricingModuleService>(
@@ -19,11 +19,12 @@ export const removePriceListPricesStep = createStep(
       { relations: ["price_list"] }
     )
 
-    const priceIds = prices.map((price) => price.id)
+    await pricingModule.softDeletePrices(prices.map((price) => price.id))
 
-    await pricingModule.softDeletePrices(priceIds)
-
-    return new StepResponse(priceIds, priceIds)
+    return new StepResponse(
+      null,
+      prices.map((price) => price.id)
+    )
   },
   async (ids, { container }) => {
     if (!ids?.length) {

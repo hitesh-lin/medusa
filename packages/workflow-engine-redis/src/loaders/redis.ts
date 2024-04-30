@@ -7,7 +7,6 @@ export default async ({
   container,
   logger,
   options,
-  dataLoaderOnly,
 }: LoaderOptions): Promise<void> => {
   const {
     url,
@@ -59,18 +58,11 @@ export default async ({
   }
 
   container.register({
-    partialLoading: asValue(true),
     redisConnection: asValue(connection),
     redisWorkerConnection: asValue(workerConnection),
     redisPublisher: asValue(redisPublisher),
     redisSubscriber: asValue(redisSubscriber),
     redisQueueName: asValue(queueName),
-    redisDisconnectHandler: asValue(async () => {
-      connection.disconnect()
-      workerConnection.disconnect()
-      redisPublisher.disconnect()
-      redisSubscriber.disconnect()
-    }),
   })
 }
 
@@ -80,9 +72,7 @@ async function getConnection(url, redisOptions) {
     ...(redisOptions ?? {}),
   })
 
-  await new Promise(async (resolve) => {
-    await connection.connect(resolve)
-  })
+  await connection.connect()
 
   return connection
 }

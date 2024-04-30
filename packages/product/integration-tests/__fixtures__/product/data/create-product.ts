@@ -42,7 +42,7 @@ export const buildProductAndRelationsData = ({
   thumbnail,
   images,
   status,
-  type_id,
+  type,
   tags,
   options,
   variants,
@@ -60,7 +60,7 @@ export const buildProductAndRelationsData = ({
     thumbnail: thumbnail as string,
     status: status ?? ProductTypes.ProductStatus.PUBLISHED,
     images: (images ?? []) as Image[],
-    type_id,
+    type: type ? { value: type } : { value: faker.commerce.productName() },
     tags: tags ?? [{ value: "tag-1" }],
     collection_id,
     options: options ?? [

@@ -1,7 +1,4 @@
-import { BaseFilterable, OperatorMap } from "../dal"
-
 import { StringComparisonOperator } from "../common/common"
-import { FulfillmentSetDTO } from "../fulfillment"
 
 /**
  * @schema StockLocationAddressDTO
@@ -207,11 +204,6 @@ export type StockLocationDTO = {
   address?: StockLocationAddressDTO
 
   /**
-   * Fulfillment sets for the location
-   */
-  fulfillment_sets: FulfillmentSetDTO[]
-
-  /**
    * The creation date of the stock location.
    */
   created_at: string | Date
@@ -249,8 +241,7 @@ export type StockLocationExpandedDTO = StockLocationDTO & {
  *
  * The filters to apply on the retrieved stock locations.
  */
-export interface FilterableStockLocationProps
-  extends BaseFilterable<FilterableStockLocationProps> {
+export type FilterableStockLocationProps = {
   /**
    * Search parameter for stock location names
    */
@@ -264,7 +255,7 @@ export interface FilterableStockLocationProps
   /**
    * The names to filter stock locations by.
    */
-  name?: string | string[] | OperatorMap<string>
+  name?: string | string[] | StringComparisonOperator
 }
 
 /**
@@ -318,7 +309,7 @@ export type StockLocationAddressInput = {
   /**
    * The second line of the stock location address.
    */
-  address_2?: string | null
+  address_2?: string
 
   /**
    * The country code of the stock location address.
@@ -328,27 +319,27 @@ export type StockLocationAddressInput = {
   /**
    * The city of the stock location address.
    */
-  city?: string | null
+  city?: string
 
   /**
    * The phone of the stock location address.
    */
-  phone?: string | null
+  phone?: string
 
   /**
    * The province of the stock location address.
    */
-  province?: string | null
+  province?: string
 
   /**
    * The postal code of the stock location address.
    */
-  postal_code?: string | null
+  postal_code?: string
 
   /**
    * Holds custom data in key-value pairs.
    */
-  metadata?: Record<string, unknown> | null
+  metadata?: Record<string, unknown>
 }
 
 /**
@@ -441,22 +432,6 @@ export type UpdateStockLocationInput = {
   metadata?: Record<string, unknown>
 }
 
-/**
- * @interface
- *
- * The attributes to update in a stock location.
- */
 export type UpdateStockLocationNextInput = UpdateStockLocationInput & {
-  /**
-   * The ID of the stock location.
-   */
   id: string
 }
-
-/**
- * @interface
- *
- * A stock location to create or update. If the `id` property isn't provided,
- * the stock location is created. In that case, the `name` property is required.
- */
-export type UpsertStockLocationInput = Partial<UpdateStockLocationNextInput>

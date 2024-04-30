@@ -16,7 +16,7 @@ interface StepInput {
 export const updateTaxLinesStepId = "update-tax-lines-step"
 export const updateTaxLinesStep = createStep(
   updateTaxLinesStepId,
-  async (input: StepInput, { container }) => {
+  async (input: StepInput, { container, idempotencyKey }) => {
     const { transaction } = await updateTaxLinesWorkflow(container).run({
       input,
     })

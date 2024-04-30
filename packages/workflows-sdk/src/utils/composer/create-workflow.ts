@@ -5,7 +5,7 @@ import {
   WorkflowManager,
 } from "@medusajs/orchestration"
 import { LoadedModule, MedusaContainer } from "@medusajs/types"
-import { isString, OrchestrationUtils } from "@medusajs/utils"
+import { OrchestrationUtils, isString } from "@medusajs/utils"
 import { ExportedWorkflow, exportWorkflow } from "../../helper"
 import { proxify } from "./helpers/proxy"
 import {
@@ -72,7 +72,7 @@ export type ReturnWorkflow<
     container?: LoadedModule[] | MedusaContainer
   ): Omit<
     LocalWorkflow,
-    "run" | "registerStepSuccess" | "registerStepFailure" | "cancel"
+    "run" | "registerStepSuccess" | "registerStepFailure"
   > &
     ExportedWorkflow<TData, TResult, TDataOverride, TResultOverride>
 } & THooks & {

@@ -1,18 +1,13 @@
 import { updateCartPromotionsWorkflow } from "@medusajs/core-flows"
-import { PromotionActions } from "@medusajs/utils"
+import { PromotionActions, remoteQueryObjectFromString } from "@medusajs/utils"
 import { MedusaRequest, MedusaResponse } from "../../../../../types/routing"
-import { refetchCart } from "../../helpers"
-import {
-  StoreAddCartPromotionsType,
-  StoreRemoveCartPromotionsType,
-} from "../../validators"
+import { defaultStoreCartFields } from "../../query-config"
+import { StorePostCartsCartPromotionsReq } from "../../validators"
 
-export const POST = async (
-  req: MedusaRequest<StoreAddCartPromotionsType>,
-  res: MedusaResponse
-) => {
+export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
+  const remoteQuery = req.scope.resolve("remoteQuery")
   const workflow = updateCartPromotionsWorkflow(req.scope)
-  const payload = req.validatedBody
+  const payload = req.validatedBody as StorePostCartsCartPromotionsReq
 
   const { errors } = await workflow.run({
     input: {
@@ -27,21 +22,22 @@ export const POST = async (
     throw errors[0].error
   }
 
-  const cart = await refetchCart(
-    req.params.id,
-    req.scope,
-    req.remoteQueryConfig.fields
-  )
+  const query = remoteQueryObjectFromString({
+    entryPoint: "cart",
+    fields: defaultStoreCartFields,
+  })
+
+  const [cart] = await remoteQuery(query, {
+    cart: { id: req.params.id },
+  })
 
   res.status(200).json({ cart })
 }
 
-export const DELETE = async (
-  req: MedusaRequest<StoreRemoveCartPromotionsType>,
-  res: MedusaResponse
-) => {
+export const DELETE = async (req: MedusaRequest, res: MedusaResponse) => {
+  const remoteQuery = req.scope.resolve("remoteQuery")
   const workflow = updateCartPromotionsWorkflow(req.scope)
-  const payload = req.validatedBody
+  const payload = req.validatedBody as StorePostCartsCartPromotionsReq
 
   const { errors } = await workflow.run({
     input: {
@@ -56,11 +52,14 @@ export const DELETE = async (
     throw errors[0].error
   }
 
-  const cart = await refetchCart(
-    req.params.id,
-    req.scope,
-    req.remoteQueryConfig.fields
-  )
+  const query = remoteQueryObjectFromString({
+    entryPoint: "cart",
+    fields: defaultStoreCartFields,
+  })
+
+  const [cart] = await remoteQuery(query, {
+    cart: { id: req.params.id },
+  })
 
   res.status(200).json({ cart })
 }

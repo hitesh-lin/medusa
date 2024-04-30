@@ -1,19 +1,15 @@
-import { BigNumberInput, ProductVariantDTO } from "@medusajs/types"
+import { ProductVariantDTO } from "@medusajs/types"
 
 interface Input {
-  quantity: BigNumberInput
+  quantity: number
   metadata?: Record<string, any>
-  unitPrice: BigNumberInput
+  unitPrice: number
   variant: ProductVariantDTO
   cartId?: string
 }
 
 export function prepareLineItemData(data: Input) {
   const { variant, unitPrice, quantity, metadata, cartId } = data
-
-  if (!variant.product) {
-    throw new Error("Variant does not have a product")
-  }
 
   const lineItem: any = {
     quantity,
@@ -27,7 +23,7 @@ export function prepareLineItemData(data: Input) {
     product_description: variant.product.description,
     product_subtitle: variant.product.subtitle,
     product_type: variant.product.type?.[0].value ?? null,
-    product_collection: variant.product.collection?.[0]?.value ?? null,
+    product_collection: variant.product.collection?.[0].value ?? null,
     product_handle: variant.product.handle,
 
     variant_id: variant.id,

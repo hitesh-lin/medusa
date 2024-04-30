@@ -7,7 +7,6 @@ import {
 import {
   ICartModuleService,
   ICustomerModuleService,
-  IFulfillmentModuleService,
   IPricingModuleService,
   IProductModuleService,
   IPromotionModuleService,
@@ -15,11 +14,7 @@ import {
   ISalesChannelModuleService,
   ITaxModuleService,
 } from "@medusajs/types"
-import {
-  PromotionRuleOperator,
-  PromotionType,
-  RuleOperator,
-} from "@medusajs/utils"
+import { PromotionRuleOperator, PromotionType } from "@medusajs/utils"
 import { medusaIntegrationTestRunner } from "medusa-test-utils"
 import adminSeeder from "../../../../helpers/admin-seeder"
 import { createAuthenticatedCustomer } from "../../../helpers/create-authenticated-customer"
@@ -43,7 +38,6 @@ medusaIntegrationTestRunner({
       let remoteLink: RemoteLink
       let promotionModule: IPromotionModuleService
       let taxModule: ITaxModuleService
-      let fulfillmentModule: IFulfillmentModuleService
 
       let defaultRegion
 
@@ -58,9 +52,6 @@ medusaIntegrationTestRunner({
         remoteLink = appContainer.resolve(LinkModuleUtils.REMOTE_LINK)
         promotionModule = appContainer.resolve(ModuleRegistrationName.PROMOTION)
         taxModule = appContainer.resolve(ModuleRegistrationName.TAX)
-        fulfillmentModule = appContainer.resolve(
-          ModuleRegistrationName.FULFILLMENT
-        )
       })
 
       beforeEach(async () => {
@@ -557,7 +548,7 @@ medusaIntegrationTestRunner({
           await setupTaxStructure(taxModule)
 
           const region = await regionModule.create({
-            name: "us",
+            name: "US",
             currency_code: "usd",
           })
 
@@ -571,9 +562,9 @@ medusaIntegrationTestRunner({
             shipping_address: {
               address_1: "test address 1",
               address_2: "test address 2",
-              city: "ny",
-              country_code: "us",
-              province: "ny",
+              city: "NY",
+              country_code: "US",
+              province: "NY",
               postal_code: "94016",
             },
             items: [
@@ -587,78 +578,11 @@ medusaIntegrationTestRunner({
             ],
           })
 
-          const shippingProfile =
-            await fulfillmentModule.createShippingProfiles({
-              name: "Test",
-              type: "default",
-            })
-
-          const fulfillmentSet = await fulfillmentModule.create({
-            name: "Test",
-            type: "test-type",
-            service_zones: [
-              {
-                name: "Test",
-                geo_zones: [{ type: "country", country_code: "us" }],
-              },
-            ],
-          })
-
-          const shippingOption = await fulfillmentModule.createShippingOptions({
-            name: "Test shipping option",
-            service_zone_id: fulfillmentSet.service_zones[0].id,
-            shipping_profile_id: shippingProfile.id,
-            provider_id: "manual_test-provider",
-            price_type: "flat",
-            type: {
-              label: "Test type",
-              description: "Test description",
-              code: "test-code",
-            },
-            rules: [
-              {
-                operator: RuleOperator.EQ,
-                attribute: "customer.email",
-                value: "tony@stark.com",
-              },
-            ],
-          })
-
-          const shippingOption2 = await fulfillmentModule.createShippingOptions(
-            {
-              name: "Test shipping option",
-              service_zone_id: fulfillmentSet.service_zones[0].id,
-              shipping_profile_id: shippingProfile.id,
-              provider_id: "manual_test-provider",
-              price_type: "flat",
-              type: {
-                label: "Test type",
-                description: "Test description",
-                code: "test-code",
-              },
-              rules: [
-                {
-                  operator: RuleOperator.EQ,
-                  attribute: "customer.email",
-                  value: "tony@stark.com",
-                },
-              ],
-            }
-          )
-
           // Manually inserting shipping methods here since the cart does not
           // currently support it. Move to API when ready.
           await cartModule.addShippingMethods(cart.id, [
-            {
-              amount: 500,
-              name: "express",
-              shipping_option_id: shippingOption.id,
-            },
-            {
-              amount: 500,
-              name: "standard",
-              shipping_option_id: shippingOption2.id,
-            },
+            { amount: 500, name: "express" },
+            { amount: 500, name: "standard" },
           ])
 
           let updated = await api.post(`/store/carts/${cart.id}`, {
@@ -666,10 +590,7 @@ medusaIntegrationTestRunner({
             email: "tony@stark.com",
             sales_channel_id: salesChannel.id,
           })
-          console.log(
-            "updated.data.cart --- ",
-            JSON.stringify(updated.data.cart, null, 4)
-          )
+
           expect(updated.status).toEqual(200)
           expect(updated.data.cart).toEqual(
             expect.objectContaining({
@@ -685,13 +606,13 @@ medusaIntegrationTestRunner({
               }),
               sales_channel_id: salesChannel.id,
               shipping_address: expect.objectContaining({
-                city: "ny",
-                country_code: "us",
-                province: "ny",
+                city: "NY",
+                country_code: "US",
+                province: "NY",
               }),
               shipping_methods: expect.arrayContaining([
                 expect.objectContaining({
-                  shipping_option_id: shippingOption2.id,
+                  shipping_option_id: null,
                   amount: 500,
                   tax_lines: [
                     expect.objectContaining({
@@ -704,7 +625,7 @@ medusaIntegrationTestRunner({
                   adjustments: [],
                 }),
                 expect.objectContaining({
-                  shipping_option_id: shippingOption.id,
+                  shipping_option_id: null,
                   amount: 500,
                   tax_lines: [
                     expect.objectContaining({
@@ -761,140 +682,6 @@ medusaIntegrationTestRunner({
                   adjustments: [],
                 }),
               ],
-            })
-          )
-        })
-
-        it("should remove invalid shipping methods", async () => {
-          await setupTaxStructure(taxModule)
-
-          const region = await regionModule.create({
-            name: "US",
-            currency_code: "usd",
-          })
-
-          const cart = await cartModule.create({
-            region_id: region.id,
-            currency_code: "eur",
-            email: "tony@stark.com",
-            shipping_address: {
-              address_1: "test address 1",
-              address_2: "test address 2",
-              city: "ny",
-              country_code: "us",
-              province: "ny",
-              postal_code: "94016",
-            },
-          })
-
-          const shippingProfile =
-            await fulfillmentModule.createShippingProfiles({
-              name: "Test",
-              type: "default",
-            })
-
-          const fulfillmentSet = await fulfillmentModule.create({
-            name: "Test",
-            type: "test-type",
-            service_zones: [
-              {
-                name: "Test",
-                geo_zones: [{ type: "country", country_code: "us" }],
-              },
-            ],
-          })
-
-          const shippingOptionOldValid =
-            await fulfillmentModule.createShippingOptions({
-              name: "Test shipping option",
-              service_zone_id: fulfillmentSet.service_zones[0].id,
-              shipping_profile_id: shippingProfile.id,
-              provider_id: "manual_test-provider",
-              price_type: "flat",
-              type: {
-                label: "Test type",
-                description: "Test description",
-                code: "test-code",
-              },
-              rules: [
-                {
-                  operator: RuleOperator.EQ,
-                  attribute: "customer.email",
-                  value: "tony@stark.com",
-                },
-              ],
-            })
-
-          const shippingOptionNewValid =
-            await fulfillmentModule.createShippingOptions({
-              name: "Test shipping option new",
-              service_zone_id: fulfillmentSet.service_zones[0].id,
-              shipping_profile_id: shippingProfile.id,
-              provider_id: "manual_test-provider",
-              price_type: "flat",
-              type: {
-                label: "Test type",
-                description: "Test description",
-                code: "test-code",
-              },
-              rules: [
-                {
-                  operator: RuleOperator.EQ,
-                  attribute: "customer.email",
-                  value: "jon@stark.com",
-                },
-              ],
-            })
-
-          await cartModule.addShippingMethods(cart.id, [
-            // should be removed
-            {
-              amount: 500,
-              name: "express",
-              shipping_option_id: shippingOptionOldValid.id,
-            },
-            // should be kept
-            {
-              amount: 500,
-              name: "express-new",
-              shipping_option_id: shippingOptionNewValid.id,
-            },
-            // should be removed
-            {
-              amount: 500,
-              name: "standard",
-              shipping_option_id: "does-not-exist",
-            },
-          ])
-
-          let updated = await api.post(`/store/carts/${cart.id}`, {
-            email: "jon@stark.com",
-          })
-
-          expect(updated.status).toEqual(200)
-          expect(updated.data.cart).toEqual(
-            expect.objectContaining({
-              id: cart.id,
-              email: "jon@stark.com",
-              shipping_methods: [
-                expect.objectContaining({
-                  shipping_option_id: shippingOptionNewValid.id,
-                }),
-              ],
-            })
-          )
-
-          updated = await api.post(`/store/carts/${cart.id}`, {
-            email: null,
-            sales_channel_id: null,
-          })
-
-          expect(updated.status).toEqual(200)
-          expect(updated.data.cart).toEqual(
-            expect.objectContaining({
-              id: cart.id,
-              email: null,
-              shipping_methods: [],
             })
           )
         })
@@ -1311,85 +1098,6 @@ medusaIntegrationTestRunner({
             type: "invalid_data",
             message: "country code is required to calculate taxes",
           })
-        })
-      })
-
-      describe("POST /store/carts/:id/shipping-methods", () => {
-        it("should add a shipping methods to a cart", async () => {
-          const cart = await cartModule.create({
-            currency_code: "usd",
-            shipping_address: { country_code: "us" },
-            items: [],
-          })
-
-          const shippingProfile =
-            await fulfillmentModule.createShippingProfiles({
-              name: "Test",
-              type: "default",
-            })
-
-          const fulfillmentSet = await fulfillmentModule.create({
-            name: "Test",
-            type: "test-type",
-            service_zones: [
-              {
-                name: "Test",
-                geo_zones: [{ type: "country", country_code: "us" }],
-              },
-            ],
-          })
-
-          const priceSet = await pricingModule.create({
-            prices: [{ amount: 3000, currency_code: "usd" }],
-          })
-
-          const shippingOption = await fulfillmentModule.createShippingOptions({
-            name: "Test shipping option",
-            service_zone_id: fulfillmentSet.service_zones[0].id,
-            shipping_profile_id: shippingProfile.id,
-            provider_id: "manual_test-provider",
-            price_type: "flat",
-            type: {
-              label: "Test type",
-              description: "Test description",
-              code: "test-code",
-            },
-            rules: [
-              {
-                operator: RuleOperator.EQ,
-                attribute: "shipping_address.country_code",
-                value: "us",
-              },
-            ],
-          })
-
-          await remoteLink.create([
-            {
-              [Modules.FULFILLMENT]: { shipping_option_id: shippingOption.id },
-              [Modules.PRICING]: { price_set_id: priceSet.id },
-            },
-          ])
-
-          let response = await api.post(
-            `/store/carts/${cart.id}/shipping-methods`,
-            { option_id: shippingOption.id }
-          )
-
-          expect(response.status).toEqual(200)
-          expect(response.data.cart).toEqual(
-            expect.objectContaining({
-              id: cart.id,
-              shipping_methods: [
-                {
-                  shipping_option_id: shippingOption.id,
-                  amount: 3000,
-                  id: expect.any(String),
-                  tax_lines: [],
-                  adjustments: [],
-                },
-              ],
-            })
-          )
         })
       })
     })

@@ -211,9 +211,12 @@ moduleIntegrationTestRunner({
         const typeId = "type-1"
 
         it("should update the value of the type successfully", async () => {
-          await service.updateTypes(typeId, {
-            value: "UK",
-          })
+          await service.updateTypes([
+            {
+              id: typeId,
+              value: "UK",
+            },
+          ])
 
           const productType = await service.retrieveType(typeId)
 
@@ -224,15 +227,18 @@ moduleIntegrationTestRunner({
           let error
 
           try {
-            await service.updateTypes("does-not-exist", {
-              value: "UK",
-            })
+            await service.updateTypes([
+              {
+                id: "does-not-exist",
+                value: "UK",
+              },
+            ])
           } catch (e) {
             error = e
           }
 
           expect(error.message).toEqual(
-            "ProductType with id: does-not-exist was not found"
+            'ProductType with id "does-not-exist" not found'
           )
         })
       })

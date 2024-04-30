@@ -1,13 +1,10 @@
 import {
-  ExternalModuleDeclaration,
-  InternalModuleDeclaration,
+  MedusaApp,
+  MedusaModule,
+  MedusaModuleConfig,
   ModuleJoinerConfig,
-} from "@medusajs/types"
-import {
-  ContainerRegistrationKeys,
-  ModulesSdkUtils,
-  promiseAll,
-} from "@medusajs/utils"
+} from "@medusajs/modules-sdk"
+import { ContainerRegistrationKeys, ModulesSdkUtils } from "@medusajs/utils"
 
 export interface InitModulesOptions {
   injectedDependencies?: Record<string, unknown>
@@ -15,12 +12,7 @@ export interface InitModulesOptions {
     clientUrl: string
     schema?: string
   }
-  modulesConfig: {
-    [key: string]:
-      | string
-      | boolean
-      | Partial<InternalModuleDeclaration | ExternalModuleDeclaration>
-  }
+  modulesConfig: MedusaModuleConfig
   joinerConfig?: ModuleJoinerConfig[]
   preventConnectionDestroyWarning?: boolean
 }
@@ -32,8 +24,6 @@ export async function initModules({
   joinerConfig,
   preventConnectionDestroyWarning = false,
 }: InitModulesOptions) {
-  const moduleSdkImports = require("@medusajs/modules-sdk")
-
   injectedDependencies ??= {}
 
   let sharedPgConnection =
@@ -50,7 +40,7 @@ export async function initModules({
       sharedPgConnection
   }
 
-  const medusaApp = await moduleSdkImports.MedusaApp({
+  const medusaApp = await MedusaApp({
     modulesConfig,
     servicesConfig: joinerConfig,
     injectedDependencies,
@@ -58,11 +48,8 @@ export async function initModules({
 
   async function shutdown() {
     if (shouldDestroyConnectionAutomatically) {
-      await promiseAll([
-        (sharedPgConnection as any).context?.destroy(),
-        (sharedPgConnection as any).destroy(),
-        medusaApp.onApplicationShutdown(),
-      ])
+      await (sharedPgConnection as any).context?.destroy()
+      await (sharedPgConnection as any).destroy()
     } else {
       if (!preventConnectionDestroyWarning) {
         console.info(
@@ -70,7 +57,7 @@ export async function initModules({
         )
       }
     }
-    moduleSdkImports.MedusaModule.clearInstances()
+    MedusaModule.clearInstances()
   }
 
   return {

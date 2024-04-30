@@ -7,31 +7,19 @@ import { BaseFilterable } from "../../dal"
  */
 export interface CurrencyDTO {
   /**
-   * The ISO 3 character code of the currency.
-   *
-   * @example
-   * usd
+   * The ISO 3 code of the currency.
    */
   code: string
   /**
    * The symbol of the currency.
-   *
-   * @example
-   * $
    */
   symbol: string
   /**
    * The symbol of the currecy in its native form. This is typically the symbol used when displaying a price.
-   *
-   * @example
-   * $
    */
   symbol_native: string
   /**
    * The name of the currency.
-   *
-   * @example
-   * US Dollar
    */
   name: string
 }
@@ -43,10 +31,6 @@ export interface CurrencyDTO {
  */
 export interface FilterableCurrencyProps
   extends BaseFilterable<FilterableCurrencyProps> {
-  /**
-   * Search through currencies using this search term.
-   */
-  q?: string
   /**
    * The codes to filter the currencies by.
    */

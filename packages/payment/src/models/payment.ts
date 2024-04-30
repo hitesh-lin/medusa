@@ -3,7 +3,6 @@ import {
   BigNumber,
   DALUtils,
   MikroOrmBigNumberProperty,
-  Searchable,
   generateEntityId,
 } from "@medusajs/utils"
 import {
@@ -47,15 +46,12 @@ export default class Payment {
   @Property({ columnType: "text" })
   provider_id: string
 
-  @Searchable()
   @Property({ columnType: "text", nullable: true })
   cart_id: string | null = null
 
-  @Searchable()
   @Property({ columnType: "text", nullable: true })
   order_id: string | null = null
 
-  @Searchable()
   @Property({ columnType: "text", nullable: true })
   customer_id: string | null = null
 

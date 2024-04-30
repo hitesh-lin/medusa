@@ -1,13 +1,4 @@
 import {
-  MODULE_PACKAGE_NAMES,
-  MedusaApp,
-  MedusaAppMigrateUp,
-  MedusaAppOutput,
-  MedusaModule,
-  Modules,
-  ModulesDefinition,
-} from "@medusajs/modules-sdk"
-import {
   CommonTypes,
   InternalModuleDeclaration,
   LoadedModule,
@@ -17,11 +8,21 @@ import {
 import {
   ContainerRegistrationKeys,
   FlagRouter,
-  MedusaV2Flag,
   isObject,
+  MedusaV2Flag,
 } from "@medusajs/utils"
+import {
+  MedusaApp,
+  MedusaAppMigrateUp,
+  MedusaAppOutput,
+  MedusaModule,
+  MODULE_PACKAGE_NAMES,
+  Modules,
+  ModulesDefinition,
+} from "@medusajs/modules-sdk"
 
 import { asValue } from "awilix"
+import { joinerConfig } from "../joiner-config"
 import { remoteQueryFetchData } from "../utils/remote-query-fetch-data"
 
 export function mergeDefaultModules(
@@ -100,6 +101,7 @@ export async function migrateMedusaApp(
 
   await MedusaAppMigrateUp({
     modulesConfig: configModules,
+    servicesConfig: joinerConfig,
     remoteFetchData: remoteQueryFetchData(container),
     sharedContainer: container,
     sharedResourcesConfig,
@@ -168,6 +170,7 @@ export const loadMedusaApp = async (
   const medusaApp = await MedusaApp({
     workerMode: configModule.projectConfig.worker_mode,
     modulesConfig: configModules,
+    servicesConfig: joinerConfig,
     remoteFetchData: remoteQueryFetchData(container),
     sharedContainer: container,
     sharedResourcesConfig,
@@ -246,6 +249,7 @@ export async function runModulesLoader({
   }
   container: MedusaContainer
 }): Promise<void> {
+  const featureFlagRouter = container.resolve<FlagRouter>("featureFlagRouter")
   const injectedDependencies = {
     [ContainerRegistrationKeys.PG_CONNECTION]: container.resolve(
       ContainerRegistrationKeys.PG_CONNECTION
@@ -288,6 +292,7 @@ export async function runModulesLoader({
 
   await MedusaApp({
     modulesConfig: configModules,
+    servicesConfig: joinerConfig,
     remoteFetchData: remoteQueryFetchData(container),
     sharedContainer: container,
     sharedResourcesConfig,

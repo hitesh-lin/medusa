@@ -1,5 +1,5 @@
 import { DAL } from "@medusajs/types"
-import { Searchable, generateEntityId } from "@medusajs/utils"
+import { generateEntityId } from "@medusajs/utils"
 import {
   BeforeCreate,
   Cascade,
@@ -37,7 +37,6 @@ export default class Address {
   @PrimaryKey({ columnType: "text" })
   id!: string
 
-  @Searchable()
   @Property({ columnType: "text", nullable: true })
   address_name: string | null = null
 
@@ -57,38 +56,30 @@ export default class Address {
   })
   customer: Customer
 
-  @Searchable()
   @Property({ columnType: "text", nullable: true })
   company: string | null = null
 
-  @Searchable()
   @Property({ columnType: "text", nullable: true })
   first_name: string | null = null
 
-  @Searchable()
   @Property({ columnType: "text", nullable: true })
   last_name: string | null = null
 
-  @Searchable()
   @Property({ columnType: "text", nullable: true })
   address_1: string | null = null
 
-  @Searchable()
   @Property({ columnType: "text", nullable: true })
   address_2: string | null = null
 
-  @Searchable()
   @Property({ columnType: "text", nullable: true })
   city: string | null = null
 
   @Property({ columnType: "text", nullable: true })
   country_code: string | null = null
 
-  @Searchable()
   @Property({ columnType: "text", nullable: true })
   province: string | null = null
 
-  @Searchable()
   @Property({ columnType: "text", nullable: true })
   postal_code: string | null = null
 

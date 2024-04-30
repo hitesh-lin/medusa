@@ -1,12 +1,13 @@
-import { initModules, InitModulesOptions } from "./init-modules"
-import { getDatabaseURL, getMikroOrmWrapper, TestDatabase } from "./database"
+import { ContainerRegistrationKeys, ModulesSdkUtils } from "@medusajs/utils"
+import { InitModulesOptions, initModules } from "./init-modules"
+import { MedusaAppOutput, ModulesDefinition } from "@medusajs/modules-sdk"
+import { TestDatabase, getDatabaseURL, getMikroOrmWrapper } from "./database"
 
 import { MockEventBusService } from "."
-import { ContainerRegistrationKeys, ModulesSdkUtils } from "@medusajs/utils"
 
 export interface SuiteOptions<TService = unknown> {
   MikroOrmWrapper: TestDatabase
-  medusaApp: any
+  medusaApp: MedusaAppOutput
   service: TService
   dbConfig: {
     schema: string
@@ -34,10 +35,8 @@ export function moduleIntegrationTestRunner({
   injectedDependencies?: Record<string, any>
   resolve?: string
   debug?: boolean
-  testSuite: <TService = unknown>(options: SuiteOptions<TService>) => void
+  testSuite: <TService = unknown>(options: SuiteOptions<TService>) => () => void
 }) {
-  const moduleSdkImports = require("@medusajs/modules-sdk")
-
   process.env.LOG_LEVEL = "error"
 
   moduleModels ??= Object.values(require(`${process.cwd()}/src/models`))
@@ -63,7 +62,7 @@ export function moduleIntegrationTestRunner({
 
   const modulesConfig_ = {
     [moduleName]: {
-      definition: moduleSdkImports.ModulesDefinition[moduleName],
+      definition: ModulesDefinition[moduleName],
       resolve,
       options: {
         defaultAdapterOptions: {
@@ -90,7 +89,7 @@ export function moduleIntegrationTestRunner({
 
   let shutdown: () => Promise<void>
   let moduleService
-  let medusaApp = {}
+  let medusaApp: MedusaAppOutput = {} as MedusaAppOutput
 
   const options = {
     MikroOrmWrapper,
@@ -101,7 +100,7 @@ export function moduleIntegrationTestRunner({
           return medusaApp[prop]
         },
       }
-    ),
+    ) as MedusaAppOutput,
     service: new Proxy(
       {},
       {
@@ -124,7 +123,7 @@ export function moduleIntegrationTestRunner({
     await MikroOrmWrapper.clearDatabase()
     await shutdown()
     moduleService = {}
-    medusaApp = {}
+    medusaApp = {} as MedusaAppOutput
   }
 
   return describe("", () => {

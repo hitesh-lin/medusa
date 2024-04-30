@@ -11,7 +11,7 @@ import { GeneratorEvent } from "../helpers/generator-event-manager.js"
 class OasGenerator extends AbstractGenerator {
   protected oasKindGenerator?: OasKindGenerator
 
-  async run() {
+  run() {
     this.init()
 
     const { generateExamples } = this.options
@@ -24,52 +24,36 @@ class OasGenerator extends AbstractGenerator {
       },
     })
 
-    await Promise.all(
-      this.program!.getSourceFiles().map(async (file) => {
-        // Ignore .d.ts files
-        if (file.isDeclarationFile || !this.isFileIncluded(file.fileName)) {
-          return
-        }
-        const fileNodes: ts.Node[] = [file]
+    this.program!.getSourceFiles().map((file) => {
+      // Ignore .d.ts files
+      if (file.isDeclarationFile || !this.isFileIncluded(file.fileName)) {
+        return
+      }
 
-        console.log(`[OAS] Generating for ${file.fileName}...`)
+      console.log(`[OAS] Generating for ${file.fileName}...`)
 
-        // since typescript's compiler API doesn't support
-        // async processes, we have to retrieve the nodes first then
-        // traverse them separately.
-        const pushNodesToArr = (node: ts.Node) => {
-          fileNodes.push(node)
+      const documentChild = (node: ts.Node) => {
+        if (
+          this.oasKindGenerator!.isAllowed(node) &&
+          this.oasKindGenerator!.canDocumentNode(node)
+        ) {
+          const oas = this.oasKindGenerator!.getDocBlock(node)
 
-          ts.forEachChild(node, pushNodesToArr)
-        }
-        ts.forEachChild(file, pushNodesToArr)
-
-        const documentChild = async (node: ts.Node) => {
-          if (
-            this.oasKindGenerator!.isAllowed(node) &&
-            this.oasKindGenerator!.canDocumentNode(node)
-          ) {
-            const oas = await this.oasKindGenerator!.getDocBlock(node)
-
-            if (!this.options.dryRun) {
-              const filename =
-                this.oasKindGenerator!.getAssociatedFileName(node)
-              ts.sys.writeFile(
-                filename,
-                this.formatter.addCommentsToSourceFile(oas, "")
-              )
-            }
+          if (!this.options.dryRun) {
+            const filename = this.oasKindGenerator!.getAssociatedFileName(node)
+            ts.sys.writeFile(
+              filename,
+              this.formatter.addCommentsToSourceFile(oas, "")
+            )
           }
         }
+      }
 
-        await Promise.all(
-          fileNodes.map(async (node) => await documentChild(node))
-        )
+      ts.forEachChild(file, documentChild)
 
-        this.generatorEventManager.emit(GeneratorEvent.FINISHED_GENERATE_EVENT)
-        console.log(`[OAS] Finished generating OAS for ${file.fileName}.`)
-      })
-    )
+      this.generatorEventManager.emit(GeneratorEvent.FINISHED_GENERATE_EVENT)
+      console.log(`[OAS] Finished generating OAS for ${file.fileName}.`)
+    })
   }
 
   /**

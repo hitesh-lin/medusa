@@ -1,51 +1,138 @@
-import { z } from "zod"
+import { Type } from "class-transformer"
 import {
-  createFindParams,
-  createOperatorMap,
-  createSelectParams,
-} from "../../utils/validators"
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from "class-validator"
+import {
+  DateComparisonOperator,
+  FindParams,
+  extendedFindParamsMixin,
+} from "../../../types/common"
+import { IsType } from "../../../utils"
 
-export type AdminGetInviteParamsType = z.infer<typeof AdminGetInviteParams>
-export const AdminGetInviteParams = createSelectParams()
+export class AdminGetInvitesInviteParams extends FindParams {}
 
-export type AdminGetInvitesParamsType = z.infer<typeof AdminGetInvitesParams>
-export const AdminGetInvitesParams = createFindParams({
+export class AdminGetInvitesParams extends extendedFindParamsMixin({
   limit: 50,
   offset: 0,
-}).merge(
-  z.object({
-    q: z.string().optional(),
-    id: z.union([z.string(), z.array(z.string())]).optional(),
-    email: z.union([z.string(), z.array(z.string())]).optional(),
-    created_at: createOperatorMap().optional(),
-    updated_at: createOperatorMap().optional(),
-    deleted_at: createOperatorMap().optional(),
-    $and: z.lazy(() => AdminGetInvitesParams.array()).optional(),
-    $or: z.lazy(() => AdminGetInvitesParams.array()).optional(),
-  })
-)
+}) {
+  /**
+   * IDs to filter invites by.
+   */
+  @IsOptional()
+  @IsType([String, [String]])
+  id?: string | string[]
 
-export type AdminGetInviteAcceptParamsType = z.infer<
-  typeof AdminGetInviteAcceptParams
->
-export const AdminGetInviteAcceptParams = createSelectParams().merge(
-  z.object({
-    token: z.string(),
-  })
-)
+  /**
+   * The field to sort the data by. By default, the sort order is ascending. To change the order to descending, prefix the field name with `-`.
+   */
+  @IsString()
+  @IsOptional()
+  order?: string
 
-export type AdminCreateInviteType = z.infer<typeof AdminCreateInvite>
-export const AdminCreateInvite = z
-  .object({
-    email: z.string(),
-  })
-  .strict()
+  /**
+   * Date filters to apply on the invites' `update_at` date.
+   */
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => DateComparisonOperator)
+  updated_at?: DateComparisonOperator
 
-export type AdminInviteAcceptType = z.infer<typeof AdminInviteAccept>
-export const AdminInviteAccept = z
-  .object({
-    email: z.string().optional(),
-    first_name: z.string().optional(),
-    last_name: z.string().optional(),
-  })
-  .strict()
+  /**
+   * Date filters to apply on the customer invites' `created_at` date.
+   */
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => DateComparisonOperator)
+  created_at?: DateComparisonOperator
+
+  /**
+   * Date filters to apply on the invites' `deleted_at` date.
+   */
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => DateComparisonOperator)
+  deleted_at?: DateComparisonOperator
+
+  /**
+   * Filter to apply on the invites' `email` field.
+   */
+  @IsOptional()
+  @IsString()
+  email?: string
+
+  /**
+   * Comma-separated fields that should be included in the returned invites.
+   */
+  @IsOptional()
+  @IsString()
+  fields?: string
+}
+
+export class AdminCreateInviteRequest {
+  @IsEmail()
+  email: string
+}
+
+/**
+ * Details of the use accepting the invite.
+ */
+export class AdminPostInvitesInviteAcceptUserReq {}
+
+/**
+ * @schema AdminPostInvitesInviteAcceptReq
+ * type: object
+ * description: "The details of the invite to be accepted."
+ * required:
+ *   - token
+ *   - user
+ * properties:
+ *   token:
+ *     description: "The token of the invite to accept. This is a unique token generated when the invite was created or resent."
+ *     type: string
+ *   user:
+ *     description: "The details of the user to create."
+ *     type: object
+ *     required:
+ *       - first_name
+ *       - last_name
+ *       - password
+ *     properties:
+ *       first_name:
+ *         type: string
+ *         description: the first name of the User
+ *       last_name:
+ *         type: string
+ *         description: the last name of the User
+ *       password:
+ *         description: The password for the User
+ *         type: string
+ *         format: password
+ */
+export class AdminPostInvitesInviteAcceptReq {
+  /**
+   * The invite's first name.
+   */
+  @IsString()
+  @IsOptional()
+  first_name: string
+
+  /**
+   * The invite's last name.
+   */
+  @IsString()
+  @IsOptional()
+  last_name: string
+}
+
+export class AdminPostInvitesInviteAcceptParams {
+  @IsString()
+  @IsNotEmpty()
+  token: string
+
+  @IsOptional()
+  expand = undefined
+}

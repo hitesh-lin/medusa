@@ -569,13 +569,19 @@ describe("RemoteJoiner", () => {
           fields: ["name"],
         },
       ],
+      args: [
+        {
+          name: "id",
+          value: "3",
+        },
+      ],
     }
 
     await joiner.query(query)
 
     expect(serviceMock.orderService).toHaveBeenCalledTimes(1)
     expect(serviceMock.orderService).toHaveBeenCalledWith({
-      args: undefined,
+      args: [],
       fields: ["number", "date", "products", "user_id"],
       expands: {
         products: {
@@ -583,7 +589,7 @@ describe("RemoteJoiner", () => {
           fields: ["product_id"],
         },
       },
-      options: { id: undefined },
+      options: { id: ["3"] },
     })
 
     expect(serviceMock.userService).toHaveBeenCalledTimes(1)
