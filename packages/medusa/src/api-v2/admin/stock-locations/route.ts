@@ -4,29 +4,52 @@ import {
 } from "@medusajs/utils"
 import { MedusaRequest, MedusaResponse } from "../../../types/routing"
 
-import { AdminPostStockLocationsReq } from "./validators"
 import { createStockLocationsWorkflow } from "@medusajs/core-flows"
+import {
+  AdminCreateStockLocationType,
+  AdminGetStockLocationsParamsType,
+} from "./validators"
+import { refetchStockLocation } from "./helpers"
 
 // Create stock location
 export const POST = async (
-  req: MedusaRequest<AdminPostStockLocationsReq>,
+  req: MedusaRequest<AdminCreateStockLocationType>,
   res: MedusaResponse
 ) => {
-  const remoteQuery = req.scope.resolve(ContainerRegistrationKeys.REMOTE_QUERY)
-
   const { result } = await createStockLocationsWorkflow(req.scope).run({
     input: { locations: [req.validatedBody] },
   })
 
-  const [stock_location] = await remoteQuery(
+  const stockLocation = await refetchStockLocation(
+    result[0].id,
+    req.scope,
+    req.remoteQueryConfig.fields
+  )
+
+  res.status(200).json({ stock_location: stockLocation })
+}
+
+export const GET = async (
+  req: MedusaRequest<AdminGetStockLocationsParamsType>,
+  res: MedusaResponse
+) => {
+  const remoteQuery = req.scope.resolve(ContainerRegistrationKeys.REMOTE_QUERY)
+
+  const { rows: stock_locations, metadata } = await remoteQuery(
     remoteQueryObjectFromString({
       entryPoint: "stock_locations",
       variables: {
-        id: result[0].id,
+        filters: req.filterableFields,
+        ...req.remoteQueryConfig.pagination,
       },
       fields: req.remoteQueryConfig.fields,
     })
   )
 
-  res.status(200).json({ stock_location })
+  res.status(200).json({
+    stock_locations,
+    count: metadata.count,
+    offset: metadata.skip,
+    limit: metadata.take,
+  })
 }

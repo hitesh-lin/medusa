@@ -1,34 +1,59 @@
-import {
-  ContainerRegistrationKeys,
-  remoteQueryObjectFromString,
-} from "@medusajs/utils"
 import { MedusaRequest, MedusaResponse } from "../../../../types/routing"
 
+import {
+  deleteStockLocationsWorkflow,
+  updateStockLocationsWorkflow,
+} from "@medusajs/core-flows"
 import { MedusaError } from "@medusajs/utils"
-import { deleteStockLocationsWorkflow } from "@medusajs/core-flows"
+import {
+  AdminGetStockLocationParamsType,
+  AdminUpdateStockLocationType,
+} from "../validators"
+import { refetchStockLocation } from "../helpers"
 
-export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
+export const POST = async (
+  req: MedusaRequest<AdminUpdateStockLocationType>,
+  res: MedusaResponse
+) => {
   const { id } = req.params
-  const remoteQuery = req.scope.resolve(ContainerRegistrationKeys.REMOTE_QUERY)
+  await updateStockLocationsWorkflow(req.scope).run({
+    input: {
+      selector: { id: req.params.id },
+      update: req.validatedBody,
+    },
+  })
 
-  const [stock_location] = await remoteQuery(
-    remoteQueryObjectFromString({
-      entryPoint: "stock_locations",
-      variables: {
-        id,
-      },
-      fields: req.remoteQueryConfig.fields,
-    })
+  const stockLocation = await refetchStockLocation(
+    id,
+    req.scope,
+    req.remoteQueryConfig.fields
   )
 
-  if (!stock_location) {
+  res.status(200).json({
+    stock_location: stockLocation,
+  })
+}
+
+export const GET = async (
+  req: MedusaRequest<AdminGetStockLocationParamsType>,
+  res: MedusaResponse
+) => {
+  const { id } = req.params
+
+  const stockLocation = await refetchStockLocation(
+    id,
+    req.scope,
+    req.remoteQueryConfig.fields
+  )
+
+  if (!stockLocation) {
     throw new MedusaError(
       MedusaError.Types.NOT_FOUND,
       `Stock location with id: ${id} was not found`
     )
   }
 
-  res.status(200).json({ stock_location })
+  res.status(200).json({ stock_location: stockLocation })
 }
 
 export const DELETE = async (req: MedusaRequest, res: MedusaResponse) => {

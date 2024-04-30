@@ -1,48 +1,73 @@
 import { ModuleRegistrationName } from "@medusajs/modules-sdk"
-import { IPricingModuleService, UpdatePriceSetDTO } from "@medusajs/types"
+import { IPricingModuleService, PricingTypes } from "@medusajs/types"
 import {
-  convertItemResponseToUpdateRequest,
+  MedusaError,
   getSelectsAndRelationsFromObjectArray,
 } from "@medusajs/utils"
 import { StepResponse, createStep } from "@medusajs/workflows-sdk"
 
+type UpdatePriceSetsStepInput =
+  | {
+      selector?: PricingTypes.FilterablePriceSetProps
+      update?: PricingTypes.UpdatePriceSetDTO
+    }
+  | {
+      price_sets: PricingTypes.UpsertPriceSetDTO[]
+    }
+
 export const updatePriceSetsStepId = "update-price-sets"
 export const updatePriceSetsStep = createStep(
   updatePriceSetsStepId,
-  async (data: UpdatePriceSetDTO[], { container }) => {
+  async (data: UpdatePriceSetsStepInput, { container }) => {
     const pricingModule = container.resolve<IPricingModuleService>(
       ModuleRegistrationName.PRICING
     )
 
-    const { selects, relations } = getSelectsAndRelationsFromObjectArray(data)
-    const dataBeforeUpdate = await pricingModule.list(
-      { id: data.map((d) => d.id) },
-      { relations, select: selects }
-    )
+    if ("price_sets" in data) {
+      if (data.price_sets.some((p) => !p.id)) {
+        throw new MedusaError(
+          MedusaError.Types.INVALID_DATA,
+          "Price set id is required when doing a batch update"
+        )
+      }
 
-    const updatedPriceSets = await pricingModule.update(data)
+      const prevData = await pricingModule.list({
+        id: data.price_sets.map((p) => p.id) as string[],
+      })
 
-    return new StepResponse(updatedPriceSets, {
-      dataBeforeUpdate,
-      selects,
+      const priceSets = await pricingModule.upsert(data.price_sets)
+      return new StepResponse(priceSets, prevData)
+    }
+
+    if (!data.selector || !data.update) {
+      return new StepResponse([], null)
+    }
+
+    const { selects, relations } = getSelectsAndRelationsFromObjectArray([
+      data.update,
+    ])
+
+    const dataBeforeUpdate = await pricingModule.list(data.selector, {
+      select: selects,
       relations,
     })
+
+    const updatedPriceSets = await pricingModule.update(
+      data.selector,
+      data.update
+    )
+
+    return new StepResponse(updatedPriceSets, dataBeforeUpdate)
   },
   async (revertInput, { container }) => {
+    const pricingModule = container.resolve<IPricingModuleService>(
+      ModuleRegistrationName.PRICING
+    )
+
     if (!revertInput) {
       return
     }
 
-    const { dataBeforeUpdate = [], selects, relations } = revertInput
-
-    const pricingModule = container.resolve<IPricingModuleService>(
-      ModuleRegistrationName.PRICING
-    )
-
-    await pricingModule.update(
-      dataBeforeUpdate.map((data) =>
-        convertItemResponseToUpdateRequest(data, selects, relations)
-      )
-    )
+    await pricingModule.upsert(revertInput as PricingTypes.UpsertPriceSetDTO[])
   }
 )

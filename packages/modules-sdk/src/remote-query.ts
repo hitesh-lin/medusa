@@ -10,11 +10,11 @@ import {
   LoadedModule,
   ModuleJoinerConfig,
   RemoteExpandProperty,
+  RemoteJoinerOptions,
   RemoteJoinerQuery,
   RemoteNestedExpands,
 } from "@medusajs/types"
 import { isString, toPascalCase } from "@medusajs/utils"
-
 import { MedusaModule } from "./medusa-module"
 
 export class RemoteQuery {
@@ -84,7 +84,7 @@ export class RemoteQuery {
     prefix = "",
     args: JoinerArgument = {} as JoinerArgument
   ): {
-    select: string[]
+    select?: string[]
     relations: string[]
     args: JoinerArgument
   } {
@@ -93,9 +93,11 @@ export class RemoteQuery {
     let fields: Set<string> = new Set()
     let relations: string[] = []
 
+    let shouldSelectAll = false
+
     for (const field of expand.fields ?? []) {
       if (field === "*") {
-        expand.fields = []
+        shouldSelectAll = true
         break
       }
       fields.add(prefix ? `${prefix}.${field}` : field)
@@ -115,11 +117,18 @@ export class RemoteQuery {
         args
       )
 
-      result.select.forEach(fields.add, fields)
+      result.select?.forEach(fields.add, fields)
       relations = relations.concat(result.relations)
     }
 
-    return { select: [...fields], relations, args }
+    const allFields = Array.from(fields)
+    const select =
+      allFields.length && !shouldSelectAll
+        ? allFields
+        : shouldSelectAll
+        ? undefined
+        : []
+    return { select, relations, args }
   }
 
   private hasPagination(options: { [attr: string]: unknown }): boolean {
@@ -172,6 +181,7 @@ export class RemoteQuery {
       "offset",
       "cursor",
       "sort",
+      "order",
       "withDeleted",
     ]
     const availableOptionsAlias = new Map([
@@ -181,7 +191,9 @@ export class RemoteQuery {
 
     for (const arg of expand.args || []) {
       if (arg.name === "filters" && arg.value) {
-        filters = { ...arg.value }
+        filters = { ...filters, ...arg.value }
+      } else if (arg.name === "context" && arg.value) {
+        filters["context"] = arg.value
       } else if (availableOptions.includes(arg.name)) {
         const argName = availableOptionsAlias.has(arg.name)
           ? availableOptionsAlias.get(arg.name)!
@@ -230,7 +242,8 @@ export class RemoteQuery {
 
   public async query(
     query: string | RemoteJoinerQuery | object,
-    variables?: Record<string, unknown>
+    variables?: Record<string, unknown>,
+    options?: RemoteJoinerOptions
   ): Promise<any> {
     let finalQuery: RemoteJoinerQuery = query as RemoteJoinerQuery
 
@@ -240,6 +253,6 @@ export class RemoteQuery {
       finalQuery = toRemoteJoinerQuery(query, variables)
     }
 
-    return await this.remoteJoiner.query(finalQuery)
+    return await this.remoteJoiner.query(finalQuery, options)
   }
 }
