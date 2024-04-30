@@ -1,6 +1,6 @@
 {
   "name": "@medusajs/admin",
-  "version": "7.1.12",
+  "version": "7.1.13",
   "bin": {
     "medusa-admin": "./bin/medusa-admin.js"
   },
