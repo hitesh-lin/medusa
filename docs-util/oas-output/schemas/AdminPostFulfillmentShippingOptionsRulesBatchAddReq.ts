@@ -18,17 +18,7 @@
  *         - attribute
  *         - value
  *       properties:
- *         operator:
- *           type: string
- *           enum:
- *             - in
- *             - eq
- *             - ne
- *             - gt
- *             - gte
- *             - lt
- *             - lte
- *             - nin
+ *         operator: {}
  *         attribute:
  *           type: string
  *           title: attribute

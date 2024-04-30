@@ -1,9 +1,7 @@
-import { BigNumberInput } from "@medusajs/types"
-
 export interface CreateShippingMethodAdjustmentDTO {
   shipping_method_id: string
   code: string
-  amount: BigNumberInput
+  amount: number
   description?: string
   promotion_id?: string
   provider_id?: string
@@ -12,7 +10,7 @@ export interface CreateShippingMethodAdjustmentDTO {
 export interface UpdateShippingMethodAdjustmentDTO {
   id: string
   code?: string
-  amount?: BigNumberInput
+  amount?: number
   description?: string
   promotion_id?: string
   provider_id?: string

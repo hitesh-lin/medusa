@@ -230,7 +230,7 @@ export type RequestQueryFields = {
  *
  * Fields included in the response if it's paginated.
  */
-export type PaginatedResponse<T = unknown> = {
+export type PaginatedResponse = {
   /**
    * The limit applied on the retrieved items.
    */
@@ -245,12 +245,12 @@ export type PaginatedResponse<T = unknown> = {
    * The total count of items.
    */
   count: number
-} & T
+}
 
 /**
  * The fields returned in the response of a DELETE request.
  */
-export type DeleteResponse<T = string> = {
+export type DeleteResponse = {
   /**
    * The ID of the item that was deleted.
    */
@@ -259,7 +259,7 @@ export type DeleteResponse<T = string> = {
   /**
    * The type of the item that was deleted.
    */
-  object: T
+  object: string
 
   /**
    * Whether the item was deleted successfully.

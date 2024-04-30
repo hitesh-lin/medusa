@@ -2,7 +2,6 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { UserRoles } from "@medusajs/medusa"
 import { Alert, Button, Heading, Input, Text, Tooltip } from "@medusajs/ui"
 import { AnimatePresence, motion } from "framer-motion"
-import i18n from "i18next"
 import { useAdminAcceptInvite } from "medusa-react"
 import { Trans, useTranslation } from "react-i18next"
 import { Link, useSearchParams } from "react-router-dom"
@@ -27,7 +26,7 @@ const CreateAccountSchema = z
     if (password !== repeat_password) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: i18n.t("invite.passwordMismatch"),
+        message: "Passwords do not match",
         path: ["repeat_password"],
       })
     }

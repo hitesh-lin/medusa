@@ -1,25 +1,28 @@
 import { Heading } from "@medusajs/ui"
 import { useTranslation } from "react-i18next"
+import { json } from "react-router-dom"
 import { RouteDrawer } from "../../../components/route-modal"
-import { useStore } from "../../../hooks/api/store"
 import { EditStoreForm } from "./components/edit-store-form/edit-store-form"
+import { useV2Store } from "../../../lib/api-v2"
 
 export const StoreEdit = () => {
   const { t } = useTranslation()
-  const { store, isPending: isLoading, isError, error } = useStore()
+  const { store, isLoading, isError, error } = useV2Store({})
 
   if (isError) {
     throw error
   }
 
-  const ready = !!store && !isLoading
+  if (!store && !isLoading) {
+    throw json("An unknown error has occured", 500)
+  }
 
   return (
     <RouteDrawer>
       <RouteDrawer.Header>
-        <Heading>{t("store.edit.header")}</Heading>
+        <Heading className="capitalize">{t("store.editStore")}</Heading>
       </RouteDrawer.Header>
-      {ready && <EditStoreForm store={store} />}
+      {store && <EditStoreForm store={store} />}
     </RouteDrawer>
   )
 }

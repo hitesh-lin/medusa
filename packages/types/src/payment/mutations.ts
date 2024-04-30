@@ -1,4 +1,3 @@
-import { BigNumberInput } from "../totals"
 import { PaymentProviderContext } from "./provider"
 
 /**
@@ -11,14 +10,14 @@ export interface CreatePaymentCollectionDTO {
   region_id: string
 
   /**
-   * The ISO 3 character currency code of the payment collection.
+   * The currency code of the payment collection.
    */
   currency_code: string
 
   /**
    * The amount of the payment collection.
    */
-  amount: BigNumberInput
+  amount: number
 
   /**
    * Holds custom data in key-value pairs.
@@ -37,33 +36,11 @@ export interface UpdatePaymentCollectionDTO
   id: string
 }
 
-/**
- * The attributes in the payment collection to be created or updated.
- */
 export interface UpsertPaymentCollectionDTO {
-  /**
-   * The ID of the payment collection.
-   */
   id?: string
-
-  /**
-   * The associated region's ID.
-   */
   region_id?: string
-
-  /**
-   * The ISO 3 character currency code of the payment collection.
-   */
   currency_code?: string
-
-  /**
-   * The amount of the payment collection.
-   */
-  amount?: BigNumberInput
-
-  /**
-   * Holds custom data in key-value pairs.
-   */
+  amount?: number
   metadata?: Record<string, unknown>
 }
 
@@ -71,24 +48,9 @@ export interface UpsertPaymentCollectionDTO {
  * The attributes to update in the payment collection.
  */
 export interface PaymentCollectionUpdatableFields {
-  /**
-   * The associated region's ID.
-   */
   region_id?: string
-
-  /**
-   * {The ISO 3 character currency code of the payment collection.
-   */
   currency_code?: string
-
-  /**
-   * The amount of the payment collection.
-   */
-  amount?: BigNumberInput
-
-  /**
-   * Holds custom data in key-value pairs.
-   */
+  amount?: number
   metadata?: Record<string, unknown>
 }
 
@@ -99,10 +61,10 @@ export interface CreatePaymentDTO {
   /**
    * The amount of the payment.
    */
-  amount: BigNumberInput
+  amount: number
 
   /**
-   * The ISO 3 character currency code of the payment.
+   * The currency code of the payment.
    */
   currency_code: string
 
@@ -112,12 +74,12 @@ export interface CreatePaymentDTO {
   provider_id: string
 
   /**
-   * The data necessary for the associated payment provider to process the payment.
+   * The data of the payment.
    */
   data: Record<string, unknown>
 
   /**
-   * The ID of the payment session this payment was created from.
+   * The associated payment session's ID.
    */
   payment_session_id: string
 
@@ -184,7 +146,7 @@ export interface CreateCaptureDTO {
   /**
    * The amount of the capture.
    */
-  amount?: BigNumberInput
+  amount?: number
 
   /**
    * The associated payment's ID.
@@ -192,8 +154,7 @@ export interface CreateCaptureDTO {
   payment_id: string
 
   /**
-   * Who captured the payment. For example,
-   * a user's ID.
+   * The captured by of the capture.
    */
   captured_by?: string
 }
@@ -205,7 +166,7 @@ export interface CreateRefundDTO {
   /**
    * The amount of the refund.
    */
-  amount?: BigNumberInput
+  amount?: number
 
   /**
    * The associated payment's ID.
@@ -213,8 +174,7 @@ export interface CreateRefundDTO {
   payment_id: string
 
   /**
-   * Who refunded the payment. For example,
-   * a user's ID.
+   * The created by of the refund.
    */
   created_by?: string
 }
@@ -227,24 +187,20 @@ export interface CreatePaymentSessionDTO {
    * The provider's ID.
    */
   provider_id: string
-
   /**
-   * The ISO 3 character currency code of the payment session.
+   * The selected currency code.
    */
   currency_code: string
-
   /**
-   * The amount to be authorized.
+   * The payment's amount.
    */
-  amount: BigNumberInput
-
+  amount: number
   /**
-   * Necessary data for the associated payment provider to process the payment.
+   * The value of the payment session's `data` field.
    */
   data: Record<string, unknown>
-
   /**
-   * Necessary context data for the associated payment provider.
+   * The payment session's context.
    */
   context?: PaymentProviderContext
 }
@@ -257,24 +213,20 @@ export interface UpdatePaymentSessionDTO {
    * The payment session's ID.
    */
   id: string
-
   /**
-   * Necessary data for the associated payment provider to process the payment.
+   * The value of the payment session's `data` field.
    */
   data: Record<string, unknown>
-
   /**
-   * The ISO 3 character currency code.
+   * The selected currency code.
    */
   currency_code: string
-
   /**
-   * The amount to be authorized.
+   * The payment's amount.
    */
-  amount: BigNumberInput
-
+  amount: number
   /**
-   * Necessary context data for the associated payment provider.
+   * The payment session's context.
    */
   context?: PaymentProviderContext
 }
@@ -287,7 +239,6 @@ export interface CreatePaymentProviderDTO {
    * The provider's ID.
    */
   id: string
-
   /**
    * Whether the provider is enabled.
    */
@@ -295,31 +246,19 @@ export interface CreatePaymentProviderDTO {
 }
 
 /**
- * The details of the webhook event payload.
+ * Webhook
  */
 export interface ProviderWebhookPayload {
-  /**
-   * The ID of the provider to pass the webhook event payload to.
-   */
   provider: string
-
-  /**
-   * The webhook event payload passed to the specified provider.
-   */
   payload: {
     /**
-     * The parsed webhook body.
+     * Parsed webhook body
      */
     data: Record<string, unknown>
-
     /**
-     * The raw webhook request body.
+     * Raw request body
      */
     rawData: string | Buffer
-
-    /**
-     * The headers of the webhook request.
-     */
     headers: Record<string, unknown>
   }
 }

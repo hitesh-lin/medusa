@@ -7,6 +7,7 @@ import {
 } from "@medusajs/utils"
 import {
   BeforeCreate,
+  Cascade,
   Entity,
   ManyToOne,
   OnInit,
@@ -49,7 +50,7 @@ export default class OrderChangeAction {
     entity: () => Order,
     columnType: "text",
     fieldName: "order_id",
-    onDelete: "cascade",
+    cascade: [Cascade.REMOVE],
     mapToPk: true,
     nullable: true,
   })
@@ -69,7 +70,7 @@ export default class OrderChangeAction {
     entity: () => OrderChange,
     columnType: "text",
     fieldName: "order_change_id",
-    onDelete: "cascade",
+    cascade: [Cascade.REMOVE],
     mapToPk: true,
     nullable: true,
   })
@@ -136,16 +137,14 @@ export default class OrderChangeAction {
   @BeforeCreate()
   onCreate() {
     this.id = generateEntityId(this.id, "ordchact")
-    this.order_id ??= this.order?.id ?? this.order_change?.order_id ?? null
+    this.order_id ??= this.order?.id ?? null
     this.order_change_id ??= this.order_change?.id ?? null
-    this.version ??= this.order_change?.version ?? null
   }
 
   @OnInit()
   onInit() {
     this.id = generateEntityId(this.id, "ordchact")
-    this.order_id ??= this.order?.id ?? this.order_change?.order_id ?? null
+    this.order_id ??= this.order?.id ?? null
     this.order_change_id ??= this.order_change?.id ?? null
-    this.version ??= this.order_change?.version ?? null
   }
 }

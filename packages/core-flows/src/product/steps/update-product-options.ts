@@ -40,13 +40,6 @@ export const updateProductOptionsStep = createStep(
       ModuleRegistrationName.PRODUCT
     )
 
-    await service.upsertOptions(
-      prevData.map((o) => ({
-        ...o,
-        values: o.values?.map((v) => v.value),
-        product: undefined,
-        product_id: o.product_id ?? undefined,
-      }))
-    )
+    await service.upsertOptions(prevData)
   }
 )

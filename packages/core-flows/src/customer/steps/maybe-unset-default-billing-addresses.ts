@@ -1,6 +1,6 @@
 import {
   CreateCustomerAddressDTO,
-  UpdateCustomerAddressDTO,
+  CustomerAddressDTO,
   FilterableCustomerAddressProps,
   ICustomerModuleService,
 } from "@medusajs/types"
@@ -13,7 +13,7 @@ type StepInput = {
   create?: CreateCustomerAddressDTO[]
   update?: {
     selector: FilterableCustomerAddressProps
-    update: UpdateCustomerAddressDTO
+    update: Partial<CustomerAddressDTO>
   }
 }
 

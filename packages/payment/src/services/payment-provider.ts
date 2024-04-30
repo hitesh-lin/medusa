@@ -71,23 +71,6 @@ export default class PaymentProviderService {
     )
   }
 
-  @InjectManager("paymentProviderRepository_")
-  async listAndCount(
-    filters: FilterablePaymentProviderProps,
-    config: FindConfig<PaymentProviderDTO>,
-    @MedusaContext() sharedContext?: Context
-  ): Promise<[PaymentProvider[], number]> {
-    const queryOptions = ModulesSdkUtils.buildQuery<PaymentProvider>(
-      filters,
-      config
-    )
-
-    return await this.paymentProviderRepository_.findAndCount(
-      queryOptions,
-      sharedContext
-    )
-  }
-
   retrieveProvider(providerId: string): IPaymentProvider {
     try {
       return this.container_[providerId] as IPaymentProvider

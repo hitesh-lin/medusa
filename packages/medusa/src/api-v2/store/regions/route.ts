@@ -1,27 +1,20 @@
-import {
-  ContainerRegistrationKeys,
-  remoteQueryObjectFromString,
-} from "@medusajs/utils"
+import { remoteQueryObjectFromString } from "@medusajs/utils"
 import { MedusaRequest, MedusaResponse } from "../../../types/routing"
+import { defaultStoreRegionFields } from "./query-config"
 
 export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
-  const remoteQuery = req.scope.resolve(ContainerRegistrationKeys.REMOTE_QUERY)
+  const remoteQuery = req.scope.resolve("remoteQuery")
+
+  const variables = { filters: req.filterableFields }
 
   const queryObject = remoteQueryObjectFromString({
     entryPoint: "region",
-    variables: {
-      filters: req.filterableFields,
-      ...req.remoteQueryConfig.pagination,
-    },
-    fields: req.remoteQueryConfig.fields,
+    variables,
+    fields: defaultStoreRegionFields,
   })
 
-  const { rows: regions, metadata } = await remoteQuery(queryObject)
+  // TODO: Add count, offset, limit
+  const regions = await remoteQuery(queryObject)
 
-  res.json({
-    regions,
-    count: metadata.count,
-    offset: metadata.skip,
-    limit: metadata.take,
-  })
+  res.json({ regions })
 }

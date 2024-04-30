@@ -1,42 +1,39 @@
 import {
   AuthenticatedMedusaRequest,
+  MedusaRequest,
   MedusaResponse,
 } from "../../../types/routing"
+import { CreateCustomerGroupDTO, ICustomerModuleService } from "@medusajs/types"
+
+import { ModuleRegistrationName } from "@medusajs/modules-sdk"
 import { createCustomerGroupsWorkflow } from "@medusajs/core-flows"
-import {
-  ContainerRegistrationKeys,
-  remoteQueryObjectFromString,
-} from "@medusajs/utils"
-import { AdminCreateCustomerGroupType } from "./validators"
-import { refetchCustomerGroup } from "./helpers"
 
 export const GET = async (
   req: AuthenticatedMedusaRequest,
   res: MedusaResponse
 ) => {
-  const remoteQuery = req.scope.resolve(ContainerRegistrationKeys.REMOTE_QUERY)
+  const customerModuleService = req.scope.resolve<ICustomerModuleService>(
+    ModuleRegistrationName.CUSTOMER
+  )
 
-  const query = remoteQueryObjectFromString({
-    entryPoint: "customer_group",
-    variables: {
-      filters: req.filterableFields,
-      ...req.remoteQueryConfig.pagination,
-    },
-    fields: req.remoteQueryConfig.fields,
-  })
+  const [groups, count] =
+    await customerModuleService.listAndCountCustomerGroups(
+      req.filterableFields,
+      req.listConfig
+    )
 
-  const { rows: customer_groups, metadata } = await remoteQuery(query)
+  const { offset, limit } = req.validatedQuery
 
   res.json({
-    customer_groups,
-    count: metadata.count,
-    offset: metadata.skip,
-    limit: metadata.take,
+    count,
+    customer_groups: groups,
+    offset,
+    limit,
   })
 }
 
 export const POST = async (
-  req: AuthenticatedMedusaRequest<AdminCreateCustomerGroupType>,
+  req: AuthenticatedMedusaRequest<CreateCustomerGroupDTO>,
   res: MedusaResponse
 ) => {
   const createGroups = createCustomerGroupsWorkflow(req.scope)
@@ -56,11 +53,5 @@ export const POST = async (
     throw errors[0].error
   }
 
-  const customerGroup = await refetchCustomerGroup(
-    result[0].id,
-    req.scope,
-    req.remoteQueryConfig.fields
-  )
-
-  res.status(200).json({ customer_group: customerGroup })
+  res.status(200).json({ customer_group: result[0] })
 }

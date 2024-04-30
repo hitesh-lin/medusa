@@ -5,7 +5,6 @@ import {
   generateEntityId,
   PriceListStatus,
   PriceListType,
-  Searchable,
 } from "@medusajs/utils"
 import {
   BeforeCreate,
@@ -47,11 +46,9 @@ export default class PriceList {
   @PrimaryKey({ columnType: "text" })
   id!: string
 
-  @Searchable()
   @Property({ columnType: "text" })
   title: string
 
-  @Searchable()
   @Property({ columnType: "text" })
   description: string
 

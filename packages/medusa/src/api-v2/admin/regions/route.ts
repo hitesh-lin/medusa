@@ -2,27 +2,27 @@ import {
   AuthenticatedMedusaRequest,
   MedusaResponse,
 } from "../../../types/routing"
+
+import { CreateRegionDTO } from "@medusajs/types"
 import { createRegionsWorkflow } from "@medusajs/core-flows"
-import {
-  ContainerRegistrationKeys,
-  remoteQueryObjectFromString,
-} from "@medusajs/utils"
-import { AdminCreateRegionType, AdminGetRegionsParamsType } from "./validators"
-import { refetchRegion } from "./helpers"
+import { defaultAdminRegionFields } from "./query-config"
+import { remoteQueryObjectFromString } from "@medusajs/utils"
 
 export const GET = async (
-  req: AuthenticatedMedusaRequest<AdminGetRegionsParamsType>,
+  req: AuthenticatedMedusaRequest,
   res: MedusaResponse
 ) => {
-  const remoteQuery = req.scope.resolve(ContainerRegistrationKeys.REMOTE_QUERY)
+  const remoteQuery = req.scope.resolve("remoteQuery")
 
   const queryObject = remoteQueryObjectFromString({
     entryPoint: "region",
     variables: {
       filters: req.filterableFields,
-      ...req.remoteQueryConfig.pagination,
+      order: req.listConfig.order,
+      skip: req.listConfig.skip,
+      take: req.listConfig.take,
     },
-    fields: req.remoteQueryConfig.fields,
+    fields: defaultAdminRegionFields,
   })
 
   const { rows: regions, metadata } = await remoteQuery(queryObject)
@@ -36,13 +36,17 @@ export const GET = async (
 }
 
 export const POST = async (
-  req: AuthenticatedMedusaRequest<AdminCreateRegionType>,
+  req: AuthenticatedMedusaRequest<CreateRegionDTO>,
   res: MedusaResponse
 ) => {
-  const input = [req.validatedBody]
+  const input = [
+    {
+      ...req.validatedBody,
+    },
+  ]
 
   const { result, errors } = await createRegionsWorkflow(req.scope).run({
-    input: { regions: input },
+    input: { regionsData: input },
     throwOnError: false,
   })
 
@@ -50,11 +54,5 @@ export const POST = async (
     throw errors[0].error
   }
 
-  const region = await refetchRegion(
-    result[0].id,
-    req.scope,
-    req.remoteQueryConfig.fields
-  )
-
-  res.status(200).json({ region })
+  res.status(200).json({ region: result[0] })
 }

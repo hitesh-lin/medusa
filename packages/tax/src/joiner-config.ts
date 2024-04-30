@@ -1,7 +1,7 @@
 import { Modules } from "@medusajs/modules-sdk"
 import { ModuleJoinerConfig } from "@medusajs/types"
 import { MapToConfig } from "@medusajs/utils"
-import { TaxProvider, TaxRate, TaxRateRule, TaxRegion } from "@models"
+import { TaxRate, TaxRegion, TaxRateRule, TaxProvider } from "@models"
 
 export const LinkableKeys: Record<string, string> = {
   tax_rate_id: TaxRate.name,

@@ -32,7 +32,7 @@ export const joinerConfig: ModuleJoinerConfig = {
   schema: moduleSchema,
   alias: [
     {
-      name: ["inventory_items", "inventory_item", "inventory"],
+      name: ["inventory_items", "inventory"],
       args: {
         entity: "InventoryItem",
       },

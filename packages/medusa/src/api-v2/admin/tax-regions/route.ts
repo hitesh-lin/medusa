@@ -1,20 +1,14 @@
 import { createTaxRegionsWorkflow } from "@medusajs/core-flows"
-import {
-  ContainerRegistrationKeys,
-  remoteQueryObjectFromString,
-} from "@medusajs/utils"
+import { remoteQueryObjectFromString } from "@medusajs/utils"
 import {
   AuthenticatedMedusaRequest,
   MedusaResponse,
 } from "../../../types/routing"
-import {
-  AdminCreateTaxRegionType,
-  AdminGetTaxRegionsParamsType,
-} from "./validators"
-import { refetchTaxRegion } from "./helpers"
+import { defaultAdminTaxRegionFields } from "./query-config"
+import { AdminPostTaxRegionsReq } from "./validators"
 
 export const POST = async (
-  req: AuthenticatedMedusaRequest<AdminCreateTaxRegionType>,
+  req: AuthenticatedMedusaRequest<AdminPostTaxRegionsReq>,
   res: MedusaResponse
 ) => {
   const { result, errors } = await createTaxRegionsWorkflow(req.scope).run({
@@ -31,35 +25,15 @@ export const POST = async (
     throw errors[0].error
   }
 
-  const taxRegion = await refetchTaxRegion(
-    result[0].id,
-    req.scope,
-    req.remoteQueryConfig.fields
-  )
-  res.status(200).json({ tax_region: taxRegion })
-}
+  const remoteQuery = req.scope.resolve("remoteQuery")
 
-export const GET = async (
-  req: AuthenticatedMedusaRequest<AdminGetTaxRegionsParamsType>,
-  res: MedusaResponse
-) => {
-  const remoteQuery = req.scope.resolve(ContainerRegistrationKeys.REMOTE_QUERY)
-
-  const { rows: tax_regions, metadata } = await remoteQuery(
-    remoteQueryObjectFromString({
-      entryPoint: "tax_regions",
-      variables: {
-        filters: req.filterableFields,
-        ...req.remoteQueryConfig.pagination,
-      },
-      fields: req.remoteQueryConfig.fields,
-    })
-  )
-
-  res.status(200).json({
-    tax_regions,
-    count: metadata.count,
-    offset: metadata.skip,
-    limit: metadata.take,
+  const query = remoteQueryObjectFromString({
+    entryPoint: "tax_region",
+    variables: { id: result[0].id },
+    fields: defaultAdminTaxRegionFields,
   })
+
+  const [taxRegion] = await remoteQuery(query)
+
+  res.status(200).json({ tax_region: taxRegion })
 }

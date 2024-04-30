@@ -28,8 +28,7 @@
   }
 
   :root {
-    @apply bg-ui-bg-subtle text-ui-fg-base antialiased;
-    text-rendering: optimizeLegibility;
+    @apply bg-ui-bg-subtle text-ui-fg-base;
   }
 }
 

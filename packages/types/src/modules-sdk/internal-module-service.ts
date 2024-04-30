@@ -4,7 +4,6 @@ import {
   BaseFilterable,
   FilterQuery as InternalFilterQuery,
   FilterQuery,
-  UpsertWithReplaceConfig,
 } from "../dal"
 
 export interface InternalModuleService<
@@ -79,10 +78,4 @@ export interface InternalModuleService<
 
   upsert(data: any[], sharedContext?: Context): Promise<TEntity[]>
   upsert(data: any, sharedContext?: Context): Promise<TEntity>
-
-  upsertWithReplace(
-    data: any[],
-    config?: UpsertWithReplaceConfig<TEntity>,
-    sharedContext?: Context
-  ): Promise<TEntity[]>
 }

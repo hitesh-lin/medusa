@@ -27,9 +27,7 @@ export default async ({
   })
 
   try {
-    await new Promise(async resolve => {
-      await connection.connect(resolve)
-    })
+    await connection.connect()
     logger?.info(`Connection to Redis in module 'event-bus-redis' established`)
   } catch (err) {
     logger?.error(

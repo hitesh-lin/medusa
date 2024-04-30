@@ -1,3 +1,5 @@
+export const defaultAdminApiKeyRelations = []
+export const allowedAdminApiKeyRelations = []
 export const defaultAdminApiKeyFields = [
   "id",
   "title",
@@ -9,17 +11,16 @@ export const defaultAdminApiKeyFields = [
   "created_by",
   "revoked_at",
   "revoked_by",
-  "sales_channels.id",
-  "sales_channels.name",
 ]
 
 export const retrieveTransformQueryConfig = {
-  defaults: defaultAdminApiKeyFields,
+  defaultFields: defaultAdminApiKeyFields,
+  defaultRelations: defaultAdminApiKeyRelations,
+  allowedRelations: allowedAdminApiKeyRelations,
   isList: false,
 }
 
 export const listTransformQueryConfig = {
-  ...retrieveTransformQueryConfig,
   defaultLimit: 20,
   isList: true,
 }

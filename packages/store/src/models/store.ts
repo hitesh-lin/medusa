@@ -1,6 +1,5 @@
 import {
   DALUtils,
-  Searchable,
   createPsqlIndexStatementHelper,
   generateEntityId,
 } from "@medusajs/utils"
@@ -33,7 +32,6 @@ export default class Store {
   @PrimaryKey({ columnType: "text" })
   id: string
 
-  @Searchable()
   @Property({ columnType: "text", default: "Medusa Store" })
   name: string
 

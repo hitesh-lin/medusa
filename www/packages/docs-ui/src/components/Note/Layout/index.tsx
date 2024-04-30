@@ -43,7 +43,7 @@ export const NoteLayout = ({
           {title && (
             <span
               className={clsx(
-                "text-compact-medium-plus block mb-docs_0.125",
+                "txt-compact-medium-plus block mb-docs_0.125",
                 isDefaultStyle && "text-medusa-fg-base",
                 isWarningStyle && "text-medusa-tag-red-text"
               )}

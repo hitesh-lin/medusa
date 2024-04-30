@@ -42,8 +42,6 @@ export const OrderPaymentSection = ({ order }: OrderPaymentSectionProps) => {
 const Header = ({ order }: { order: Order }) => {
   const { t } = useTranslation()
 
-  const hasCapturedPayment = order.payments.some((p) => !!p.captured_at)
-
   return (
     <div className="flex items-center justify-between px-6 py-4">
       <Heading level="h2">{t("orders.payment.title")}</Heading>
@@ -54,8 +52,7 @@ const Header = ({ order }: { order: Order }) => {
               {
                 label: t("orders.payment.refund"),
                 icon: <ArrowDownRightMini />,
-                to: `/orders/${order.id}/refund`,
-                disabled: !hasCapturedPayment,
+                to: "#", // TODO: Go to general refund modal
               },
             ],
           },
@@ -167,8 +164,7 @@ const Payment = ({
                 {
                   label: t("orders.payment.refund"),
                   icon: <XCircle />,
-                  to: `/orders/${payment.order_id}/refund?paymentId=${payment.id}`,
-                  disabled: !payment.captured_at,
+                  to: "#", // TODO: Go to specific payment refund modal
                 },
               ],
             },

@@ -1,63 +1,49 @@
-import {
-  DALUtils,
-  Searchable,
-  createPsqlIndexStatementHelper,
-  generateEntityId,
-  kebabCase,
-} from "@medusajs/utils"
+import { generateEntityId, kebabCase } from "@medusajs/utils"
 import {
   BeforeCreate,
   Collection,
   Entity,
   EventArgs,
-  Filter,
   Index,
   ManyToMany,
   ManyToOne,
   OnInit,
   OneToMany,
+  OptionalProps,
   PrimaryKey,
   Property,
+  Unique,
 } from "@mikro-orm/core"
+
+import { DAL } from "@medusajs/types"
 import Product from "./product"
 
-const categoryHandleIndexName = "IDX_category_handle_unique"
-const categoryHandleIndexStatement = createPsqlIndexStatementHelper({
-  name: categoryHandleIndexName,
-  tableName: "product_category",
-  columns: ["handle"],
-  unique: true,
-  where: "deleted_at IS NULL",
-})
+type OptionalFields = DAL.SoftDeletableEntityDateColumns
 
-const categoryMpathIndexName = "IDX_product_category_path"
-const categoryMpathIndexStatement = createPsqlIndexStatementHelper({
-  name: categoryMpathIndexName,
-  tableName: "product_category",
-  columns: ["mpath"],
-  unique: false,
-  where: "deleted_at IS NULL",
-})
-
-categoryMpathIndexStatement.MikroORMIndex()
-categoryHandleIndexStatement.MikroORMIndex()
 @Entity({ tableName: "product_category" })
-@Filter(DALUtils.mikroOrmSoftDeletableFilterOptions)
 class ProductCategory {
+  [OptionalProps]?: OptionalFields
+
   @PrimaryKey({ columnType: "text" })
   id!: string
 
-  @Searchable()
   @Property({ columnType: "text", nullable: false })
   name?: string
 
-  @Searchable()
   @Property({ columnType: "text", default: "", nullable: false })
   description?: string
 
+  @Unique({
+    name: "IDX_product_category_handle",
+    properties: ["handle"],
+  })
   @Property({ columnType: "text", nullable: false })
   handle?: string
 
+  @Index({
+    name: "IDX_product_category_path",
+    properties: ["mpath"],
+  })
   @Property({ columnType: "text", nullable: false })
   mpath?: string
 
@@ -70,16 +56,10 @@ class ProductCategory {
   @Property({ columnType: "numeric", nullable: false, default: 0 })
   rank?: number
 
-  @ManyToOne(() => ProductCategory, {
-    columnType: "text",
-    fieldName: "parent_category_id",
-    nullable: true,
-    mapToPk: true,
-    onDelete: "cascade",
-  })
+  @Property({ columnType: "text", nullable: true })
   parent_category_id?: string | null
 
-  @ManyToOne(() => ProductCategory, { nullable: true, persist: false })
+  @ManyToOne(() => ProductCategory, { nullable: true })
   parent_category?: ProductCategory
 
   @OneToMany({
@@ -103,37 +83,28 @@ class ProductCategory {
   })
   updated_at?: Date
 
-  @Index({ name: "IDX_product_category_deleted_at" })
-  @Property({ columnType: "timestamptz", nullable: true })
-  deleted_at?: Date
-
   @ManyToMany(() => Product, (product) => product.categories)
   products = new Collection<Product>(this)
 
   @OnInit()
   async onInit() {
     this.id = generateEntityId(this.id, "pcat")
-    this.parent_category_id ??= this.parent_category?.id ?? null
   }
 
   @BeforeCreate()
   async onCreate(args: EventArgs<ProductCategory>) {
     this.id = generateEntityId(this.id, "pcat")
-    this.parent_category_id ??= this.parent_category?.id ?? null
 
     if (!this.handle && this.name) {
       this.handle = kebabCase(this.name)
     }
 
     const { em } = args
-
+    const parentCategoryId = args.changeSet?.entity?.parent_category?.id
     let parentCategory: ProductCategory | null = null
 
-    if (this.parent_category_id) {
-      parentCategory = await em.findOne(
-        ProductCategory,
-        this.parent_category_id
-      )
+    if (parentCategoryId) {
+      parentCategory = await em.findOne(ProductCategory, parentCategoryId)
     }
 
     if (parentCategory) {

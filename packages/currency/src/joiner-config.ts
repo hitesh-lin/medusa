@@ -5,8 +5,6 @@ import Currency from "./models/currency"
 
 export const LinkableKeys: Record<string, string> = {
   code: Currency.name,
-  currency_code: Currency.name,
-  default_currency_code: Currency.name,
 }
 
 const entityLinkableKeysMap: MapToConfig = {}

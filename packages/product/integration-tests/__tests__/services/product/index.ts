@@ -24,7 +24,6 @@ import { SqlEntityManager } from "@mikro-orm/postgresql"
 import { createProductCategories } from "../../../__fixtures__/product-category"
 import { Modules } from "@medusajs/modules-sdk"
 import { moduleIntegrationTestRunner, SuiteOptions } from "medusa-test-utils"
-import { ProductTag } from "../../../../src/models"
 
 jest.setTimeout(30000)
 
@@ -235,31 +234,6 @@ moduleIntegrationTestRunner({
       })
 
       describe("list", () => {
-        it("should list all product that match the free text search", async () => {
-          const data = buildProductOnlyData({
-            title: "test product",
-          })
-          const data2 = buildProductOnlyData({
-            title: "space X",
-          })
-
-          const products = await service.create([data, data2])
-
-          const result = await service.list({
-            q: "test",
-          })
-
-          expect(result).toHaveLength(1)
-          expect(result[0].title).toEqual("test product")
-
-          const result2 = await service.list({
-            q: "space",
-          })
-
-          expect(result2).toHaveLength(1)
-          expect(result2[0].title).toEqual("space X")
-        })
-
         describe("soft deleted", function () {
           let product
 
@@ -405,21 +379,18 @@ moduleIntegrationTestRunner({
                 name: "category 0",
                 handle: "category-0",
                 mpath: "category-0.",
-                parent_category_id: null,
               },
               {
                 id: "category-1",
                 name: "category 1",
                 handle: "category-1",
                 mpath: "category-0.category-1.",
-                parent_category_id: null,
               },
               {
                 id: "category-1-a",
                 name: "category 1 a",
                 handle: "category-1-a",
                 mpath: "category-0.category-1.category-1-a.",
-                parent_category_id: null,
               },
             ])
           })
@@ -511,11 +482,7 @@ moduleIntegrationTestRunner({
               {
                 id: workingProduct.id,
                 title: workingProduct.title,
-                handle: "product-1",
-                collection_id: workingCollection.id,
-                type_id: null,
                 collection: {
-                  handle: "col-1",
                   id: workingCollection.id,
                   title: workingCollection.title,
                 },
@@ -541,11 +508,8 @@ moduleIntegrationTestRunner({
               {
                 id: workingProduct.id,
                 title: workingProduct.title,
-                handle: "product-1",
-                type_id: null,
                 collection_id: workingCollection.id,
                 collection: {
-                  handle: "col-1",
                   id: workingCollection.id,
                   title: workingCollection.title,
                 },
@@ -553,11 +517,8 @@ moduleIntegrationTestRunner({
               {
                 id: workingProductTwo.id,
                 title: workingProductTwo.title,
-                handle: "product",
-                type_id: null,
                 collection_id: workingCollectionTwo.id,
                 collection: {
-                  handle: "col-2",
                   id: workingCollectionTwo.id,
                   title: workingCollectionTwo.title,
                 },

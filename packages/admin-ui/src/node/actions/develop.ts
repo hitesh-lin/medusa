@@ -22,11 +22,10 @@ export async function develop({
     backend: "http://localhost:9000",
     develop: {
       open: true,
-      host: "localhost",
       port: 7001,
       logLevel: "error",
       stats: "normal",
-      allowedHosts: "auto",
+      allowedHosts: 'auto',
     },
   },
 }: DevelopArgs) {
@@ -55,16 +54,13 @@ export async function develop({
 
   const devServerArgs: DevServerConfiguration = {
     port: options.develop.port,
-    host: options.develop.host,
     client: {
       logging: "none",
       overlay: {
         errors: true,
         warnings: false,
       },
-      webSocketURL: options.develop.webSocketURL
-        ? options.develop.webSocketURL
-        : `ws://${options.develop.host}:${options.develop.port}/ws`,
+      webSocketURL: options.develop.webSocketURL ? options.develop.webSocketURL : `ws://localhost:${options.develop.port}/ws`,
     },
     open: false,
     onListening: options.develop.open
@@ -74,7 +70,7 @@ export async function develop({
           }
 
           openBrowser(
-            `http://${options.develop.host}:${options.develop.port}${
+            `http://localhost:${options.develop.port}${
               options.path ? options.path : ""
             }`
           )
@@ -89,18 +85,16 @@ export async function develop({
       disableDotRule: true,
     },
     hot: true,
-    allowedHosts: options.develop.allowedHosts
-      ? options.develop.allowedHosts
-      : "auto",
+    allowedHosts: options.develop.allowedHosts ? options.develop.allowedHosts : 'auto',
   }
 
   const server = new WebpackDevDerver(devServerArgs, compiler)
 
   const runServer = async () => {
     logger.info(
-      `Started development server on http://${options.develop.host}:${
-        options.develop.port
-      }${options.path ? options.path : ""}`
+      `Started development server on http://localhost:${options.develop.port}${
+        options.path ? options.path : ""
+      }`
     )
 
     await server.start()

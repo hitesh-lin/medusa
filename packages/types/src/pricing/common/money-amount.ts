@@ -1,5 +1,4 @@
 import { BaseFilterable } from "../../dal"
-import { BigNumberInput, BigNumberValue } from "../../totals"
 
 /**
  * @interface
@@ -18,15 +17,15 @@ export interface MoneyAmountDTO {
   /**
    * The price of this money amount.
    */
-  amount?: BigNumberValue
+  amount?: number
   /**
    * The minimum quantity required to be purchased for this price to be applied.
    */
-  min_quantity?: BigNumberValue
+  min_quantity?: number
   /**
    * The maximum quantity required to be purchased for this price to be applied.
    */
-  max_quantity?: BigNumberValue
+  max_quantity?: number
   /**
    * When the money_amount was created.
    */
@@ -58,15 +57,15 @@ export interface CreateMoneyAmountDTO {
   /**
    * The amount of this money amount.
    */
-  amount: BigNumberInput
+  amount: number
   /**
    * The minimum quantity required to be purchased for this money amount to be applied.
    */
-  min_quantity?: BigNumberInput | null
+  min_quantity?: number | null
   /**
    * The maximum quantity required to be purchased for this money amount to be applied.
    */
-  max_quantity?: BigNumberInput | null
+  max_quantity?: number | null
 }
 
 /**
@@ -86,15 +85,15 @@ export interface UpdateMoneyAmountDTO {
   /**
    * The price of this money amount.
    */
-  amount?: BigNumberInput
+  amount?: number
   /**
    * The minimum quantity required to be purchased for this money amount to be applied.
    */
-  min_quantity?: BigNumberInput
+  min_quantity?: number
   /**
    * The maximum quantity required to be purchased for this money amount to be applied.
    */
-  max_quantity?: BigNumberInput
+  max_quantity?: number
 }
 
 /**

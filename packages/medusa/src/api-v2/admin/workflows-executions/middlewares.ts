@@ -1,28 +1,27 @@
 import * as QueryConfig from "./query-config"
 
 import {
-  AdminCreateWorkflowsAsyncResponse,
-  AdminCreateWorkflowsRun,
   AdminGetWorkflowExecutionDetailsParams,
   AdminGetWorkflowExecutionsParams,
+  AdminPostWorkflowsAsyncResponseReq,
+  AdminPostWorkflowsRunReq,
 } from "./validators"
+import { transformBody, transformQuery } from "../../../api/middlewares"
 
 import { MiddlewareRoute } from "../../../loaders/helpers/routing/types"
 import { authenticate } from "../../../utils/authenticate-middleware"
-import { validateAndTransformQuery } from "../../utils/validate-query"
-import { validateAndTransformBody } from "../../utils/validate-body"
 
 export const adminWorkflowsExecutionsMiddlewares: MiddlewareRoute[] = [
   {
     method: ["ALL"],
     matcher: "/admin/workflows-executions*",
-    middlewares: [authenticate("admin", ["bearer", "session", "api-key"])],
+    middlewares: [authenticate("admin", ["bearer", "session"])],
   },
   {
     method: ["GET"],
     matcher: "/admin/workflows-executions",
     middlewares: [
-      validateAndTransformQuery(
+      transformQuery(
         AdminGetWorkflowExecutionsParams,
         QueryConfig.listTransformQueryConfig
       ),
@@ -32,7 +31,7 @@ export const adminWorkflowsExecutionsMiddlewares: MiddlewareRoute[] = [
     method: ["GET"],
     matcher: "/admin/workflows-executions/:id",
     middlewares: [
-      validateAndTransformQuery(
+      transformQuery(
         AdminGetWorkflowExecutionDetailsParams,
         QueryConfig.retrieveTransformQueryConfig
       ),
@@ -42,7 +41,7 @@ export const adminWorkflowsExecutionsMiddlewares: MiddlewareRoute[] = [
     method: ["GET"],
     matcher: "/admin/workflows-executions/:workflow_id/:transaction_id",
     middlewares: [
-      validateAndTransformQuery(
+      transformQuery(
         AdminGetWorkflowExecutionDetailsParams,
         QueryConfig.retrieveTransformQueryConfig
       ),
@@ -51,17 +50,17 @@ export const adminWorkflowsExecutionsMiddlewares: MiddlewareRoute[] = [
   {
     method: ["POST"],
     matcher: "/admin/workflows-executions/:id/run",
-    middlewares: [validateAndTransformBody(AdminCreateWorkflowsRun)],
+    middlewares: [transformBody(AdminPostWorkflowsRunReq)],
   },
   {
     method: ["POST"],
 
     matcher: "/admin/workflows-executions/:id/steps/success",
-    middlewares: [validateAndTransformBody(AdminCreateWorkflowsAsyncResponse)],
+    middlewares: [transformBody(AdminPostWorkflowsAsyncResponseReq)],
   },
   {
     method: ["POST"],
     matcher: "/admin/workflows-executions/:id/steps/failure",
-    middlewares: [validateAndTransformBody(AdminCreateWorkflowsAsyncResponse)],
+    middlewares: [transformBody(AdminPostWorkflowsAsyncResponseReq)],
   },
 ]

@@ -1,11 +1,12 @@
+import { useTranslation } from "react-i18next"
+
+import { PencilSquare } from "@medusajs/icons"
+import type { Discount } from "@medusajs/medusa"
 import { Container, Copy, Heading, Text } from "@medusajs/ui"
 
 import { ActionMenu } from "../../../../../components/common/action-menu"
-import type { Discount } from "@medusajs/medusa"
-import { ListSummary } from "../../../../../components/common/list-summary"
 import { MoneyAmountCell } from "../../../../../components/table/table-cells/common/money-amount-cell"
-import { PencilSquare } from "@medusajs/icons"
-import { useTranslation } from "react-i18next"
+import { ListSummary } from "../../../../../components/common/list-summary"
 
 export const DetailsSection = ({ discount }: { discount: Discount }) => {
   const { t } = useTranslation()
@@ -53,8 +54,8 @@ export const DetailsSection = ({ discount }: { discount: Discount }) => {
           {discount.rule.type === "percentage"
             ? t("discounts.percentageDiscount")
             : discount.rule.type === "free_shipping"
-              ? t("discounts.freeShipping")
-              : t("discounts.fixedDiscount")}
+            ? t("discounts.freeShipping")
+            : t("discounts.fixedDiscount")}
         </Text>
       </div>
 

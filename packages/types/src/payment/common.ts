@@ -1,6 +1,6 @@
 import { BaseFilterable } from "../dal"
 import { OperatorMap } from "../dal/utils"
-import { BigNumberValue } from "../totals"
+
 /* ********** PAYMENT COLLECTION ********** */
 /**
  * @enum
@@ -14,12 +14,12 @@ export enum PaymentCollectionStatus {
   NOT_PAID = "not_paid",
 
   /**
-   * The payment sessions in the payment collection are await authorization.
+   * The payment collection is awaiting payment.
    */
   AWAITING = "awaiting",
 
   /**
-   * The payment sessions in the payment collection are authorized.
+   * The payment collection is authorized.
    */
   AUTHORIZED = "authorized",
 
@@ -29,7 +29,7 @@ export enum PaymentCollectionStatus {
   PARTIALLY_AUTHORIZED = "partially_authorized",
 
   /**
-   * The payments in the payment collection are canceled.
+   * The payment collection is canceled.
    */
   CANCELED = "canceled",
 }
@@ -44,22 +44,18 @@ export enum PaymentSessionStatus {
    * The payment is authorized.
    */
   AUTHORIZED = "authorized",
-
   /**
    * The payment is pending.
    */
   PENDING = "pending",
-
   /**
    * The payment requires an action.
    */
   REQUIRES_MORE = "requires_more",
-
   /**
    * An error occurred while processing the payment.
    */
   ERROR = "error",
-
   /**
    * The payment is canceled.
    */
@@ -71,76 +67,76 @@ export enum PaymentSessionStatus {
  */
 export interface PaymentCollectionDTO {
   /**
-   * The ID of the payment collection.
+   * The ID of the Payment Collection
    */
   id: string
 
   /**
-   * The ISO 3 character currency code of the payment sessions and payments associated with payment collection.
+   * The currency of the payments/sessions associated with payment collection
    */
   currency_code: string
 
   /**
-   * The id of the associated region.
+   * The id of the region
    */
   region_id: string
 
   /**
-   * The total amount to be authorized and captured.
+   * The amount
    */
-  amount: BigNumberValue
+  amount: number
 
   /**
-   * The amount authorized within the associated payment sessions.
+   * The amount authorized within associated payment sessions
    */
-  authorized_amount?: BigNumberValue
+  authorized_amount?: number
 
   /**
-   * The amount refunded within the associated payments.
+   * The amount refunded from associated payments
    */
-  refunded_amount?: BigNumberValue
+  refunded_amount?: number
 
   /**
-   * When the payment collection was completed.
+   * When the payment collection was completed
    */
   completed_at?: string | Date
 
   /**
-   * When the payment collection was created.
+   * When the payment collection was created
    */
   created_at?: string | Date
 
   /**
-   * When the payment collection was updated.
+   * When the payment collection was updated
    */
   updated_at?: string | Date
 
   /**
-   * Holds custom data in key-value pairs.
+   * Holds custom data in key-value pairs
    */
   metadata?: Record<string, unknown>
 
   /**
-   * The status of the payment collection.
+   * The status of the payment collection
    */
   status: PaymentCollectionStatus
 
   /**
-   * The payment provider used to process the associated payment sessions and payments.
+   * The payment provider for the payments
    *
    * @expandable
    */
   payment_providers: PaymentProviderDTO[]
 
   /**
-   * The associated payment sessions.
+   * The associated payment sessions
    *
    * @expandable
    */
   payment_sessions?: PaymentSessionDTO[]
 
   /**
-   * The associated payments.
+   * The associated payments
    *
    * @expandable
    */
@@ -173,305 +169,164 @@ export interface FilterablePaymentCollectionProps
   updated_at?: OperatorMap<string>
 }
 
-/**
- * The filters to apply on the retrieved payment sessions.
- */
 export interface FilterablePaymentSessionProps
   extends BaseFilterable<PaymentSessionDTO> {
-  /**
-   * The IDs to filter the payment sessions by.
-   */
   id?: string | string[]
-
-  /**
-   * Filter the payment sessions by their currency code.
-   */
   currency_code?: string | string[]
-
-  /**
-   * Filter the payment sessions by their amount.
-   */
-  amount?: BigNumberValue | OperatorMap<BigNumberValue>
-
-  /**
-   * Filter the payment sessions by the ID of their associated payment provider.
-   */
+  amount?: number | OperatorMap<number>
   provider_id?: string | string[]
-
-  /**
-   * Filter the payment sessions by the ID of their associated payment collection.
-   */
   payment_collection_id?: string | string[]
-
-  /**
-   * Filter the payment sessions by the ID of their associated region.
-   */
   region_id?: string | string[] | OperatorMap<string>
-
-  /**
-   * Filter the payment sessions by their creation date.
-   */
   created_at?: OperatorMap<string>
-
-  /**
-   * Filter the payment sessions by their update date.
-   */
   updated_at?: OperatorMap<string>
-
-  /**
-   * Filter the payment sessions by their deletion date.
-   */
   deleted_at?: OperatorMap<string>
 }
 
-/**
- * The filters to apply on the retrieved captures.
- */
 export interface FilterableCaptureProps extends BaseFilterable<CaptureDTO> {
-  /**
-   * The IDs to filter the captures by.
-   */
   id?: string | string[]
-
-  /**
-   * Filter the captures by their currency code.
-   */
   currency_code?: string | string[]
-
-  /**
-   * Filter the captures by their amounts.
-   */
-  amount?: BigNumberValue | OperatorMap<BigNumberValue>
-
-  /**
-   * Filter the captures by the ID of their associated payment.
-   */
+  amount?: number | OperatorMap<number>
   payment_id?: string | string[]
-
-  /**
-   * Filter the captures by their creation date.
-   */
   created_at?: OperatorMap<string>
-
-  /**
-   * Filter the captures by their update date.
-   */
   updated_at?: OperatorMap<string>
-
-  /**
-   * Filter the captures by their deletion date.
-   */
   deleted_at?: OperatorMap<string>
 }
 
-/**
- * The filters to apply on the retrieved refunds.
- */
 export interface FilterableRefundProps extends BaseFilterable<RefundDTO> {
-  /**
-   * The IDs to filter the refunds by.
-   */
   id?: string | string[]
-
-  /**
-   * Filter the refunds by their currency code.
-   */
   currency_code?: string | string[]
-
-  /**
-   * Filter the refunds by their amount.
-   */
-  amount?: BigNumberValue | OperatorMap<BigNumberValue>
-
-  /**
-   * Filter the refunds by the ID of their associated payment.
-   */
+  amount?: number | OperatorMap<number>
   payment_id?: string | string[]
-
-  /**
-   * Filter the refunds by their creation date.
-   */
   created_at?: OperatorMap<string>
-
-  /**
-   * Filter the refunds by their update date.
-   */
   updated_at?: OperatorMap<string>
-
-  /**
-   * Filter the refunds by their deletion date.
-   */
   deleted_at?: OperatorMap<string>
 }
+
 /* ********** PAYMENT ********** */
 export interface PaymentDTO {
   /**
-   * The ID of the payment.
+   * The ID of the Payment
    */
   id: string
 
   /**
-   * The payment's total amount.
+   * The payment amount
    */
-  amount: BigNumberValue
+  amount: number
 
   /**
    * The authorized amount of the payment.
    */
-  authorized_amount?: BigNumberValue
+  authorized_amount?: number
 
   /**
-   * The ISO 3 character currency code of the payment.
+   * Payment currency
    */
   currency_code: string
 
   /**
-   * The ID of the associated payment provider.
+   * The ID of payment provider
    */
   provider_id: string
 
   /**
-   * The ID of the associated cart.
+   * The associated cart's ID.
    */
   cart_id?: string
 
   /**
-   * The ID of the associated order.
+   * The associated order's ID.
    */
   order_id?: string
 
   /**
-   * The ID of the associated order edit.
+   * The associated order edit's ID.
    */
   order_edit_id?: string
 
   /**
-   * The ID of the associated customer.
+   * The associated customer's ID.
    */
   customer_id?: string
 
   /**
-   * The data relevant for the payment provider to process the payment.
+   * Payment provider data
    */
   data?: Record<string, unknown>
 
   /**
-   * When the payment was created.
+   * When the payment collection was created
    */
   created_at?: string | Date
 
   /**
-   * When the payment was updated.
+   * When the payment collection was updated
    */
   updated_at?: string | Date
 
   /**
-   * When the payment was captured.
+   * When the payment was captured
    */
   captured_at?: string | Date
 
   /**
-   * When the payment was canceled.
+   * When the payment was canceled
    */
   canceled_at?: string | Date
 
   /**
-   * The sum of the associated captures' amounts.
+   * The sum of the associated captures
    */
-  captured_amount?: BigNumberValue
+  captured_amount?: number
 
   /**
-   * The sum of the associated refunds' amounts.
+   * The sum of the associated refunds
    */
-  refunded_amount?: BigNumberValue
+  refunded_amount?: number
 
   /**
-   * The associated captures.
+   * The associated payment captures
    *
    * @expandable
    */
   captures?: CaptureDTO[]
 
   /**
-   * The associated refunds.
+   * The associated refunds of the payment
    *
    * @expandable
    */
   refunds?: RefundDTO[]
 
   /**
-   * The associated payment collection.
+   * The payment collection the payment is associated with
    *
    * @expandable
    */
   payment_collection?: PaymentCollectionDTO
 
   /**
-   * The payment session from which the payment is created.
+   * The payment session from which the payment is created
    *
    * @expandable
    */
   payment_session?: PaymentSessionDTO
 }
 
-/**
- * The filters to apply on the retrieved payments.
- */
 export interface FilterablePaymentProps
   extends BaseFilterable<FilterablePaymentProps> {
-  /**
-   * Find payments based on cart, order, or customer IDs through this search term.
-   */
-  q?: string
-
-  /**
-   * The IDs to filter the payments by.
-   */
   id?: string | string[]
 
-  /**
-   * Filter the payments by the ID of their associated payment session.
-   */
   session_id?: string | string[] | OperatorMap<string>
 
-  /**
-   * Filter the payments by the ID of their associated customer.
-   */
   customer_id?: string | string[] | OperatorMap<string>
-
-  /**
-   * Filter the payments by the ID of their associated cart.
-   */
   cart_id?: string | string[] | OperatorMap<string>
-
-  /**
-   * Filter the payments by the ID of their associated order.
-   */
   order_id?: string | string[] | OperatorMap<string>
-
-  /**
-   * Filter the payments by the ID of their associated order edit.
-   */
   order_edit_id?: string | string[] | OperatorMap<string>
 
-  /**
-   * Filter the payments by their creation date.
-   */
   created_at?: OperatorMap<string>
-
-  /**
-   * Filter the payments by their update date.
-   */
   updated_at?: OperatorMap<string>
-
-  /**
-   * Filter the payments by their capture date.
-   */
   captured_at?: OperatorMap<string>
-
-  /**
-   * Filter the payments by their cancelation date.
-   */
   canceled_at?: OperatorMap<string>
 }
 
@@ -480,14 +335,14 @@ export interface FilterablePaymentProps
  */
 export interface CaptureDTO {
   /**
-   * The ID of the capture.
+   * The ID of the Capture
    */
   id: string
 
   /**
-   * The captured amount.
+   * Captured amount
    */
-  amount: BigNumberValue
+  amount: number
 
   /**
    * The creation date of the capture.
@@ -495,8 +350,7 @@ export interface CaptureDTO {
   created_at: Date
 
   /**
-   * Who the capture was created by. For example,
-   * the ID of a user.
+   * Who the capture was created by.
    */
   created_by?: string
 
@@ -511,14 +365,14 @@ export interface CaptureDTO {
  */
 export interface RefundDTO {
   /**
-   * The ID of the refund
+   * The ID of the Refund
    */
   id: string
 
   /**
-   * The refunded amount.
+   * Refunded amount
    */
-  amount: BigNumberValue
+  amount: number
 
   /**
    * The creation date of the refund.
@@ -526,8 +380,7 @@ export interface RefundDTO {
   created_at: Date
 
   /**
-   * Who created the refund. For example,
-   * the user's ID.
+   * Who created the refund.
    */
   created_by?: string
 
@@ -536,61 +389,57 @@ export interface RefundDTO {
    */
   payment: PaymentDTO
 }
-/* ********** PAYMENT SESSION ********** */
-/**
- * The payment session details.
- */
+
+/* ********** PAYMENT ********** */
 export interface PaymentSessionDTO {
   /**
-   * The ID of the payment session.
+   * The ID of the Payment Session
    */
   id: string
 
   /**
-   * The amount to authorize.
+   * The amount
    */
-  amount: BigNumberValue
+  amount: number
 
   /**
-   * The 3 character currency code of the payment session.
+   * Payment session currency
    */
   currency_code: string
 
   /**
-   * The ID of the associated payment provider.
+   * The ID of payment provider
    */
   provider_id: string
 
   /**
-   * The data necessary for the payment provider to process the payment session.
+   * Payment provider data
    */
   data: Record<string, unknown>
 
   /**
-   * The context necessary for the payment provider.
+   * Payment session context
    */
   context?: Record<string, unknown>
 
   /**
-   * The status of the payment session.
+   * The status of the payment session
    */
   status: PaymentSessionStatus
 
   /**
-   * When the payment session was authorized.
+   * When the session was authorized
    */
   authorized_at?: Date
 
   /**
-   * The payment collection the session is associated with.
-   *
+   * The payment collection the session is associated with
    * @expandable
    */
   payment_collection?: PaymentCollectionDTO
 
   /**
-   * The payment created from the session.
-   *
+   * The payment created from the session
    * @expandable
    */
   payment?: PaymentDTO
@@ -611,18 +460,15 @@ export interface PaymentProviderDTO {
   is_enabled: string
 }
 
-/**
- * The filters to apply on the retrieved payment providers.
- */
 export interface FilterablePaymentProviderProps
   extends BaseFilterable<PaymentProviderDTO> {
   /**
    * The IDs to filter the payment collection by.
    */
-  id?: string | string[] | OperatorMap<string | string[]>
+  id?: string | string[]
 
   /**
-   * Filter by whether the payment provider is enabled.
+   * Filter by enabled status
    */
   is_enabled?: boolean
 }

@@ -129,11 +129,6 @@ export const mockServiceList = (serviceName) => {
       })
     }
 
-    // mock filtering on service order
-    if (serviceName === "orderService" && data.options?.id) {
-      resultset = resultset.filter((item) => data.options.id.includes(item.id))
-    }
-
     return {
       data: resultset,
       path: serviceName === "productService" ? "rows" : undefined,

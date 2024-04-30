@@ -30,7 +30,7 @@ export const joinerConfig: ModuleJoinerConfig = {
     },
     {
       name: ["country", "countries"],
-      args: { entity: Country.name, methodSuffix: "Countries" },
+      args: { entity: Country.name },
     },
   ],
 } as ModuleJoinerConfig

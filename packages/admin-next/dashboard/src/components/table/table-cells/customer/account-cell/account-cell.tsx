@@ -9,9 +9,7 @@ export const AccountCell = ({ hasAccount }: AccountCellProps) => {
   const { t } = useTranslation()
 
   const color = hasAccount ? "green" : ("orange" as const)
-  const text = hasAccount
-    ? t("customers.fields.registered")
-    : t("customers.fields.guest")
+  const text = hasAccount ? t("customers.registered") : t("customers.guest")
 
   return <StatusCell color={color}>{text}</StatusCell>
 }

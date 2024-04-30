@@ -1,47 +1,56 @@
-import { createCustomersWorkflow } from "@medusajs/core-flows"
-import {
-  AdminCustomerListResponse,
-  AdminCustomerResponse,
-} from "@medusajs/types"
-import {
-  ContainerRegistrationKeys,
-  remoteQueryObjectFromString,
-} from "@medusajs/utils"
 import {
   AuthenticatedMedusaRequest,
   MedusaResponse,
 } from "../../../types/routing"
-import { AdminCreateCustomerType } from "./validators"
-import { refetchCustomer } from "./helpers"
+import { CreateCustomerDTO, ICustomerModuleService } from "@medusajs/types"
+
+import { ModuleRegistrationName } from "@medusajs/modules-sdk"
+import { createCustomersWorkflow } from "@medusajs/core-flows"
 
 export const GET = async (
   req: AuthenticatedMedusaRequest,
-  res: MedusaResponse<AdminCustomerListResponse>
+  res: MedusaResponse
 ) => {
-  const remoteQuery = req.scope.resolve(ContainerRegistrationKeys.REMOTE_QUERY)
+  const customerModuleService = req.scope.resolve<ICustomerModuleService>(
+    ModuleRegistrationName.CUSTOMER
+  )
 
-  const query = remoteQueryObjectFromString({
-    entryPoint: "customers",
-    variables: {
-      filters: req.filterableFields,
-      ...req.remoteQueryConfig.pagination,
-    },
-    fields: req.remoteQueryConfig.fields,
-  })
+  const [customers, count] = await customerModuleService.listAndCount(
+    req.filterableFields,
+    req.listConfig
+  )
 
-  const { rows: customers, metadata } = await remoteQuery(query)
+  const { offset, limit } = req.validatedQuery
+
+  // TODO: Replace with remote query
+  //const remoteQuery = req.scope.resolve("remoteQuery")
+
+  //const variables = {
+  //  filters: req.filterableFields,
+  //  order: req.listConfig.order,
+  //  skip: req.listConfig.skip,
+  //  take: req.listConfig.take,
+  //}
+
+  //const query = remoteQueryObjectFromString({
+  //  entryPoint: "customer",
+  //  variables,
+  //  fields: [...req.listConfig.select!, ...req.listConfig.relations!],
+  //})
+
+  //const results = await remoteQuery(query)
 
   res.json({
+    count,
     customers,
-    count: metadata.count,
-    offset: metadata.skip,
-    limit: metadata.take,
+    offset,
+    limit,
   })
 }
 
 export const POST = async (
-  req: AuthenticatedMedusaRequest<AdminCreateCustomerType>,
-  res: MedusaResponse<AdminCustomerResponse>
+  req: AuthenticatedMedusaRequest<CreateCustomerDTO>,
+  res: MedusaResponse
 ) => {
   const createCustomers = createCustomersWorkflow(req.scope)
 
@@ -61,11 +70,5 @@ export const POST = async (
     throw errors[0].error
   }
 
-  const customer = await refetchCustomer(
-    result[0].id,
-    req.scope,
-    req.remoteQueryConfig.fields
-  )
-
-  res.status(200).json({ customer })
+  res.status(200).json({ customer: result[0] })
 }

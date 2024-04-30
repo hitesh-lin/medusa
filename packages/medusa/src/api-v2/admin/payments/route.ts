@@ -1,3 +1,4 @@
+import { Modules } from "@medusajs/modules-sdk"
 import {
   ContainerRegistrationKeys,
   remoteQueryObjectFromString,
@@ -6,25 +7,27 @@ import {
   AuthenticatedMedusaRequest,
   MedusaResponse,
 } from "../../../types/routing"
-import { AdminGetPaymentsParamsType } from "./validators"
 
 export const GET = async (
-  req: AuthenticatedMedusaRequest<AdminGetPaymentsParamsType>,
+  req: AuthenticatedMedusaRequest,
   res: MedusaResponse
 ) => {
   const remoteQuery = req.scope.resolve(ContainerRegistrationKeys.REMOTE_QUERY)
-  const queryObject = remoteQueryObjectFromString({
-    entryPoint: "payment",
+
+  const query = remoteQueryObjectFromString({
+    entryPoint: Modules.PAYMENT,
     variables: {
       filters: req.filterableFields,
-      ...req.remoteQueryConfig.pagination,
+      order: req.listConfig.order,
+      skip: req.listConfig.skip,
+      take: req.listConfig.take,
     },
-    fields: req.remoteQueryConfig.fields,
+    fields: req.listConfig.select as string[],
   })
 
-  const { rows: payments, metadata } = await remoteQuery(queryObject)
+  const { rows: payments, metadata } = await remoteQuery(query)
 
-  res.json({
+  res.status(200).json({
     payments,
     count: metadata.count,
     offset: metadata.skip,

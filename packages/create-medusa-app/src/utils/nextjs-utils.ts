@@ -1,10 +1,9 @@
 import inquirer from "inquirer"
-import { exec } from "child_process"
-import execute from "./execute.js"
+import promiseExec from "./promise-exec.js"
 import { FactBoxOptions, displayFactBox } from "./facts.js"
 import fs from "fs"
 import path from "path"
-import { customAlphabet } from "nanoid"
+import { customAlphabet, nanoid } from "nanoid"
 import { isAbortError } from "./create-abort-controller.js"
 import logMessage from "./log-message.js"
 
@@ -27,14 +26,12 @@ type InstallOptions = {
   directoryName: string
   abortController?: AbortController
   factBoxOptions: FactBoxOptions
-  verbose?: boolean
 }
 
 export async function installNextjsStarter({
   directoryName,
   abortController,
   factBoxOptions,
-  verbose = false,
 }: InstallOptions): Promise<string> {
   factBoxOptions.interval = displayFactBox({
     ...factBoxOptions,
@@ -56,18 +53,15 @@ export async function installNextjsStarter({
   }
 
   try {
-    await execute(
-      [
-        `npx create-next-app -e ${NEXTJS_REPO} ${nextjsDirectory}`,
-        {
-          signal: abortController?.signal,
-          env: {
-            ...process.env,
-            npm_config_yes: "yes",
-          },
+    await promiseExec(
+      `npx create-next-app -e ${NEXTJS_REPO} ${nextjsDirectory}`,
+      {
+        signal: abortController?.signal,
+        env: {
+          ...process.env,
+          npm_config_yes: "yes",
         },
-      ],
-      { verbose }
+      }
     )
   } catch (e) {
     if (isAbortError(e)) {
@@ -96,21 +90,18 @@ export async function installNextjsStarter({
 type StartOptions = {
   directory: string
   abortController?: AbortController
-  verbose?: boolean
 }
 
-export function startNextjsStarter({
+export async function startNextjsStarter({
   directory,
   abortController,
-  verbose = false,
 }: StartOptions) {
-  const childProcess = exec(`npm run dev`, {
-    cwd: directory,
-    signal: abortController?.signal,
-  })
-
-  if (verbose) {
-    childProcess.stdout?.pipe(process.stdout)
-    childProcess.stderr?.pipe(process.stderr)
+  try {
+    await promiseExec(`npm run dev`, {
+      cwd: directory,
+      signal: abortController?.signal,
+    })
+  } catch {
+    // ignore abort errors
   }
 }

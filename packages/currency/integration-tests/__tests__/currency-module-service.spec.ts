@@ -19,12 +19,10 @@ moduleIntegrationTestRunner({
               expect.objectContaining({
                 code: "cad",
                 name: "Canadian Dollar",
-                decimal_digits: 2,
               }),
               expect.objectContaining({
                 code: "usd",
                 name: "US Dollar",
-                decimal_digits: 2,
               }),
             ])
           )
@@ -118,7 +116,7 @@ moduleIntegrationTestRunner({
             {},
             {
               take: 1,
-              select: ["code", "rounding"],
+              select: ["code"],
             }
           )
 
@@ -128,8 +126,6 @@ moduleIntegrationTestRunner({
           expect(serialized).toEqual([
             {
               code: "aed",
-              rounding: 0,
-              raw_rounding: expect.any(Object),
             },
           ])
         })

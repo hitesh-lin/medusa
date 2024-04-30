@@ -1,8 +1,6 @@
-import { BigNumberInput } from "@medusajs/types"
-
 export interface CreateLineItemAdjustmentDTO {
   item_id: string
-  amount: BigNumberInput
+  amount: number
   code?: string
   description?: string
   promotion_id?: string

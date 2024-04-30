@@ -1,12 +1,12 @@
 import { EllipseMiniSolid, XMarkMini } from "@medusajs/icons"
 import { DatePicker, Text, clx } from "@medusajs/ui"
 import * as Popover from "@radix-ui/react-popover"
+import { format } from "date-fns"
 import isEqual from "lodash/isEqual"
 import { MouseEvent, useMemo, useState } from "react"
 
 import { t } from "i18next"
 import { useTranslation } from "react-i18next"
-import { useDate } from "../../../../hooks/use-date"
 import { useSelectedParams } from "../hooks"
 import { useDataTableFilterContext } from "./context"
 import { IFilter } from "./types"
@@ -17,19 +17,19 @@ type DateComparisonOperator = {
   /**
    * The filtered date must be greater than or equal to this value.
    */
-  $gte?: string
+  gte?: string
   /**
    * The filtered date must be less than or equal to this value.
    */
-  $lte?: string
+  lte?: string
   /**
    * The filtered date must be less than this value.
    */
-  $lt?: string
+  lt?: string
   /**
    * The filtered date must be greater than this value.
    */
-  $gt?: string
+  gt?: string
 }
 
 export const DateFilter = ({
@@ -39,8 +39,6 @@ export const DateFilter = ({
 }: DateFilterProps) => {
   const [open, setOpen] = useState(openOnMount)
   const [showCustom, setShowCustom] = useState(false)
-
-  const { getFullDate } = useDate()
 
   const { key, label } = filter
 
@@ -62,14 +60,14 @@ export const DateFilter = ({
   const currentValue = selectedParams.get()
 
   const currentDateComparison = parseDateComparison(currentValue)
-  const customStartValue = getDateFromComparison(currentDateComparison, "$gte")
-  const customEndValue = getDateFromComparison(currentDateComparison, "$lte")
+  const customStartValue = getDateFromComparison(currentDateComparison, "gte")
+  const customEndValue = getDateFromComparison(currentDateComparison, "lte")
 
   const handleCustomDateChange = (
     value: Date | undefined,
     pos: "start" | "end"
   ) => {
-    const key = pos === "start" ? "$gte" : "$lte"
+    const key = pos === "start" ? "gte" : "lte"
     const dateValue = value ? value.toISOString() : undefined
 
     selectedParams.add(
@@ -86,7 +84,7 @@ export const DateFilter = ({
   }
 
   const formatCustomDate = (date: Date | undefined) => {
-    return date ? getFullDate({ date: date }) : undefined
+    return date ? format(date, "dd MMM, yyyy") : undefined
   }
 
   const getCustomDisplayValue = () => {
@@ -196,12 +194,12 @@ export const DateFilter = ({
               <div>
                 <div className="px-2 py-1">
                   <Text size="xsmall" leading="compact" weight="plus">
-                    {t("filters.date.from")}
+                    Starting
                   </Text>
                 </div>
                 <div className="px-2 py-1">
                   <DatePicker
-                    // placeholder="MM/DD/YYYY" TODO: Fix DatePicker component not working with placeholder
+                    placeholder="MM/DD/YYYY"
                     toDate={customEndValue}
                     value={customStartValue}
                     onChange={(d) => handleCustomDateChange(d, "start")}
@@ -211,12 +209,12 @@ export const DateFilter = ({
               <div>
                 <div className="px-2 py-1">
                   <Text size="xsmall" leading="compact" weight="plus">
-                    {t("filters.date.to")}
+                    Ending
                   </Text>
                 </div>
                 <div className="px-2 py-1">
                   <DatePicker
-                    // placeholder="MM/DD/YYYY"
+                    placeholder="MM/DD/YYYY"
                     fromDate={customStartValue}
                     value={customEndValue || undefined}
                     onChange={(d) => {
@@ -303,13 +301,13 @@ const usePresets = () => {
       {
         label: t("filters.date.today"),
         value: {
-          $gte: today.toISOString(),
+          gte: today.toISOString(),
         },
       },
       {
         label: t("filters.date.lastSevenDays"),
         value: {
-          $gte: new Date(
+          gte: new Date(
             today.getTime() - 7 * 24 * 60 * 60 * 1000
           ).toISOString(), // 7 days ago
         },
@@ -317,7 +315,7 @@ const usePresets = () => {
       {
         label: t("filters.date.lastThirtyDays"),
         value: {
-          $gte: new Date(
+          gte: new Date(
             today.getTime() - 30 * 24 * 60 * 60 * 1000
           ).toISOString(), // 30 days ago
         },
@@ -325,7 +323,7 @@ const usePresets = () => {
       {
         label: t("filters.date.lastNinetyDays"),
         value: {
-          $gte: new Date(
+          gte: new Date(
             today.getTime() - 90 * 24 * 60 * 60 * 1000
           ).toISOString(), // 90 days ago
         },
@@ -333,7 +331,7 @@ const usePresets = () => {
       {
         label: t("filters.date.lastTwelveMonths"),
         value: {
-          $gte: new Date(
+          gte: new Date(
             today.getTime() - 365 * 24 * 60 * 60 * 1000
           ).toISOString(), // 365 days ago
         },
@@ -351,7 +349,7 @@ const parseDateComparison = (value: string[]) => {
 
 const getDateFromComparison = (
   comparison: DateComparisonOperator | null,
-  key: "$gte" | "$lte"
+  key: "gte" | "lte"
 ) => {
   return comparison?.[key] ? new Date(comparison[key] as string) : undefined
 }

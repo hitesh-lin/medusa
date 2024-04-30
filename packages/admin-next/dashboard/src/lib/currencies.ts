@@ -1,5 +1,5 @@
 /** This file is auto-generated. Do not modify it manually. */
-export type CurrencyInfo = {
+type CurrencyInfo = {
   code: string
   name: string
   symbol_native: string

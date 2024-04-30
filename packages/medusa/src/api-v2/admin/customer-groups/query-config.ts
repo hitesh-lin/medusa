@@ -1,14 +1,17 @@
+export const defaultAdminCustomerGroupRelations = []
+export const allowedAdminCustomerGroupRelations = ["customers"]
 export const defaultAdminCustomerGroupFields = [
   "id",
   "name",
-  "created_by",
   "created_at",
   "updated_at",
   "deleted_at",
 ]
 
 export const retrieveTransformQueryConfig = {
-  defaults: defaultAdminCustomerGroupFields,
+  defaultFields: defaultAdminCustomerGroupFields,
+  defaultRelations: defaultAdminCustomerGroupRelations,
+  allowedRelations: allowedAdminCustomerGroupRelations,
   isList: false,
 }
 

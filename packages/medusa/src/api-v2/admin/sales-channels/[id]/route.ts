@@ -3,30 +3,38 @@ import {
   updateSalesChannelsWorkflow,
 } from "@medusajs/core-flows"
 import {
+  ContainerRegistrationKeys,
+  remoteQueryObjectFromString,
+} from "@medusajs/utils"
+import {
   AuthenticatedMedusaRequest,
   MedusaResponse,
 } from "../../../../types/routing"
-import {
-  AdminGetSalesChannelParamsType,
-  AdminUpdateSalesChannelType,
-} from "../validators"
-import { refetchSalesChannel } from "../helpers"
+import { defaultAdminSalesChannelFields } from "../query-config"
 
 export const GET = async (
-  req: AuthenticatedMedusaRequest<AdminGetSalesChannelParamsType>,
+  req: AuthenticatedMedusaRequest,
   res: MedusaResponse
 ) => {
-  const salesChannel = await refetchSalesChannel(
-    req.params.id,
-    req.scope,
-    req.remoteQueryConfig.fields
-  )
+  const remoteQuery = req.scope.resolve(ContainerRegistrationKeys.REMOTE_QUERY)
 
-  res.json({ sales_channel: salesChannel })
+  const variables = {
+    id: req.params.id,
+  }
+
+  const queryObject = remoteQueryObjectFromString({
+    entryPoint: "sales_channels",
+    variables,
+    fields: defaultAdminSalesChannelFields,
+  })
+
+  const [sales_channel] = await remoteQuery(queryObject)
+
+  res.json({ sales_channel })
 }
 
 export const POST = async (
-  req: AuthenticatedMedusaRequest<AdminUpdateSalesChannelType>,
+  req: AuthenticatedMedusaRequest,
   res: MedusaResponse
 ) => {
   const { errors } = await updateSalesChannelsWorkflow(req.scope).run({
@@ -41,12 +49,17 @@ export const POST = async (
     throw errors[0].error
   }
 
-  const salesChannel = await refetchSalesChannel(
-    req.params.id,
-    req.scope,
-    req.remoteQueryConfig.fields
-  )
-  res.status(200).json({ sales_channel: salesChannel })
+  const remoteQuery = req.scope.resolve(ContainerRegistrationKeys.REMOTE_QUERY)
+
+  const queryObject = remoteQueryObjectFromString({
+    entryPoint: "sales_channels",
+    variables: { id: req.params.id },
+    fields: defaultAdminSalesChannelFields,
+  })
+
+  const [sales_channel] = await remoteQuery(queryObject)
+
+  res.status(200).json({ sales_channel })
 }
 
 export const DELETE = async (

@@ -17,11 +17,7 @@
  *     description: The workflows execution's step id.
  *   response: {}
  *   compensate_input: {}
- *   action:
- *     type: string
- *     enum:
- *       - invoke
- *       - compensate
+ *   action: {}
  * 
 */
 

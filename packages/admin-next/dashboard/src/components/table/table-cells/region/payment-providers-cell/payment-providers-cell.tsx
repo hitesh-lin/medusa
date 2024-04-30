@@ -1,26 +1,39 @@
+import { PaymentProvider } from "@medusajs/medusa"
 import { useTranslation } from "react-i18next"
-import { PaymentProviderDTO } from "@medusajs/types"
-
 import { formatProvider } from "../../../../../lib/format-provider"
 import { PlaceholderCell } from "../../common/placeholder-cell"
-import { ListSummary } from "../../../../common/list-summary"
 
 type PaymentProvidersCellProps = {
-  paymentProviders?: PaymentProviderDTO[] | null
+  paymentProviders?: PaymentProvider[] | null
 }
 
 export const PaymentProvidersCell = ({
   paymentProviders,
 }: PaymentProvidersCellProps) => {
+  const { t } = useTranslation()
+
   if (!paymentProviders || paymentProviders.length === 0) {
     return <PlaceholderCell />
   }
 
-  const displayValues = paymentProviders.map((p) => formatProvider(p.id))
+  const displayValue = paymentProviders
+    .slice(0, 2)
+    .map((p) => formatProvider(p.id))
+    .join(", ")
+
+  const additionalProviders = paymentProviders.slice(2).length
+
+  const text = `${displayValue}${
+    additionalProviders > 0
+      ? ` ${t("general.plusCountMore", {
+          count: additionalProviders,
+        })}`
+      : ""
+  }`
 
   return (
     <div className="flex size-full items-center overflow-hidden">
-      <ListSummary list={displayValues} />
+      <span className="truncate">{text}</span>
     </div>
   )
 }

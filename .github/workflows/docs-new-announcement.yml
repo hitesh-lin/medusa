@@ -34,10 +34,6 @@ jobs:
         run: yarn install
         working-directory: docs-util
 
-      - name: Build Workspace packages
-        run: yarn build
-        working-directory: docs-util
-
       - name: Generate Announcement Bar
         run: yarn generate:announcement
         working-directory: docs-util/packages/scripts

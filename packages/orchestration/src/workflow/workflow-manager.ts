@@ -6,7 +6,6 @@ import {
   TransactionMetadata,
   TransactionModelOptions,
   TransactionOrchestrator,
-  TransactionStep,
   TransactionStepHandler,
   TransactionStepsDefinition,
 } from "../transaction"
@@ -33,21 +32,15 @@ export type WorkflowHandler = Map<
   { invoke: WorkflowStepHandler; compensate?: WorkflowStepHandler }
 >
 
-export type WorkflowStepHandlerArguments = {
+export type WorkflowStepHandler = (args: {
   container: MedusaContainer
   payload: unknown
   invoke: { [actions: string]: unknown }
   compensate: { [actions: string]: unknown }
   metadata: TransactionMetadata
   transaction: DistributedTransaction
-  step: TransactionStep
-  orchestrator: TransactionOrchestrator
   context?: Context
-}
-
-export type WorkflowStepHandler = (
-  args: WorkflowStepHandlerArguments
-) => Promise<unknown>
+}) => unknown
 
 export class WorkflowManager {
   protected static workflows: Map<string, WorkflowDefinition> = new Map()
@@ -176,10 +169,8 @@ export class WorkflowManager {
       return async (
         actionId: string,
         handlerType: TransactionHandlerType,
-        payload: any,
-        transaction: DistributedTransaction,
-        step: TransactionStep,
-        orchestrator: TransactionOrchestrator
+        payload?: any,
+        transaction?: DistributedTransaction
       ) => {
         const command = handlers.get(actionId)
 
@@ -201,8 +192,6 @@ export class WorkflowManager {
           compensate,
           metadata,
           transaction: transaction as DistributedTransaction,
-          step,
-          orchestrator,
           context,
         })
       }

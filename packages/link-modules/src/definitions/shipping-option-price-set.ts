@@ -1,6 +1,6 @@
 import { Modules } from "@medusajs/modules-sdk"
 import { ModuleJoinerConfig } from "@medusajs/types"
-import { LINKS } from "@medusajs/utils"
+import { LINKS } from "../links"
 
 export const ShippingOptionPriceSet: ModuleJoinerConfig = {
   serviceName: LINKS.ShippingOptionPriceSet,
@@ -39,21 +39,11 @@ export const ShippingOptionPriceSet: ModuleJoinerConfig = {
   extends: [
     {
       serviceName: Modules.FULFILLMENT,
-      fieldAlias: {
-        prices: {
-          path: "price_set_link.price_set.prices",
-          isList: true,
-        },
-        calculated_price: {
-          path: "price_set_link.price_set.calculated_price",
-          forwardArgumentsOnPath: ["price_set_link.price_set"],
-        },
-      },
       relationship: {
         serviceName: LINKS.ShippingOptionPriceSet,
         primaryKey: "shipping_option_id",
         foreignKey: "id",
-        alias: "price_set_link",
+        alias: "price",
       },
     },
     {

@@ -1,3 +1,5 @@
+export const defaultAdminInviteRelations = []
+export const allowedAdminInviteRelations = []
 export const defaultAdminInviteFields = [
   "id",
   "email",
@@ -11,7 +13,9 @@ export const defaultAdminInviteFields = [
 ]
 
 export const retrieveTransformQueryConfig = {
-  defaults: defaultAdminInviteFields,
+  defaultFields: defaultAdminInviteFields,
+  defaultRelations: defaultAdminInviteRelations,
+  allowedRelations: allowedAdminInviteRelations,
   isList: false,
 }
 

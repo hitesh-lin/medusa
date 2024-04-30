@@ -1,13 +1,8 @@
-import {
-  BigNumberInput,
-  ProductTypes,
-  SalesChannelTypes,
-  WorkflowTypes,
-} from "@medusajs/types"
+import { ProductTypes, SalesChannelTypes, WorkflowTypes } from "@medusajs/types"
 import {
   FeatureFlagUtils,
-  ShippingProfileUtils,
   kebabCase,
+  ShippingProfileUtils,
 } from "@medusajs/utils"
 import { WorkflowArguments } from "@medusajs/workflows-sdk"
 
@@ -19,9 +14,9 @@ type VariantIndexAndPrices = {
   prices: {
     region_id?: string
     currency_code?: string
-    amount: BigNumberInput
-    min_quantity?: BigNumberInput
-    max_quantity?: BigNumberInput
+    amount: number
+    min_quantity?: number
+    max_quantity?: number
   }[]
 }
 

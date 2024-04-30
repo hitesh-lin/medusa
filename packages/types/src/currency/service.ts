@@ -5,7 +5,7 @@ import { Context } from "../shared-context"
 import { FilterableCurrencyProps, CurrencyDTO } from "./common"
 
 /**
- * The main service interface for the Currency Module.
+ * The main service interface for the currency module.
  */
 export interface ICurrencyModuleService extends IModuleService {
   /**
@@ -19,7 +19,44 @@ export interface ICurrencyModuleService extends IModuleService {
    * @returns {Promise<CurrencyDTO>} The retrieved currency.
    *
    * @example
-   * const currency = await currencyModuleService.retrieve("usd")
+   * A simple example that retrieves a currency by its code:
+   *
+   * ```ts
+   * import {
+   *   initialize as initializeCurrencyModule,
+   * } from "@medusajs/currency"
+   *
+   * async function retrieveCurrency (code: string) {
+   *   const currencyModule = await initializeCurrencyModule()
+   *
+   *   const currency = await currencyModule.retrieve(
+   *     code
+   *   )
+   *
+   *   // do something with the currency or return it
+   * }
+   * ```
+   *
+   * To specify attributes that should be retrieved:
+   *
+   * ```ts
+   * import {
+   *   initialize as initializeCurrencyModule,
+   * } from "@medusajs/currency"
+   *
+   * async function retrieveCurrency (code: string) {
+   *   const currencyModule = await initializeCurrencyModule()
+   *
+   *   const currency = await currencyModule.retrieve(
+   *     code,
+   *     {
+   *       select: ["symbol_native"]
+   *     }
+   *   )
+   *
+   *   // do something with the currency or return it
+   * }
+   * ```
    */
   retrieve(
     code: string,
@@ -42,23 +79,69 @@ export interface ICurrencyModuleService extends IModuleService {
    * To retrieve a list of currencies using their codes:
    *
    * ```ts
-   * const currencies = await currencyModuleService.list({
-   *   code: ["usd", "eur"],
-   * })
+   * import {
+   *   initialize as initializeCurrencyModule,
+   * } from "@medusajs/currency"
+   *
+   * async function retrieveCurrencies (codes: string[]) {
+   *   const currencyModule = await initializeCurrencyModule()
+   *
+   *   const currencies = await currencyModule.list(
+   *     {
+   *       code: codes
+   *     },
+   *   )
+   *
+   *   // do something with the currencies or return them
+   * }
+   * ```
+   *
+   * To specify attributes that should be retrieved within the money amounts:
+   *
+   * ```ts
+   * import {
+   *   initialize as initializeCurrencyModule,
+   * } from "@medusajs/currency"
+   *
+   * async function retrieveCurrencies (codes: string[]) {
+   *   const currencyModule = await initializeCurrencyModule()
+   *
+   *   const currencies = await currencyModule.list(
+   *     {
+   *       code: codes
+   *     },
+   *     {
+   *       select: ["symbol_native"]
+   *     }
+   *   )
+   *
+   *   // do something with the currencies or return them
+   * }
    * ```
    *
    * By default, only the first `15` records are retrieved. You can control pagination by specifying the `skip` and `take` properties of the `config` parameter:
    *
    * ```ts
-   * const currencies = await currencyModuleService.list(
-   *   {
-   *     code: ["usd", "eur"],
-   *   },
-   *   {
-   *     take: 20,
-   *     skip: 2,
-   *   }
-   * )
+   * import {
+   *   initialize as initializeCurrencyModule,
+   * } from "@medusajs/currency"
+   *
+   * async function retrieveCurrencies (codes: string[], skip: number, take: number) {
+   *   const currencyModule = await initializeCurrencyModule()
+   *
+   *   const currencies = await currencyModule.list(
+   *     {
+   *       code: codes
+   *     },
+   *     {
+   *       select: ["symbol_native"],
+   *       skip,
+   *       take
+   *     }
+   *   )
+   *
+   *   // do something with the currencies or return them
+   * }
    * ```
    */
   list(
@@ -82,25 +165,69 @@ export interface ICurrencyModuleService extends IModuleService {
    * To retrieve a list of currencies using their codes:
    *
    * ```ts
-   * const [currencies, count] =
-   *   await currencyModuleService.listAndCount({
-   *     code: ["usd", "eur"],
-   *   })
+   * import {
+   *   initialize as initializeCurrencyModule,
+   * } from "@medusajs/currency"
+   *
+   * async function retrieveCurrencies (codes: string[]) {
+   *   const currencyModule = await initializeCurrencyModule()
+   *
+   *   const [currencies, count] = await currencyModule.listAndCount(
+   *     {
+   *       code: codes
+   *     },
+   *   )
+   *
+   *   // do something with the currencies or return them
+   * }
+   * ```
+   *
+   * To specify attributes that should be retrieved within the money amounts:
+   *
+   * ```ts
+   * import {
+   *   initialize as initializeCurrencyModule,
+   * } from "@medusajs/currency"
+   *
+   * async function retrieveCurrencies (codes: string[]) {
+   *   const currencyModule = await initializeCurrencyModule()
+   *
+   *   const [currencies, count] = await currencyModule.listAndCount(
+   *     {
+   *       code: codes
+   *     },
+   *     {
+   *       select: ["symbol_native"]
+   *     }
+   *   )
+   *
+   *   // do something with the currencies or return them
+   * }
    * ```
    *
    * By default, only the first `15` records are retrieved. You can control pagination by specifying the `skip` and `take` properties of the `config` parameter:
    *
    * ```ts
-   * const [currencies, count] =
-   *   await currencyModuleService.listAndCount(
+   * import {
+   *   initialize as initializeCurrencyModule,
+   * } from "@medusajs/currency"
+   *
+   * async function retrieveCurrencies (codes: string[], skip: number, take: number) {
+   *   const currencyModule = await initializeCurrencyModule()
+   *
+   *   const [currencies, count] = await currencyModule.listAndCount(
    *     {
-   *       code: ["usd", "eur"],
+   *       code: codes
    *     },
    *     {
-   *       take: 20,
-   *       skip: 2,
+   *       select: ["symbol_native"],
+   *       skip,
+   *       take
    *     }
    *   )
+   *
+   *   // do something with the currencies or return them
+   * }
    * ```
    */
   listAndCount(

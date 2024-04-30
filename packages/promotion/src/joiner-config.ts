@@ -1,12 +1,11 @@
 import { Modules } from "@medusajs/modules-sdk"
 import { ModuleJoinerConfig } from "@medusajs/types"
 import { generateLinkableKeysMap } from "@medusajs/utils"
-import { Campaign, Promotion, PromotionRule } from "@models"
+import { Campaign, Promotion } from "@models"
 
 export const LinkableKeys = {
   promotion_id: Promotion.name,
   campaign_id: Campaign.name,
-  promotion_rule_id: PromotionRule.name,
 }
 
 export const entityNameToLinkableKeysMap = generateLinkableKeysMap(LinkableKeys)
@@ -27,13 +26,6 @@ export const joinerConfig: ModuleJoinerConfig = {
       args: {
         entity: Campaign.name,
         methodSuffix: "Campaigns",
-      },
-    },
-    {
-      name: ["promotion_rule", "promotion_rules"],
-      args: {
-        entity: PromotionRule.name,
-        methodSuffix: "PromotionRules",
       },
     },
   ],

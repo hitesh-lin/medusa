@@ -12,7 +12,6 @@ import {
  */
 class DTOPropertyGenerator extends DefaultKindGenerator<ts.PropertySignature> {
   protected allowedKinds: ts.SyntaxKind[] = [ts.SyntaxKind.PropertySignature]
-  public name = "dto-property"
 
   /**
    * Check that the generator can handle generating for the node.
@@ -32,12 +31,12 @@ class DTOPropertyGenerator extends DefaultKindGenerator<ts.PropertySignature> {
     )
   }
 
-  async getDocBlock(
+  getDocBlock(
     node: ts.PropertyDeclaration | ts.Node,
     options?: GetDocBlockOptions
-  ): Promise<string> {
+  ): string {
     if (!this.isAllowed(node)) {
-      return await super.getDocBlock(node, options)
+      return super.getDocBlock(node, options)
     }
 
     let str = DOCBLOCK_START

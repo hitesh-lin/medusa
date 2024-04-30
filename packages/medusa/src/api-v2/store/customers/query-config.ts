@@ -1,4 +1,8 @@
-const defaultStoreCustomersFields = [
+import { CustomerDTO } from "@medusajs/types"
+
+export const defaultStoreCustomersRelations = []
+export const allowedStoreCustomersRelations = ["addresses", "groups"]
+export const defaultStoreCustomersFields: (keyof CustomerDTO)[] = [
   "id",
   "email",
   "company_name",
@@ -10,14 +14,17 @@ const defaultStoreCustomersFields = [
   "deleted_at",
   "created_at",
   "updated_at",
-  "*addresses",
 ]
 
 export const retrieveTransformQueryConfig = {
-  defaults: defaultStoreCustomersFields,
+  defaultFields: defaultStoreCustomersFields as string[],
+  defaultRelations: defaultStoreCustomersRelations,
+  allowedRelations: allowedStoreCustomersRelations,
   isList: false,
 }
 
+export const defaultStoreCustomerAddressRelations = []
+export const allowedStoreCustomerAddressRelations = ["customer"]
 export const defaultStoreCustomerAddressFields = [
   "id",
   "company",
@@ -37,7 +44,9 @@ export const defaultStoreCustomerAddressFields = [
 ]
 
 export const retrieveAddressTransformQueryConfig = {
-  defaults: defaultStoreCustomerAddressFields,
+  defaultFields: defaultStoreCustomerAddressFields,
+  defaultRelations: defaultStoreCustomerAddressRelations,
+  allowedRelations: allowedStoreCustomerAddressRelations,
   isList: false,
 }
 

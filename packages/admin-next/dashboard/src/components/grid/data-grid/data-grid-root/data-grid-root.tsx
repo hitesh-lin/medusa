@@ -20,7 +20,6 @@ import {
   Command,
   useCommandHistory,
 } from "../../../../hooks/use-command-history"
-import { GridCellType, NON_INTERACTIVE_CELL_TYPES } from "../../constants"
 
 type FieldCoordinates = {
   column: number
@@ -31,10 +30,10 @@ export interface DataGridRootProps<
   TData,
   TFieldValues extends FieldValues = FieldValues,
 > {
-  data?: TData[]
+  data: TData[]
   columns: ColumnDef<TData>[]
   state: UseFormReturn<TFieldValues>
-  getSubRows?: (row: TData) => TData[]
+  getSubRows: (row: TData) => TData[] | undefined
 }
 
 const ROW_HEIGHT = 40
@@ -43,7 +42,7 @@ export const DataGridRoot = <
   TData,
   TFieldValues extends FieldValues = FieldValues,
 >({
-  data = [],
+  data,
   columns,
   state,
   getSubRows,
@@ -100,35 +99,17 @@ export const DataGridRoot = <
     }
   }
 
-  const handleBlurAnchor = () => {
-    const activeElement = document.activeElement
-
-    if (anchor && activeElement instanceof HTMLElement) {
-      activeElement.blur()
-    }
-  }
-
-  const isNonInteractive = (element: HTMLElement) => {
-    const type = element.getAttribute("data-cell-type")
-
-    if (!type) {
-      return true
-    }
-
-    return NON_INTERACTIVE_CELL_TYPES.includes(type as GridCellType)
-  }
-
   const handleMouseDown = (e: ReactMouseEvent<HTMLTableCellElement>) => {
-    e.stopPropagation()
-    e.preventDefault()
-
     const target = e.target
 
     /**
      * Check if the click was on a presentation element.
      * If so, we don't want to set the anchor.
      */
-    if (target instanceof HTMLElement && isNonInteractive(target)) {
+    if (
+      target instanceof HTMLElement &&
+      target.querySelector("[data-role=presentation]")
+    ) {
       return
     }
 
@@ -140,9 +121,6 @@ export const DataGridRoot = <
     if (e.detail === 2 || isAnchor) {
       handleFocusInner(e.currentTarget)
       return
-    } else {
-      // reset focus so the previous cell doesn't keep the focus
-      handleBlurAnchor()
     }
 
     const coordinates: FieldCoordinates = {
@@ -179,7 +157,10 @@ export const DataGridRoot = <
      * Check if the click was on a presentation element.
      * If so, we don't want to add it to the selection.
      */
-    if (target instanceof HTMLElement && isNonInteractive(target)) {
+    if (
+      target instanceof HTMLElement &&
+      target.querySelector("[data-role=presentation]")
+    ) {
       return
     }
 
@@ -506,7 +487,7 @@ export const DataGridRoot = <
   }, [handleMouseUp, handleCopy, handlePaste, handleCommandHistory])
 
   return (
-    <div className="bg-ui-bg-subtle size-full overflow-hidden">
+    <div className="size-full overflow-hidden">
       <div
         ref={tableContainerRef}
         style={{
@@ -578,11 +559,10 @@ export const DataGridRoot = <
                         data-column-index={index}
                         className={clx(
                           "bg-ui-bg-base has-[[data-role='presentation']]:bg-ui-bg-subtle relative flex items-center border-b border-r p-0 outline-none",
-                          "after:transition-fg after:border-ui-fg-interactive after:pointer-events-none after:invisible after:absolute after:-bottom-px after:-left-px after:-right-px after:-top-px after:box-border after:border-[2px] after:content-['']",
+                          "after:transition-fg after:border-ui-fg-interactive after:invisible after:absolute after:-bottom-px after:-left-px after:-right-px after:-top-px after:box-border after:border-[2px] after:content-['']",
                           {
                             "after:visible": isAnchor,
-                            "bg-ui-bg-highlight focus-within:bg-ui-bg-base":
-                              isSelected || isAnchor,
+                            "bg-ui-bg-highlight": isSelected,
                             "bg-ui-bg-base-hover": isDragTarget,
                           }
                         )}

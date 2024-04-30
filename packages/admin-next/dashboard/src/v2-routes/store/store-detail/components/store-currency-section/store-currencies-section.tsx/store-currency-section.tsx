@@ -1,75 +1,72 @@
-import { Plus, Trash } from "@medusajs/icons"
-import { CurrencyDTO } from "@medusajs/types"
+import { Trash } from "@medusajs/icons"
+import { Currency } from "@medusajs/medusa"
 import {
+  Button,
   Checkbox,
   CommandBar,
   Container,
   Heading,
-  toast,
+  StatusBadge,
+  Table,
+  clx,
   usePrompt,
 } from "@medusajs/ui"
-import { keepPreviousData } from "@tanstack/react-query"
-import { RowSelectionState, createColumnHelper } from "@tanstack/react-table"
+import {
+  RowSelectionState,
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  getPaginationRowModel,
+  useReactTable,
+} from "@tanstack/react-table"
+import {
+  adminStoreKeys,
+  useAdminCustomPost,
+  useAdminCustomQuery,
+} from "medusa-react"
 import { useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
+import { Link } from "react-router-dom"
 import { ActionMenu } from "../../../../../../components/common/action-menu"
-import { DataTable } from "../../../../../../components/table/data-table"
-import { useCurrencies } from "../../../../../../hooks/api/currencies"
-import { useUpdateStore } from "../../../../../../hooks/api/store"
-import { useDataTable } from "../../../../../../hooks/use-data-table"
-import { ExtendedStoreDTO } from "../../../../../../types/api-responses"
-import { useCurrenciesTableColumns } from "../../../../common/hooks/use-currencies-table-columns"
-import { useCurrenciesTableQuery } from "../../../../common/hooks/use-currencies-table-query"
+import { LocalizedTablePagination } from "../../../../../../components/localization/localized-table-pagination"
+import { StoreDTO } from "@medusajs/types"
 
 type StoreCurrencySectionProps = {
-  store: ExtendedStoreDTO
+  store: StoreDTO
 }
 
-const PAGE_SIZE = 10
+const PAGE_SIZE = 20
 
 export const StoreCurrencySection = ({ store }: StoreCurrencySectionProps) => {
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
-
-  const { searchParams, raw } = useCurrenciesTableQuery({ pageSize: PAGE_SIZE })
-
-  const {
-    currencies,
-    count,
-    isPending: isLoading,
-    isError,
-    error,
-  } = useCurrencies(
-    {
-      code: store.supported_currency_codes,
-      ...searchParams,
-    },
-    {
-      placeholderData: keepPreviousData,
-    }
+  const { data } = useAdminCustomQuery(
+    `/admin/currencies?code[]=${store.supported_currency_codes.join(",")}`,
+    adminStoreKeys.details()
   )
 
   const columns = useColumns()
 
-  const { table } = useDataTable({
-    data: currencies ?? [],
+  const table = useReactTable({
+    data: data?.currencies ?? [],
     columns,
-    count: count,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    onRowSelectionChange: setRowSelection,
     getRowId: (row) => row.code,
-    rowSelection: {
-      state: rowSelection,
-      updater: setRowSelection,
+    pageCount: Math.ceil(store.supported_currency_codes.length / PAGE_SIZE),
+    state: {
+      rowSelection,
     },
-    enablePagination: true,
-    enableRowSelection: true,
-    pageSize: PAGE_SIZE,
     meta: {
-      storeId: store.id,
       currencyCodes: store.supported_currency_codes,
-      defaultCurrencyCode: store.default_currency_code,
+      storeId: store.id,
     },
   })
 
-  const { mutateAsync } = useUpdateStore(store.id)
+  const { mutateAsync } = useAdminCustomPost(
+    `/admin/stores/${store.id}`,
+    adminStoreKeys.details()
+  )
   const { t } = useTranslation()
   const prompt = usePrompt()
 
@@ -89,58 +86,81 @@ export const StoreCurrencySection = ({ store }: StoreCurrencySectionProps) => {
       return
     }
 
-    try {
-      await mutateAsync({
+    await mutateAsync(
+      {
         supported_currency_codes: store.supported_currency_codes.filter(
           (c) => !ids.includes(c)
         ),
-      })
-      setRowSelection({})
-
-      toast.success(t("general.success"), {
-        description: t("store.toast.currenciesRemoved"),
-        dismissLabel: t("actions.close"),
-      })
-    } catch (e) {
-      toast.error(t("general.error"), {
-        description: e.message,
-        dismissLabel: t("actions.close"),
-      })
-    }
-  }
-
-  if (isError) {
-    throw error
+      },
+      {
+        onSuccess: () => {
+          setRowSelection({})
+        },
+      }
+    )
   }
 
   return (
-    <Container className="divide-y p-0">
+    <Container className="p-0">
       <div className="flex items-center justify-between px-6 py-4">
         <Heading level="h2">{t("store.currencies")}</Heading>
-        <ActionMenu
-          groups={[
-            {
-              actions: [
-                {
-                  icon: <Plus />,
-                  label: t("actions.add"),
-                  to: "currencies",
-                },
-              ],
-            },
-          ]}
-        />
+        <div>
+          <Link to="/settings/store/add-currencies">
+            <Button size="small" variant="secondary">
+              {t("general.add")}
+            </Button>
+          </Link>
+        </div>
       </div>
-      <DataTable
-        orderBy={["code", "name"]}
-        search
-        pagination
-        table={table}
+      <Table>
+        <Table.Header>
+          {table.getHeaderGroups().map((headerGroup) => {
+            return (
+              <Table.Row
+                key={headerGroup.id}
+                className="[&_th:first-of-type]:w-[1%] [&_th:first-of-type]:whitespace-nowrap [&_th]:w-1/3"
+              >
+                {headerGroup.headers.map((header) => {
+                  return (
+                    <Table.HeaderCell key={header.id}>
+                      {flexRender(
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
+                    </Table.HeaderCell>
+                  )
+                })}
+              </Table.Row>
+            )
+          })}
+        </Table.Header>
+        <Table.Body className="border-b-0">
+          {table.getRowModel().rows.map((row) => (
+            <Table.Row
+              key={row.id}
+              className={clx("transition-fg", {
+                "bg-ui-bg-highlight hover:bg-ui-bg-highlight-hover":
+                  row.getIsSelected(),
+              })}
+            >
+              {row.getVisibleCells().map((cell) => (
+                <Table.Cell key={cell.id}>
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </Table.Cell>
+              ))}
+            </Table.Row>
+          ))}
+        </Table.Body>
+      </Table>
+      <LocalizedTablePagination
+        canNextPage={table.getCanNextPage()}
+        canPreviousPage={table.getCanPreviousPage()}
+        nextPage={table.nextPage}
+        previousPage={table.previousPage}
+        count={store.supported_currency_codes.length}
+        pageIndex={table.getState().pagination.pageIndex}
+        pageCount={table.getPageCount()}
         pageSize={PAGE_SIZE}
-        columns={columns}
-        count={count}
-        isLoading={isLoading}
-        queryObject={raw}
       />
       <CommandBar open={!!Object.keys(rowSelection).length}>
         <CommandBar.Bar>
@@ -165,14 +185,15 @@ const CurrencyActions = ({
   storeId,
   currency,
   currencyCodes,
-  defaultCurrencyCode,
 }: {
   storeId: string
-  currency: CurrencyDTO
+  currency: Currency
   currencyCodes: string[]
-  defaultCurrencyCode: string
 }) => {
-  const { mutateAsync } = useUpdateStore(storeId)
+  const { mutateAsync } = useAdminCustomPost(
+    `/admin/stores/${storeId}`,
+    adminStoreKeys.details()
+  )
 
   const { t } = useTranslation()
   const prompt = usePrompt()
@@ -193,23 +214,11 @@ const CurrencyActions = ({
       return
     }
 
-    try {
-      await mutateAsync({
-        supported_currency_codes: currencyCodes.filter(
-          (c) => c !== currency.code
-        ),
-      })
-
-      toast.success(t("general.success"), {
-        description: t("store.toast.currenciesRemoved"),
-        dismissLabel: t("actions.close"),
-      })
-    } catch (e) {
-      toast.error(t("general.error"), {
-        description: e.message,
-        dismissLabel: t("actions.close"),
-      })
-    }
+    await mutateAsync({
+      supported_currency_codes: currencyCodes.filter(
+        (c) => c !== currency.code
+      ),
+    })
   }
 
   return (
@@ -221,7 +230,6 @@ const CurrencyActions = ({
               icon: <Trash />,
               label: t("actions.remove"),
               onClick: handleRemove,
-              disabled: currency.code === defaultCurrencyCode,
             },
           ],
         },
@@ -230,10 +238,10 @@ const CurrencyActions = ({
   )
 }
 
-const columnHelper = createColumnHelper<CurrencyDTO>()
+const columnHelper = createColumnHelper<Currency>()
 
 const useColumns = () => {
-  const base = useCurrenciesTableColumns()
+  const { t } = useTranslation()
 
   return useMemo(
     () => [
@@ -265,15 +273,31 @@ const useColumns = () => {
           )
         },
       }),
-      ...base,
+      columnHelper.accessor("code", {
+        header: t("fields.code"),
+        cell: ({ getValue }) => getValue().toUpperCase(),
+      }),
+      columnHelper.accessor("name", {
+        header: t("fields.name"),
+        cell: ({ getValue }) => getValue(),
+      }),
+      columnHelper.accessor("includes_tax", {
+        header: "Tax Inclusive Prices",
+        cell: ({ getValue }) => {
+          const value = getValue()
+          const text = value ? t("general.enabled") : t("general.disabled")
+
+          return (
+            <StatusBadge color={value ? "green" : "red"}>{text}</StatusBadge>
+          )
+        },
+      }),
       columnHelper.display({
         id: "actions",
         cell: ({ row, table }) => {
-          const { currencyCodes, storeId, defaultCurrencyCode } = table.options
-            .meta as {
+          const { currencyCodes, storeId } = table.options.meta as {
             currencyCodes: string[]
             storeId: string
-            defaultCurrencyCode: string
           }
 
           return (
@@ -281,12 +305,11 @@ const useColumns = () => {
               storeId={storeId}
               currency={row.original}
               currencyCodes={currencyCodes}
-              defaultCurrencyCode={defaultCurrencyCode}
             />
           )
         },
       }),
     ],
-    [base]
+    [t]
   )
 }

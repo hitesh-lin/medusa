@@ -14,7 +14,6 @@ import {
   DALUtils,
   createPsqlIndexStatementHelper,
   generateEntityId,
-  Searchable,
 } from "@medusajs/utils"
 
 const inviteEmailIndexName = "IDX_invite_email"
@@ -58,7 +57,6 @@ export default class Invite {
     name: inviteEmailIndexName,
     expression: inviteEmailIndexStatement,
   })
-  @Searchable()
   @Property({ columnType: "text" })
   email: string
 

@@ -3,28 +3,31 @@ import {
   MedusaResponse,
 } from "../../../../../types/routing"
 
-import {
-  ContainerRegistrationKeys,
-  remoteQueryObjectFromString,
-} from "@medusajs/utils"
-import { AdminGetWorkflowExecutionDetailsParamsType } from "../../validators"
+import { IWorkflowEngineService } from "@medusajs/workflows-sdk"
+import { ModuleRegistrationName } from "@medusajs/modules-sdk"
 
 export const GET = async (
-  req: AuthenticatedMedusaRequest<AdminGetWorkflowExecutionDetailsParamsType>,
+  req: AuthenticatedMedusaRequest,
   res: MedusaResponse
 ) => {
-  const remoteQuery = req.scope.resolve(ContainerRegistrationKeys.REMOTE_QUERY)
+  const workflowEngineService: IWorkflowEngineService = req.scope.resolve(
+    ModuleRegistrationName.WORKFLOW_ENGINE
+  )
 
   const { workflow_id, transaction_id } = req.params
-  const variables = { workflow_id, transaction_id }
 
-  const queryObject = remoteQueryObjectFromString({
-    entryPoint: "workflow_execution",
-    variables,
-    fields: req.remoteQueryConfig.fields,
+  const execution = await workflowEngineService.retrieveWorkflowExecution(
+    {
+      workflow_id,
+      transaction_id,
+    },
+    {
+      select: req.retrieveConfig.select,
+      relations: req.retrieveConfig.relations,
+    }
+  )
+
+  res.status(200).json({
+    workflow_execution: execution,
   })
-
-  const [workflowExecution] = await remoteQuery(queryObject)
-
-  res.status(200).json({ workflow_execution: workflowExecution })
 }

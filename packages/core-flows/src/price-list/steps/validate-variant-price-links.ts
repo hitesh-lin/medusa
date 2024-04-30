@@ -1,3 +1,4 @@
+import { UpdatePriceListWorkflowInputDTO } from "@medusajs/types"
 import {
   ContainerRegistrationKeys,
   MedusaError,
@@ -9,11 +10,7 @@ export const validateVariantPriceLinksStepId = "validate-variant-price-links"
 export const validateVariantPriceLinksStep = createStep(
   validateVariantPriceLinksStepId,
   async (
-    data: {
-      prices?: {
-        variant_id: string
-      }[]
-    }[],
+    data: Pick<UpdatePriceListWorkflowInputDTO, "prices">[],
     { container }
   ) => {
     const remoteQuery = container.resolve(
@@ -21,7 +18,7 @@ export const validateVariantPriceLinksStep = createStep(
     )
 
     const variantIds: string[] = data
-      .map((pl) => pl?.prices?.map((price) => price.variant_id) || [])
+      .map((pl) => pl?.prices?.map((price) => price.variant_id!) || [])
       .filter(Boolean)
       .flat(1)
 

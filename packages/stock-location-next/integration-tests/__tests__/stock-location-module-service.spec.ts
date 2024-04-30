@@ -107,7 +107,7 @@ moduleIntegrationTestRunner({
             id: stockLocation.id,
             name: "updated location",
           }
-          const location = await service.upsert(data)
+          const location = await service.update(data)
 
           expect(location).toEqual(expect.objectContaining(data))
         })
@@ -122,7 +122,7 @@ moduleIntegrationTestRunner({
             },
           }
 
-          const location = await service.upsert(data)
+          const location = await service.update(data)
 
           expect(location).toEqual(
             expect.objectContaining({

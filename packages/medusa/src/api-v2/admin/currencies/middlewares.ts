@@ -1,8 +1,11 @@
+import { transformQuery } from "../../../api/middlewares"
 import { MiddlewareRoute } from "../../../loaders/helpers/routing/types"
 import { authenticate } from "../../../utils/authenticate-middleware"
-import { validateAndTransformQuery } from "../../utils/validate-query"
 import * as QueryConfig from "./query-config"
-import { AdminGetCurrencyParams, AdminGetCurrenciesParams } from "./validators"
+import {
+  AdminGetCurrenciesCurrencyParams,
+  AdminGetCurrenciesParams,
+} from "./validators"
 
 export const adminCurrencyRoutesMiddlewares: MiddlewareRoute[] = [
   {
@@ -14,7 +17,7 @@ export const adminCurrencyRoutesMiddlewares: MiddlewareRoute[] = [
     method: ["GET"],
     matcher: "/admin/currencies",
     middlewares: [
-      validateAndTransformQuery(
+      transformQuery(
         AdminGetCurrenciesParams,
         QueryConfig.listTransformQueryConfig
       ),
@@ -24,8 +27,8 @@ export const adminCurrencyRoutesMiddlewares: MiddlewareRoute[] = [
     method: ["GET"],
     matcher: "/admin/currencies/:code",
     middlewares: [
-      validateAndTransformQuery(
-        AdminGetCurrencyParams,
+      transformQuery(
+        AdminGetCurrenciesCurrencyParams,
         QueryConfig.retrieveTransformQueryConfig
       ),
     ],

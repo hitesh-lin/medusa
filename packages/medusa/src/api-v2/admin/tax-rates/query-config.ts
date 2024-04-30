@@ -1,4 +1,6 @@
-export const defaults = [
+export const defaultAdminTaxRateRelations = []
+export const allowedAdminTaxRateRelations = []
+export const defaultAdminTaxRateFields = [
   "id",
   "name",
   "code",
@@ -11,16 +13,16 @@ export const defaults = [
   "updated_at",
   "deleted_at",
   "metadata",
-  "*tax_region",
-  "*rules",
 ]
 
 export const retrieveTransformQueryConfig = {
-  defaults,
+  defaultFields: defaultAdminTaxRateFields,
+  defaultRelations: defaultAdminTaxRateRelations,
+  allowedRelations: allowedAdminTaxRateRelations,
   isList: false,
 }
 
 export const listTransformQueryConfig = {
-  defaults,
+  defaultLimit: 20,
   isList: true,
 }

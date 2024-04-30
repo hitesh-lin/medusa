@@ -73,7 +73,7 @@ moduleIntegrationTestRunner({
               .catch((e) => e)
 
             expect(err).toBeDefined()
-            expect(err.message).toContain("exists")
+            expect(err.constraint).toBe("IDX_shipping_profile_name_unique")
           })
         })
       })

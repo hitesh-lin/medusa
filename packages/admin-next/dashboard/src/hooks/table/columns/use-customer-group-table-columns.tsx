@@ -1,34 +1,34 @@
+import { CustomerGroup } from "@medusajs/medusa"
 import { createColumnHelper } from "@tanstack/react-table"
 import { useMemo } from "react"
+import { Text } from "@medusajs/ui"
 
-import { AdminCustomerGroupResponse } from "@medusajs/types"
-import { useTranslation } from "react-i18next"
+import { NameHeader } from "../../../components/table/table-cells/common/name-cell"
 import {
-  TextCell,
-  TextHeader,
-} from "../../../components/table/table-cells/common/text-cell"
+  CreatedAtHeader,
+  CreatedAtCell,
+} from "../../../components/table/table-cells/common/created-at-cell"
 
-const columnHelper =
-  createColumnHelper<AdminCustomerGroupResponse["customer_group"]>()
+const columnHelper = createColumnHelper<CustomerGroup>()
 
 export const useCustomerGroupTableColumns = () => {
-  const { t } = useTranslation()
-
   return useMemo(
     () => [
-      columnHelper.accessor("name", {
-        header: () => <TextHeader text={t("fields.name")} />,
-        cell: ({ getValue }) => <TextCell text={getValue() || "-"} />,
+      columnHelper.display({
+        id: "name",
+        header: () => <NameHeader />,
+        cell: ({
+          row: {
+            original: { name },
+          },
+        }) => <Text size="small">{name}</Text>,
       }),
-      columnHelper.accessor("customers", {
-        header: () => <TextHeader text={t("customers.domain")} />,
-        cell: ({ getValue }) => {
-          const count = getValue()?.length ?? 0
 
-          return <TextCell text={count} />
-        },
+      columnHelper.accessor("created_at", {
+        header: () => <CreatedAtHeader />,
+        cell: ({ getValue }) => <CreatedAtCell date={getValue()} />,
       }),
     ],
-    [t]
+    []
   )
 }

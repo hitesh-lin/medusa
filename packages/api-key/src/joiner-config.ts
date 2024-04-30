@@ -3,9 +3,7 @@ import { ModuleJoinerConfig } from "@medusajs/types"
 import { MapToConfig } from "@medusajs/utils"
 import ApiKey from "./models/api-key"
 
-export const LinkableKeys: Record<string, string> = {
-  api_key_id: ApiKey.name,
-}
+export const LinkableKeys: Record<string, string> = {}
 
 const entityLinkableKeysMap: MapToConfig = {}
 Object.entries(LinkableKeys).forEach(([key, value]) => {

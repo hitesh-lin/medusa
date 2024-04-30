@@ -30,8 +30,7 @@ export function generateCreateFulfillmentData(
       country_code: "test-country-code_" + randomString,
       province: "test-province_" + randomString,
       phone: "test-phone_" + randomString,
-      first_name: "test-first-name_" + randomString,
-      last_name: "test-last-name_" + randomString,
+      full_name: "test-full-name_" + randomString,
     },
     items: data.items ?? [
       {

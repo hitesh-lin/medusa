@@ -5,19 +5,15 @@ import {
 } from "@medusajs/utils"
 import { MedusaRequest, MedusaResponse } from "../../../../../../types/routing"
 
-import {
-  deleteInventoryLevelsWorkflow,
-  updateInventoryLevelsWorkflow,
-} from "@medusajs/core-flows"
-import { refetchInventoryItem } from "../../../helpers"
-import { AdminUpdateInventoryLocationLevelType } from "../../../validators"
+import { AdminPostInventoryItemsItemLocationLevelsLevelReq } from "../../../validators"
+import { deleteInventoryLevelsWorkflow } from "@medusajs/core-flows"
+import { updateInventoryLevelsWorkflow } from "@medusajs/core-flows"
 
 export const DELETE = async (req: MedusaRequest, res: MedusaResponse) => {
   const { id, location_id } = req.params
 
   const remoteQuery = req.scope.resolve(ContainerRegistrationKeys.REMOTE_QUERY)
 
-  // TODO: We probably want to move this logic to the workflow
   const [{ id: levelId, reserved_quantity: reservedQuantity }] =
     await remoteQuery(
       remoteQueryObjectFromString({
@@ -45,28 +41,23 @@ export const DELETE = async (req: MedusaRequest, res: MedusaResponse) => {
     },
   })
 
-  const inventoryItem = await refetchInventoryItem(
-    id,
-    req.scope,
-    req.remoteQueryConfig.fields
-  )
-
   res.status(200).json({
     id: levelId,
     object: "inventory-level",
     deleted: true,
-    parent: inventoryItem,
   })
 }
 
 export const POST = async (
-  req: MedusaRequest<AdminUpdateInventoryLocationLevelType>,
+  req: MedusaRequest<AdminPostInventoryItemsItemLocationLevelsLevelReq>,
   res: MedusaResponse
 ) => {
-  const { id, location_id } = req.params
+  const { id: inventory_item_id, location_id } = req.params
+  const remoteQuery = req.scope.resolve(ContainerRegistrationKeys.REMOTE_QUERY)
+
   const { errors } = await updateInventoryLevelsWorkflow(req.scope).run({
     input: {
-      updates: [{ ...req.validatedBody, inventory_item_id: id, location_id }],
+      updates: [{ inventory_item_id, location_id, ...req.validatedBody }],
     },
     throwOnError: false,
   })
@@ -75,13 +66,17 @@ export const POST = async (
     throw errors[0].error
   }
 
-  const inventoryItem = await refetchInventoryItem(
-    id,
-    req.scope,
-    req.remoteQueryConfig.fields
+  const [inventory_item] = await remoteQuery(
+    remoteQueryObjectFromString({
+      entryPoint: "inventory",
+      variables: {
+        id: inventory_item_id,
+      },
+      fields: req.remoteQueryConfig.fields,
+    })
   )
 
   res.status(200).json({
-    inventory_item: inventoryItem,
+    inventory_item,
   })
 }

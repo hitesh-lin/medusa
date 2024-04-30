@@ -102,8 +102,6 @@ moduleIntegrationTestRunner({
               value: tagOne.value,
               products: [
                 {
-                  collection_id: null,
-                  type_id: null,
                   id: productOne.id,
                 },
               ],
@@ -177,8 +175,6 @@ moduleIntegrationTestRunner({
               value: tagOne.value,
               products: [
                 {
-                  collection_id: null,
-                  type_id: null,
                   id: productOne.id,
                 },
               ],

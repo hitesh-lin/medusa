@@ -1,11 +1,10 @@
-import { asClass, asValue } from "awilix"
+import { asClass } from "awilix"
 import { RedisDistributedTransactionStorage } from "../utils"
 
-export default async ({ container, dataLoaderOnly }): Promise<void> => {
+export default async ({ container }): Promise<void> => {
   container.register({
     redisDistributedTransactionStorage: asClass(
       RedisDistributedTransactionStorage
     ).singleton(),
-    dataLoaderOnly: asValue(!!dataLoaderOnly),
   })
 }

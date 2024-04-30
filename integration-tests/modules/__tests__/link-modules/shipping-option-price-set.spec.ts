@@ -71,10 +71,6 @@ medusaIntegrationTestRunner({
               amount: 3000,
               currency_code: "usd",
             },
-            {
-              amount: 5000,
-              currency_code: "eur",
-            },
           ],
         })
 
@@ -92,19 +88,8 @@ medusaIntegrationTestRunner({
         const link = await remoteQuery({
           shipping_option: {
             fields: ["id"],
-            price_set_link: {
+            price: {
               fields: ["id", "price_set_id", "shipping_option_id"],
-            },
-            prices: {
-              fields: ["amount", "currency_code"],
-            },
-            calculated_price: {
-              fields: ["calculated_amount", "currency_code"],
-              __args: {
-                context: {
-                  currency_code: "eur",
-                },
-              },
             },
           },
         })
@@ -114,23 +99,9 @@ medusaIntegrationTestRunner({
           expect.arrayContaining([
             expect.objectContaining({
               id: shippingOption.id,
-              price_set_link: expect.objectContaining({
+              price: expect.objectContaining({
                 price_set_id: priceSet.id,
                 shipping_option_id: shippingOption.id,
-              }),
-              prices: [
-                expect.objectContaining({
-                  amount: 5000,
-                  currency_code: "eur",
-                }),
-                expect.objectContaining({
-                  amount: 3000,
-                  currency_code: "usd",
-                }),
-              ],
-              calculated_price: expect.objectContaining({
-                calculated_amount: 5000,
-                currency_code: "eur",
               }),
             }),
           ])

@@ -42,7 +42,6 @@ export type CreateOptions = {
   migrations?: boolean
   directoryPath?: string
   withNextjsStarter?: boolean
-  verbose?: boolean
   v2?: boolean
 }
 
@@ -56,7 +55,6 @@ export default async ({
   migrations,
   directoryPath,
   withNextjsStarter = false,
-  verbose = false,
   v2 = false,
 }: CreateOptions) => {
   track("CREATE_CLI_CMA")
@@ -70,7 +68,6 @@ export default async ({
     processManager,
     message: "",
     title: "",
-    verbose,
   }
   const dbName = !skipDb && !dbUrl ? `medusa-${nanoid(4)}` : ""
   let isProjectCreated = false
@@ -106,7 +103,6 @@ export default async ({
     ? await getDbClientAndCredentials({
         dbName,
         dbUrl,
-        verbose,
       })
     : { client: null, dbConnectionString: "" }
   isDbInitialized = true
@@ -119,7 +115,6 @@ export default async ({
     browser,
     migrations,
     installNextjs,
-    verbose,
   })
 
   logMessage({
@@ -141,7 +136,6 @@ export default async ({
       repoUrl,
       abortController,
       spinner,
-      verbose,
       v2,
     })
   } catch {
@@ -158,7 +152,6 @@ export default async ({
         directoryName: projectPath,
         abortController,
         factBoxOptions,
-        verbose,
       })
     : ""
 
@@ -194,7 +187,6 @@ export default async ({
       onboardingType: installNextjs ? "nextjs" : "default",
       nextjsDirectory,
       client,
-      verbose,
       v2,
     })
   } catch (e: any) {
@@ -233,10 +225,9 @@ export default async ({
     })
 
     if (installNextjs && nextjsDirectory) {
-      startNextjsStarter({
+      void startNextjsStarter({
         directory: nextjsDirectory,
         abortController,
-        verbose,
       })
     }
   } catch (e) {

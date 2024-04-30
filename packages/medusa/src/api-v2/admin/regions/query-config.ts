@@ -1,3 +1,5 @@
+export const defaultAdminRegionRelations = ["countries"]
+export const allowedAdminRegionRelations = ["countries"]
 export const defaultAdminRegionFields = [
   "id",
   "name",
@@ -6,16 +8,21 @@ export const defaultAdminRegionFields = [
   "updated_at",
   "deleted_at",
   "metadata",
-  "*countries",
+  "countries.id",
+  "countries.iso_2",
+  "countries.iso_3",
+  "countries.num_code",
+  "countries.name",
 ]
 
 export const retrieveTransformQueryConfig = {
-  defaults: defaultAdminRegionFields,
+  defaultFields: defaultAdminRegionFields,
+  defaultRelations: defaultAdminRegionRelations,
+  allowedRelations: allowedAdminRegionRelations,
   isList: false,
 }
 
 export const listTransformQueryConfig = {
-  defaults: defaultAdminRegionFields,
   defaultLimit: 20,
   isList: true,
 }

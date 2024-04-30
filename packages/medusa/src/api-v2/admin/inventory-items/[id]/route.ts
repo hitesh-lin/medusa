@@ -1,26 +1,36 @@
-import { MedusaError } from "@medusajs/utils"
+import {
+  ContainerRegistrationKeys,
+  MedusaError,
+  remoteQueryObjectFromString,
+} from "@medusajs/utils"
 import { MedusaRequest, MedusaResponse } from "../../../../types/routing"
 import {
   deleteInventoryItemWorkflow,
   updateInventoryItemsWorkflow,
 } from "@medusajs/core-flows"
-import {
-  AdminGetInventoryItemParamsType,
-  AdminUpdateInventoryItemType,
-} from "../validators"
-import { refetchInventoryItem } from "../helpers"
 
-export const GET = async (
-  req: MedusaRequest<AdminGetInventoryItemParamsType>,
-  res: MedusaResponse
-) => {
+import { AdminPostInventoryItemsInventoryItemReq } from "../validators"
+
+export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   const { id } = req.params
-  const inventoryItem = await refetchInventoryItem(
-    id,
-    req.scope,
-    req.remoteQueryConfig.fields
-  )
-  if (!inventoryItem) {
+  const remoteQuery = req.scope.resolve(ContainerRegistrationKeys.REMOTE_QUERY)
+
+  const query = remoteQueryObjectFromString({
+    entryPoint: "inventory",
+    variables: {
+      filters: { id },
+      skip: 0,
+      take: 1,
+    },
+
+    fields: req.retrieveConfig.select as string[],
+  })
+
+  const { rows } = await remoteQuery(query)
+
+  const [inventory_item] = rows
+
+  if (!inventory_item) {
     throw new MedusaError(
       MedusaError.Types.NOT_FOUND,
       `Inventory item with id: ${id} was not found`
@@ -28,13 +38,13 @@ export const GET = async (
   }
 
   res.status(200).json({
-    inventory_item: inventoryItem,
+    inventory_item,
   })
 }
 
 // Update inventory item
 export const POST = async (
-  req: MedusaRequest<AdminUpdateInventoryItemType>,
+  req: MedusaRequest<AdminPostInventoryItemsInventoryItemReq>,
   res: MedusaResponse
 ) => {
   const { id } = req.params
@@ -45,14 +55,20 @@ export const POST = async (
     },
   })
 
-  const inventoryItem = await refetchInventoryItem(
-    id,
-    req.scope,
-    req.remoteQueryConfig.fields
+  const remoteQuery = req.scope.resolve(ContainerRegistrationKeys.REMOTE_QUERY)
+
+  const [inventory_item] = await remoteQuery(
+    remoteQueryObjectFromString({
+      entryPoint: "inventory",
+      variables: {
+        id,
+      },
+      fields: req.retrieveConfig.select as string[],
+    })
   )
 
   res.status(200).json({
-    inventory_item: inventoryItem,
+    inventory_item,
   })
 }
 

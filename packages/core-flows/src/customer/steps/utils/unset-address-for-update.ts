@@ -1,5 +1,5 @@
 import {
-  UpdateCustomerAddressDTO,
+  CustomerAddressDTO,
   FilterableCustomerAddressProps,
   ICustomerModuleService,
 } from "@medusajs/types"
@@ -8,7 +8,7 @@ import { StepResponse } from "@medusajs/workflows-sdk"
 export const unsetForUpdate = async (
   data: {
     selector: FilterableCustomerAddressProps
-    update: UpdateCustomerAddressDTO
+    update: Partial<CustomerAddressDTO>
   },
   customerService: ICustomerModuleService,
   field: "is_default_billing" | "is_default_shipping"

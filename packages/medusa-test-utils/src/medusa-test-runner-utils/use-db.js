@@ -9,6 +9,7 @@ const {
 } = require("@medusajs/utils")
 const { DataSource } = require("typeorm")
 const { ContainerRegistrationKeys } = require("@medusajs/utils")
+const { migrateMedusaApp } = require("@medusajs/medusa/dist/loaders/medusa-app")
 const { logger } = require("@medusajs/medusa-cli/dist/reporter")
 
 module.exports = {
@@ -18,16 +19,14 @@ module.exports = {
     database_extra,
     env,
     force_modules_migration,
-    dbUrl = "",
+    dbUrl = DB_URL,
     dbSchema = "public",
   }) {
     if (isObject(env)) {
       Object.entries(env).forEach(([k, v]) => (process.env[k] = v))
     }
 
-    const configModuleLoader =
-      require("@medusajs/medusa/dist/loaders/config").default
-    const configModule = configModuleLoader(cwd)
+    const { configModule } = getConfigFile(cwd, `medusa-config`)
 
     const featureFlagsLoader =
       require("@medusajs/medusa/dist/loaders/feature-flags").default
@@ -68,7 +67,7 @@ module.exports = {
 
     const dbDataSource = new DataSource({
       type: "postgres",
-      url: dbUrl || configModule.projectConfig.database_url,
+      url: dbUrl,
       entities: enabledEntities.concat(moduleModels),
       migrations: enabledMigrations.concat(moduleMigrations),
       extra: database_extra ?? {},
@@ -94,16 +93,7 @@ module.exports = {
 
       const featureFlagRouter = await featureFlagLoader(configModule)
 
-      const pgConnection = await pgConnectionLoader({
-        configModule: {
-          ...configModule,
-          projectConfig: {
-            ...configModule.projectConfig,
-            database_url: dbUrl || configModule.projectConfig.database_url,
-          },
-        },
-        container,
-      })
+      const pgConnection = await pgConnectionLoader({ configModule, container })
 
       container.register({
         [ContainerRegistrationKeys.CONFIG_MODULE]: asValue(configModule),
@@ -113,9 +103,6 @@ module.exports = {
         featureFlagRouter: asValue(featureFlagRouter),
       })
 
-      const {
-        migrateMedusaApp,
-      } = require("@medusajs/medusa/dist/loaders/medusa-app")
       await migrateMedusaApp(
         { configModule, container },
         { registerInContainer: false }

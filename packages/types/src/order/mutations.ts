@@ -32,18 +32,16 @@ export interface CreateOrderDTO {
   sales_channel_id?: string
   status?: string
   email?: string
-  currency_code?: string
+  currency_code: string
   shipping_address_id?: string
   billing_address_id?: string
   shipping_address?: CreateOrderAddressDTO | UpdateOrderAddressDTO
   billing_address?: CreateOrderAddressDTO | UpdateOrderAddressDTO
   no_notification?: boolean
   items?: CreateOrderLineItemDTO[]
-  shipping_methods?: Omit<CreateOrderShippingMethodDTO, "order_id">[]
-  transactions?: Omit<CreateOrderTransactionDTO, "order_id">[]
+  shipping_methods?: CreateOrderShippingMethodDTO[]
+  transactions?: CreateOrderTransactionDTO[]
   metadata?: Record<string, unknown>
-
-  promo_codes?: string[]
 }
 
 export interface UpdateOrderDTO {
@@ -52,9 +50,7 @@ export interface UpdateOrderDTO {
   region_id?: string
   customer_id?: string
   sales_channel_id?: string
-  items?: CreateOrderLineItemDTO[]
-  shipping_address?: CreateOrderAddressDTO | UpdateOrderAddressDTO
-  billing_address?: CreateOrderAddressDTO | UpdateOrderAddressDTO
+  status?: string
   email?: string
   no_notification?: boolean
   metadata?: Record<string, unknown>
@@ -166,8 +162,6 @@ export interface CreateOrderLineItemDTO {
 
   tax_lines?: CreateOrderTaxLineDTO[]
   adjustments?: CreateOrderAdjustmentDTO[]
-
-  metadata?: Record<string, unknown>
 }
 
 export interface CreateOrderLineItemForOrderDTO extends CreateOrderLineItemDTO {
@@ -200,10 +194,9 @@ export interface UpdateOrderLineItemDTO
 
 export interface CreateOrderShippingMethodDTO {
   name: string
+  shipping_method_id: string
   order_id: string
-  version?: number
   amount: BigNumberInput
-  shipping_option_id?: string
   data?: Record<string, unknown>
   tax_lines?: CreateOrderTaxLineDTO[]
   adjustments?: CreateOrderAdjustmentDTO[]
@@ -212,7 +205,7 @@ export interface CreateOrderShippingMethodDTO {
 export interface UpdateOrderShippingMethodDTO {
   id: string
   name?: string
-  shipping_option_id?: string
+  shipping_method_id: string
   amount?: BigNumberInput
   data?: Record<string, unknown>
   tax_lines?: UpdateOrderTaxLineDTO[] | CreateOrderTaxLineDTO[]
@@ -247,9 +240,7 @@ export interface CreateOrderChangeDTO {
   internal_note?: string
   requested_by?: string
   requested_at?: Date
-  created_by?: string
   metadata?: Record<string, unknown>
-  actions?: CreateOrderChangeActionDTO[]
 }
 
 export interface UpdateOrderChangeDTO {
@@ -291,19 +282,21 @@ export interface ConfirmOrderChangeDTO {
 /** ORDER CHANGE ACTION START */
 
 export interface CreateOrderChangeActionDTO {
-  order_change_id?: string
-  version?: number
-  reference?: string
-  reference_id?: string
-  action: string
+  order_change_id: string
+  reference: string
+  reference_id: string
+  action: Record<string, unknown>
   internal_note?: string
-  amount?: BigNumberInput
-  details?: Record<string, unknown>
+  metadata?: Record<string, unknown>
 }
 
 export interface UpdateOrderChangeActionDTO {
   id: string
+  reference?: string
+  reference_id?: string
+  action?: Record<string, unknown>
   internal_note?: string
+  metadata?: Record<string, unknown>
 }
 
 /** ORDER TRANSACTION START */
@@ -349,55 +342,3 @@ export interface UpdateOrderItemWithSelectorDTO {
 }
 
 /** ORDER DETAIL END */
-
-/** ORDER bundled action flows  */
-
-export interface RegisterOrderFulfillmentDTO {
-  order_id: string
-  description?: string
-  internal_note?: string
-  reference?: string
-  reference_id?: string
-  created_by?: string
-  items: {
-    id: string
-    quantity: BigNumberInput
-    internal_note?: string
-    metadata?: Record<string, unknown>
-  }[]
-  metadata?: Record<string, unknown>
-}
-
-export interface RegisterOrderShipmentDTO {
-  order_id: string
-  description?: string
-  internal_note?: string
-  reference?: string
-  created_by?: string
-  shipping_method: Omit<CreateOrderShippingMethodDTO, "order_id"> | string
-  items: {
-    id: string
-    quantity: BigNumberInput
-    internal_note?: string
-    metadata?: Record<string, unknown>
-  }[]
-  metadata?: Record<string, unknown>
-}
-
-export interface CreateOrderReturnDTO {
-  order_id: string
-  description?: string
-  reference?: string
-  internal_note?: string
-  created_by?: string
-  shipping_method: Omit<CreateOrderShippingMethodDTO, "order_id"> | string
-  items: {
-    id: string
-    quantity: BigNumberInput
-    internal_note?: string
-    metadata?: Record<string, unknown>
-  }[]
-  metadata?: Record<string, unknown>
-}
-
-/** ORDER bundled action flows */

@@ -1,17 +1,14 @@
 import {
-  Context,
-  DAL,
-  ProductCategoryTransformOptions,
-  ProductTypes,
-} from "@medusajs/types"
-import { DALUtils, MedusaError, isDefined } from "@medusajs/utils"
-import {
-  LoadStrategy,
   FilterQuery as MikroFilterQuery,
   FindOptions as MikroOptions,
+  LoadStrategy,
 } from "@mikro-orm/core"
-import { SqlEntityManager } from "@mikro-orm/postgresql"
 import { ProductCategory } from "@models"
+import { Context, DAL, ProductCategoryTransformOptions } from "@medusajs/types"
+import groupBy from "lodash/groupBy"
+import { SqlEntityManager } from "@mikro-orm/postgresql"
+import { DALUtils, isDefined, MedusaError } from "@medusajs/utils"
+import { ProductTypes } from "@medusajs/types"
 
 export type ReorderConditions = {
   targetCategoryId: string
@@ -37,13 +34,13 @@ export class ProductCategoryRepository extends DALUtils.MikroOrmBaseTreeReposito
     const manager = super.getActiveManager<SqlEntityManager>(context)
 
     const findOptions_ = { ...findOptions }
-    const { includeDescendantsTree, includeAncestorsTree } = transformOptions
+    const { includeDescendantsTree } = transformOptions
     findOptions_.options ??= {}
     const fields = (findOptions_.options.fields ??= [])
 
     // Ref: Building descendants
     // mpath and parent_category_id needs to be added to the query for the tree building to be done accurately
-    if (includeDescendantsTree || includeAncestorsTree) {
+    if (includeDescendantsTree) {
       fields.indexOf("mpath") === -1 && fields.push("mpath")
       fields.indexOf("parent_category_id") === -1 &&
         fields.push("parent_category_id")
@@ -59,118 +56,65 @@ export class ProductCategoryRepository extends DALUtils.MikroOrmBaseTreeReposito
       findOptions_.options as MikroOptions<ProductCategory>
     )
 
-    if (!includeDescendantsTree && !includeAncestorsTree) {
+    if (!includeDescendantsTree) {
       return productCategories
     }
 
-    return this.buildProductCategoriesWithTree(
-      {
-        descendants: includeDescendantsTree,
-        ancestors: includeAncestorsTree,
-      },
+    return this.buildProductCategoriesWithDescendants(
       productCategories,
       findOptions_
     )
   }
 
-  async buildProductCategoriesWithTree(
-    include: {
-      descendants?: boolean
-      ancestors?: boolean
-    },
+  async buildProductCategoriesWithDescendants(
     productCategories: ProductCategory[],
     findOptions: DAL.FindOptions<ProductCategory> = { where: {} },
     context: Context = {}
   ): Promise<ProductCategory[]> {
     const manager = super.getActiveManager<SqlEntityManager>(context)
 
-    const hasPopulateParentCategory = (
-      findOptions.options?.populate ?? ([] as any)
-    ).find((pop) => pop.field === "parent_category")
-
-    include.ancestors = include.ancestors || hasPopulateParentCategory
-
-    const mpaths: any[] = []
-    const parentMpaths = new Set()
-    for (const cat of productCategories) {
-      if (include.descendants) {
-        mpaths.push({ mpath: { $like: `${cat.mpath}%` } })
+    for (let productCategory of productCategories) {
+      const whereOptions = {
+        ...findOptions.where,
+        mpath: {
+          $like: `${productCategory.mpath}%`,
+        },
       }
 
-      if (include.ancestors) {
-        let parent = ""
-        cat.mpath?.split(".").forEach((mpath) => {
-          if (mpath === "") {
-            return
-          }
-          parentMpaths.add(parent + mpath + ".")
-          parent += mpath + "."
-        })
+      if ("parent_category_id" in whereOptions) {
+        delete whereOptions.parent_category_id
       }
-    }
 
-    mpaths.push({ mpath: Array.from(parentMpaths) })
-
-    const whereOptions = {
-      ...findOptions.where,
-      $or: mpaths,
-    }
-
-    if ("parent_category_id" in whereOptions) {
-      delete whereOptions.parent_category_id
-    }
-
-    if ("id" in whereOptions) {
-      delete whereOptions.id
-    }
-
-    let allCategories = await manager.find(
-      ProductCategory,
-      whereOptions as MikroFilterQuery<ProductCategory>,
-      findOptions.options as MikroOptions<ProductCategory>
-    )
-
-    allCategories = JSON.parse(JSON.stringify(allCategories))
-
-    const categoriesById = new Map(allCategories.map((cat) => [cat.id, cat]))
-
-    allCategories.forEach((cat: any) => {
-      if (cat.parent_category_id) {
-        cat.parent_category = categoriesById.get(cat.parent_category_id)
+      if ("id" in whereOptions) {
+        delete whereOptions.id
       }
-    })
 
-    const populateChildren = (category, level = 0) => {
-      const categories = allCategories.filter(
-        (child) => child.parent_category_id === category.id
+      const descendantsForCategory = await manager.find(
+        ProductCategory,
+        whereOptions as MikroFilterQuery<ProductCategory>,
+        findOptions.options as MikroOptions<ProductCategory>
       )
 
-      if (include.descendants) {
-        category.category_children = categories.map((child) => {
-          return populateChildren(categoriesById.get(child.id), level + 1)
-        })
-      }
+      const descendantsByParentId = groupBy(
+        descendantsForCategory,
+        (pc) => pc.parent_category_id
+      )
 
-      if (level === 0) {
+      const addChildrenToCategory = (category, children) => {
+        category.category_children = (children || []).map((categoryChild) => {
+          const moreChildren = descendantsByParentId[categoryChild.id] || []
+
+          return addChildrenToCategory(categoryChild, moreChildren)
+        })
+
         return category
       }
 
-      if (include.ancestors) {
-        delete category.category_children
-      }
-      if (include.descendants) {
-        delete category.parent_category
-      }
-
-      return category
+      const children = descendantsByParentId[productCategory.id] || []
+      productCategory = addChildrenToCategory(productCategory, children)
     }
 
-    const populatedProductCategories = productCategories.map((cat) => {
-      const fullCategory = categoriesById.get(cat.id)
-      return populateChildren(fullCategory)
-    })
-
-    return populatedProductCategories
+    return productCategories
   }
 
   async findAndCount(
@@ -181,7 +125,7 @@ export class ProductCategoryRepository extends DALUtils.MikroOrmBaseTreeReposito
     const manager = super.getActiveManager<SqlEntityManager>(context)
 
     const findOptions_ = { ...findOptions }
-    const { includeDescendantsTree, includeAncestorsTree } = transformOptions
+    const { includeDescendantsTree } = transformOptions
     findOptions_.options ??= {}
     const fields = (findOptions_.options.fields ??= [])
 
@@ -202,20 +146,13 @@ export class ProductCategoryRepository extends DALUtils.MikroOrmBaseTreeReposito
       findOptions_.where as MikroFilterQuery<ProductCategory>,
       findOptions_.options as MikroOptions<ProductCategory>
     )
+
     if (!includeDescendantsTree) {
       return [productCategories, count]
     }
 
-    if (!includeDescendantsTree && !includeAncestorsTree) {
-      return [productCategories, count]
-    }
-
     return [
-      await this.buildProductCategoriesWithTree(
-        {
-          descendants: includeDescendantsTree,
-          ancestors: includeAncestorsTree,
-        },
+      await this.buildProductCategoriesWithDescendants(
         productCategories,
         findOptions_
       ),
@@ -417,10 +354,10 @@ export class ProductCategoryRepository extends DALUtils.MikroOrmBaseTreeReposito
       rankCondition = { $gte: targetRank }
     } else if (originalRank > targetRank) {
       shouldIncrementRank = true
-      rankCondition = { $gte: targetRank, $lte: originalRank }
+      rankCondition = { $gte: targetRank, $lt: originalRank }
     } else {
       shouldIncrementRank = false
-      rankCondition = { $gte: originalRank, $lte: targetRank }
+      rankCondition = { $gte: originalRank, $lt: targetRank }
     }
 
     // Scope out the list of siblings that we need to shift up or down

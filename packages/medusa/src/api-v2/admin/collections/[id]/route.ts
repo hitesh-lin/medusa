@@ -7,24 +7,30 @@ import {
   updateCollectionsWorkflow,
 } from "@medusajs/core-flows"
 
-import { AdminUpdateCollectionType } from "../validators"
-import { refetchCollection } from "../helpers"
+import { UpdateProductCollectionDTO } from "@medusajs/types"
+import { remoteQueryObjectFromString } from "@medusajs/utils"
 
 export const GET = async (
   req: AuthenticatedMedusaRequest,
   res: MedusaResponse
 ) => {
-  const collection = await refetchCollection(
-    req.params.id,
-    req.scope,
-    req.remoteQueryConfig.fields
-  )
+  const remoteQuery = req.scope.resolve("remoteQuery")
+
+  const variables = { id: req.params.id }
+
+  const queryObject = remoteQueryObjectFromString({
+    entryPoint: "product_collection",
+    variables,
+    fields: req.retrieveConfig.select as string[],
+  })
+
+  const [collection] = await remoteQuery(queryObject)
 
   res.status(200).json({ collection })
 }
 
 export const POST = async (
-  req: AuthenticatedMedusaRequest<AdminUpdateCollectionType>,
+  req: AuthenticatedMedusaRequest<UpdateProductCollectionDTO>,
   res: MedusaResponse
 ) => {
   const { result, errors } = await updateCollectionsWorkflow(req.scope).run({
@@ -39,13 +45,7 @@ export const POST = async (
     throw errors[0].error
   }
 
-  const collection = await refetchCollection(
-    req.params.id,
-    req.scope,
-    req.remoteQueryConfig.fields
-  )
-
-  res.status(200).json({ collection })
+  res.status(200).json({ collection: result[0] })
 }
 
 export const DELETE = async (

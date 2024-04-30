@@ -22,7 +22,7 @@ export const GET = async (
   const query = remoteQueryObjectFromString({
     entryPoint: "user",
     variables: { id },
-    fields: req.remoteQueryConfig.fields,
+    fields: req.retrieveConfig.select as string[],
   })
 
   const [user] = await remoteQuery(query)

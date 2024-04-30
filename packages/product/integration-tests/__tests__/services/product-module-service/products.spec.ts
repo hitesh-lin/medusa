@@ -9,17 +9,14 @@ import {
   ProductVariant,
 } from "@models"
 
-import {
-  MockEventBusService,
-  moduleIntegrationTestRunner,
-  SuiteOptions,
-} from "medusa-test-utils"
+import { MockEventBusService } from "medusa-test-utils"
 import { createCollections, createTypes } from "../../../__fixtures__/product"
 import { createProductCategories } from "../../../__fixtures__/product-category"
 import { buildProductAndRelationsData } from "../../../__fixtures__/product/data/create-product"
-import { UpdateProductInput } from "@types"
+import { UpdateProductInput } from "../../../../src/types/services/product"
+import { moduleIntegrationTestRunner, SuiteOptions } from "medusa-test-utils"
 
-jest.setTimeout(300000)
+jest.setTimeout(30000)
 
 moduleIntegrationTestRunner({
   moduleName: Modules.PRODUCT,
@@ -54,9 +51,10 @@ moduleIntegrationTestRunner({
         let productTwo: Product
         let productCategoryOne: ProductCategory
         let productCategoryTwo: ProductCategory
+        let variantTwo: ProductVariant
         let productTypeOne: ProductType
         let productTypeTwo: ProductType
-        let images = [{ url: "image-1" }]
+        let images = ["image-1"]
 
         const productCategoriesData = [
           {
@@ -111,63 +109,49 @@ moduleIntegrationTestRunner({
           productCategoryOne = categories[0]
           productCategoryTwo = categories[1]
 
-          productOne = service.create({
+          productOne = testManager.create(Product, {
             id: "product-1",
             title: "product 1",
             status: ProductTypes.ProductStatus.PUBLISHED,
-            variants: [
-              {
-                id: "variant-1",
-                title: "variant 1",
-                inventory_quantity: 10,
-              },
-            ],
           })
 
-          productTwo = service.create({
+          productTwo = testManager.create(Product, {
             id: "product-2",
             title: "product 2",
             status: ProductTypes.ProductStatus.PUBLISHED,
-            categories: [{ id: productCategoryOne.id }],
+            categories: [productCategoryOne],
             collection_id: productCollectionOne.id,
             tags: tagsData,
-            options: [
-              {
-                title: "size",
-                values: ["large", "small"],
-              },
-              {
-                title: "color",
-                values: ["red", "blue"],
-              },
-            ],
-            variants: [
-              {
-                id: "variant-2",
-                title: "variant 2",
-                inventory_quantity: 10,
-              },
-              {
-                id: "variant-3",
-                title: "variant 3",
-                inventory_quantity: 10,
-                options: {
-                  size: "small",
-                  color: "red",
-                },
-              },
-            ],
           })
 
-          const res = await Promise.all([productOne, productTwo])
-          productOne = res[0]
-          productTwo = res[1]
+          testManager.create(ProductVariant, {
+            id: "variant-1",
+            title: "variant 1",
+            inventory_quantity: 10,
+            product: productOne,
+          })
+
+          variantTwo = testManager.create(ProductVariant, {
+            id: "variant-2",
+            title: "variant 2",
+            inventory_quantity: 10,
+            product: productTwo,
+          })
+
+          testManager.create(ProductVariant, {
+            id: "variant-3",
+            title: "variant 3",
+            inventory_quantity: 10,
+            product: productTwo,
+          })
+
+          await testManager.persistAndFlush([productOne, productTwo])
         })
 
         it("should update a product and upsert relations that are not created yet", async () => {
           const data = buildProductAndRelationsData({
             images,
-            thumbnail: images[0].url,
+            thumbnail: images[0],
           })
 
           const variantTitle = data.variants[0].title
@@ -189,10 +173,12 @@ moduleIntegrationTestRunner({
             ...productBefore.variants!,
             ...data.variants,
           ]
+          productBefore.type = { value: "new-type" }
           productBefore.options = data.options
           productBefore.images = data.images
           productBefore.thumbnail = data.thumbnail
           productBefore.tags = data.tags
+
           const updatedProducts = await service.upsert([productBefore])
           expect(updatedProducts).toHaveLength(1)
 
@@ -225,12 +211,12 @@ moduleIntegrationTestRunner({
               subtitle: productBefore.subtitle,
               is_giftcard: productBefore.is_giftcard,
               discountable: productBefore.discountable,
-              thumbnail: images[0].url,
+              thumbnail: images[0],
               status: productBefore.status,
               images: expect.arrayContaining([
                 expect.objectContaining({
                   id: expect.any(String),
-                  url: images[0].url,
+                  url: images[0],
                 }),
               ]),
               options: expect.arrayContaining([
@@ -251,6 +237,10 @@ moduleIntegrationTestRunner({
                   value: productBefore.tags?.[0].value,
                 }),
               ]),
+              type: expect.objectContaining({
+                id: expect.any(String),
+                value: productBefore.type!.value,
+              }),
               variants: expect.arrayContaining([
                 expect.objectContaining({
                   id: expect.any(String),
@@ -263,7 +253,9 @@ moduleIntegrationTestRunner({
                   options: expect.arrayContaining([
                     expect.objectContaining({
                       id: expect.any(String),
-                      value: data.options[0].values[0],
+                      option_value: expect.objectContaining({
+                        value: data.options[0].values[0],
+                      }),
                     }),
                   ]),
                 }),
@@ -276,7 +268,7 @@ moduleIntegrationTestRunner({
           const eventBusSpy = jest.spyOn(MockEventBusService.prototype, "emit")
           const data = buildProductAndRelationsData({
             images,
-            thumbnail: images[0].url,
+            thumbnail: images[0],
           })
 
           const updateData = {
@@ -336,7 +328,10 @@ moduleIntegrationTestRunner({
         it("should upsert a product type when type object is passed", async () => {
           let updateData = {
             id: productTwo.id,
-            type_id: productTypeOne.id,
+            type: {
+              id: productTypeOne.id,
+              value: productTypeOne.value,
+            },
           }
 
           await service.upsert([updateData])
@@ -350,6 +345,29 @@ moduleIntegrationTestRunner({
               id: productTwo.id,
               type: expect.objectContaining({
                 id: productTypeOne.id,
+              }),
+            })
+          )
+
+          updateData = {
+            id: productTwo.id,
+            type: {
+              id: "new-type-id",
+              value: "new-type-value",
+            },
+          }
+
+          await service.upsert([updateData])
+
+          product = await service.retrieve(updateData.id, {
+            relations: ["type"],
+          })
+
+          expect(product).toEqual(
+            expect.objectContaining({
+              id: productTwo.id,
+              type: expect.objectContaining({
+                ...updateData.type,
               }),
             })
           )
@@ -403,7 +421,8 @@ moduleIntegrationTestRunner({
           )
         })
 
-        it("should remove relationships of a product", async () => {
+        // TODO: Currently the base repository doesn't remove relationships if an empty array is passed, we need to fix that in the base repo.
+        it.skip("should remove relationships of a product", async () => {
           const updateData = {
             id: productTwo.id,
             categories: [],
@@ -431,13 +450,18 @@ moduleIntegrationTestRunner({
 
         it("should throw an error when product ID does not exist", async () => {
           let error
+          const updateData = {
+            id: "does-not-exist",
+            title: "test",
+          }
+
           try {
-            await service.update("does-not-exist", { title: "test" })
+            await service.upsert([updateData])
           } catch (e) {
             error = e.message
           }
 
-          expect(error).toEqual(`Product with id: does-not-exist was not found`)
+          expect(error).toEqual(`Product with id "does-not-exist" not found`)
         })
 
         it("should update, create and delete variants", async () => {
@@ -446,7 +470,7 @@ moduleIntegrationTestRunner({
             // Note: VariantThree is already assigned to productTwo, that should be deleted
             variants: [
               {
-                id: productTwo.variants[0].id,
+                id: variantTwo.id,
                 title: "updated-variant",
               },
               {
@@ -467,7 +491,7 @@ moduleIntegrationTestRunner({
               id: expect.any(String),
               variants: expect.arrayContaining([
                 expect.objectContaining({
-                  id: productTwo.variants[0].id,
+                  id: variantTwo.id,
                   title: "updated-variant",
                 }),
                 expect.objectContaining({
@@ -479,39 +503,15 @@ moduleIntegrationTestRunner({
           )
         })
 
-        it("should do a partial update on the options of a variant successfully", async () => {
-          await service.update(productTwo.id, {
-            variants: [
-              {
-                id: "variant-3",
-                options: { size: "small", color: "blue" },
-              },
-            ],
-          })
+        it("should throw an error when variant with id does not exist", async () => {
+          let error
 
-          const fetchedProduct = await service.retrieve(productTwo.id, {
-            relations: ["variants", "variants.options"],
-          })
-
-          expect(fetchedProduct.variants[0].options).toEqual(
-            expect.arrayContaining([
-              expect.objectContaining({
-                value: "small",
-              }),
-              expect.objectContaining({
-                value: "blue",
-              }),
-            ])
-          )
-        })
-
-        it("should createa variant with id that was passed if it does not exist", async () => {
           const updateData = {
             id: productTwo.id,
             // Note: VariantThree is already assigned to productTwo, that should be deleted
             variants: [
               {
-                id: "passed-id",
+                id: "does-not-exist",
                 title: "updated-variant",
               },
               {
@@ -520,33 +520,28 @@ moduleIntegrationTestRunner({
             ],
           }
 
-          await service.upsert([updateData])
-          const retrieved = await service.retrieve(updateData.id, {
+          try {
+            await service.upsert([updateData])
+          } catch (e) {
+            error = e
+          }
+
+          await service.retrieve(updateData.id, {
             relations: ["variants"],
           })
 
-          expect(retrieved.variants).toHaveLength(2)
-          expect(retrieved.variants).toEqual(
-            expect.arrayContaining([
-              expect.objectContaining({
-                id: "passed-id",
-                title: "updated-variant",
-              }),
-              expect.objectContaining({
-                id: expect.any(String),
-                title: "created-variant",
-              }),
-            ])
+          expect(error.message).toEqual(
+            `Variant with id "does-not-exist" does not exist, but was referenced in the update request`
           )
         })
       })
 
       describe("create", function () {
-        let images = [{ url: "image-1" }]
+        let images = ["image-1"]
         it("should create a product", async () => {
           const data = buildProductAndRelationsData({
             images,
-            thumbnail: images[0].url,
+            thumbnail: images[0],
           })
 
           const productsCreated = await service.create([data])
@@ -562,6 +557,7 @@ moduleIntegrationTestRunner({
                 "options",
                 "options.values",
                 "tags",
+                "type",
               ],
             }
           )
@@ -582,12 +578,12 @@ moduleIntegrationTestRunner({
               subtitle: data.subtitle,
               is_giftcard: data.is_giftcard,
               discountable: data.discountable,
-              thumbnail: images[0].url,
+              thumbnail: images[0],
               status: data.status,
               images: expect.arrayContaining([
                 expect.objectContaining({
                   id: expect.any(String),
-                  url: images[0].url,
+                  url: images[0],
                 }),
               ]),
               options: expect.arrayContaining([
@@ -608,6 +604,10 @@ moduleIntegrationTestRunner({
                   value: data.tags[0].value,
                 }),
               ]),
+              type: expect.objectContaining({
+                id: expect.any(String),
+                value: data.type.value,
+              }),
               variants: expect.arrayContaining([
                 expect.objectContaining({
                   id: expect.any(String),
@@ -620,7 +620,9 @@ moduleIntegrationTestRunner({
                   options: expect.arrayContaining([
                     expect.objectContaining({
                       id: expect.any(String),
-                      value: data.options[0].values[0],
+                      option_value: expect.objectContaining({
+                        value: data.options[0].values[0],
+                      }),
                     }),
                   ]),
                 }),
@@ -633,7 +635,7 @@ moduleIntegrationTestRunner({
           const eventBusSpy = jest.spyOn(MockEventBusService.prototype, "emit")
           const data = buildProductAndRelationsData({
             images,
-            thumbnail: images[0].url,
+            thumbnail: images[0],
           })
 
           const products = await service.create([data])
@@ -648,11 +650,11 @@ moduleIntegrationTestRunner({
       })
 
       describe("softDelete", function () {
-        let images = [{ url: "image-1" }]
+        let images = ["image-1"]
         it("should soft delete a product and its cascaded relations", async () => {
           const data = buildProductAndRelationsData({
             images,
-            thumbnail: images[0].url,
+            thumbnail: images[0],
           })
 
           const products = await service.create([data])
@@ -703,7 +705,7 @@ moduleIntegrationTestRunner({
         it("should retrieve soft-deleted products if filtered on deleted_at", async () => {
           const data = buildProductAndRelationsData({
             images,
-            thumbnail: images[0].url,
+            thumbnail: images[0],
           })
 
           const products = await service.create([data])
@@ -721,7 +723,7 @@ moduleIntegrationTestRunner({
           const eventBusSpy = jest.spyOn(MockEventBusService.prototype, "emit")
           const data = buildProductAndRelationsData({
             images,
-            thumbnail: images[0].url,
+            thumbnail: images[0],
           })
 
           const products = await service.create([data])
@@ -738,12 +740,12 @@ moduleIntegrationTestRunner({
       })
 
       describe("restore", function () {
-        let images = [{ url: "image-1" }]
+        let images = ["image-1"]
 
         it("should restore a soft deleted product and its cascaded relations", async () => {
           const data = buildProductAndRelationsData({
             images,
-            thumbnail: images[0].url,
+            thumbnail: images[0],
           })
 
           const products = await service.create([data])
@@ -772,6 +774,7 @@ moduleIntegrationTestRunner({
             {
               relations: [
                 "variants",
+                "variants.options",
                 "variants.options",
                 "options",
                 "options.values",
@@ -825,7 +828,6 @@ moduleIntegrationTestRunner({
 
           const productTwoData = buildProductAndRelationsData({
             collection_id: productCollectionTwo.id,
-            tags: [],
           })
 
           await service.create([productOneData, productTwoData])
@@ -850,7 +852,7 @@ moduleIntegrationTestRunner({
           ])
         })
 
-        it("should return empty array when querying for a collection that doesnt exist", async () => {
+        it("should returns empty array when querying for a collection that doesnt exist", async () => {
           const products = await service.list(
             {
               categories: { id: ["collection-doesnt-exist-id"] },

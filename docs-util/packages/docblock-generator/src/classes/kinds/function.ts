@@ -7,8 +7,6 @@ import {
   DOCBLOCK_DOUBLE_LINES,
 } from "../../constants.js"
 import getSymbol from "../../utils/get-symbol.js"
-import AiGenerator from "../helpers/ai-generator.js"
-import path from "path"
 
 export type FunctionNode =
   | ts.MethodDeclaration
@@ -34,9 +32,6 @@ class FunctionKindGenerator extends DefaultKindGenerator<FunctionOrVariableNode>
     ...this.methodKinds,
     ...this.functionKinds,
   ]
-  public name = "function"
-  static EXAMPLE_PLACEHOLDER = `{example-code}`
-  protected aiParameterExceptions = ["sharedContext"]
 
   /**
    * Checks whether a node is considered a function node. A node is considered a function node if:
@@ -140,40 +135,15 @@ class FunctionKindGenerator extends DefaultKindGenerator<FunctionOrVariableNode>
   /**
    * Retrieves the summary comment of a function.
    *
-   * @param {FunctionNode} node - The function's options.
+   * @param {FunctionNode} node - The node's function.
+   * @param {ts.Symbol} symbol - The node's symbol. If provided, the method will try to retrieve the summary from the {@link KnowledgeBaseFactory}.
    * @returns {string} The function's summary comment.
    */
-  getFunctionSummary({
-    node,
-    symbol,
-    parentSymbol,
-    returnType,
-  }: {
-    /**
-     * The node's function.
-     */
-    node: FunctionNode
-    /**
-     * The node's symbol. If provided, the method will try to retrieve the summary from the {@link KnowledgeBaseFactory}.
-     */
-    symbol?: ts.Symbol
-    /**
-     * The node's parent symbol. This is useful to pass along the parent name to the knowledge base.
-     */
-    parentSymbol?: ts.Symbol
-    /**
-     * The node's return type. Useful for the {@link KnowledgeBaseFactory}
-     */
-    returnType?: string
-  }): string {
+  getFunctionSummary(node: FunctionNode, symbol?: ts.Symbol): string {
     return symbol
       ? this.knowledgeBaseFactory.tryToGetFunctionSummary({
           symbol: symbol,
           kind: node.kind,
-          templateOptions: {
-            rawParentName: parentSymbol?.getName(),
-            pluralIndicatorStr: returnType,
-          },
         }) || this.getNodeSummary({ node, symbol })
       : this.getNodeSummary({ node, symbol })
   }
@@ -184,53 +154,15 @@ class FunctionKindGenerator extends DefaultKindGenerator<FunctionOrVariableNode>
    * @param {ts.Symbol} symbol - The function's symbol. If provided, the method will try to retrieve the example from the {@link KnowledgeBaseFactory}.
    * @returns {string} The function's example comment.
    */
-  getFunctionPlaceholderExample(): string {
-    return this.formatExample(FunctionKindGenerator.EXAMPLE_PLACEHOLDER)
-  }
-
-  /**
-   * Retrieves a function's example using the AiGenerator
-   *
-   * @param node - The function's node.
-   * @param aiGenerator - An instance of the AiGenerator
-   * @returns the example code
-   */
-  async getFunctionExampleAi(
-    node: FunctionOrVariableNode,
-    aiGenerator: AiGenerator,
-    withTag = true
-  ): Promise<string> {
-    const actualNode = ts.isVariableStatement(node)
-      ? this.extractFunctionNode(node)
-      : node
-
-    if (!actualNode) {
-      return ""
-    }
-
-    const symbol = getSymbol(node, this.checker)
-
-    const example = await aiGenerator.generateExample({
-      className: this.isMethod(actualNode)
-        ? getSymbol(node.parent, this.checker)?.name
-        : undefined,
-      functionName: symbol?.name || "",
-      signature: node.getText(),
-      fileName: path.basename(node.getSourceFile().fileName),
-    })
-
-    return this.formatExample(
-      example.length
-        ? `${example}${DOCBLOCK_NEW_LINE}`
-        : FunctionKindGenerator.EXAMPLE_PLACEHOLDER,
-      withTag
-    )
-  }
-
-  formatExample(example: string, withTag = true): string {
-    return `${
-      withTag ? `${DOCBLOCK_DOUBLE_LINES}@example${DOCBLOCK_NEW_LINE}` : ""
-    }${example}`
+  getFunctionExample(symbol?: ts.Symbol): string {
+    const str = `${DOCBLOCK_DOUBLE_LINES}@example${DOCBLOCK_NEW_LINE}`
+    return `${str}${
+      symbol
+        ? this.knowledgeBaseFactory.tryToGetFunctionExamples({
+            symbol: symbol,
+          }) || `{example-code}`
+        : `{example-code}`
+    }`
   }
 
   /**
@@ -241,12 +173,12 @@ class FunctionKindGenerator extends DefaultKindGenerator<FunctionOrVariableNode>
    * @param {GetDocBlockOptions} options - Formatting options.
    * @returns {string} The function's docblock.
    */
-  async getDocBlock(
+  getDocBlock(
     node: FunctionOrVariableNode | ts.Node,
     options: GetDocBlockOptions = { addEnd: true }
-  ): Promise<string> {
+  ): string {
     if (!this.isAllowed(node)) {
-      return await super.getDocBlock(node, options)
+      return super.getDocBlock(node, options)
     }
 
     const actualNode = ts.isVariableStatement(node)
@@ -254,34 +186,10 @@ class FunctionKindGenerator extends DefaultKindGenerator<FunctionOrVariableNode>
       : node
 
     if (!actualNode) {
-      return await super.getDocBlock(node, options)
-    }
-
-    let existingComments = this.getNodeCommentsFromRange(node)
-
-    if (existingComments?.includes(FunctionKindGenerator.EXAMPLE_PLACEHOLDER)) {
-      // just replace the existing comment and return it
-      if (options.aiGenerator) {
-        existingComments = existingComments.replace(
-          FunctionKindGenerator.EXAMPLE_PLACEHOLDER,
-          await this.getFunctionExampleAi(
-            actualNode,
-            options.aiGenerator,
-            false
-          )
-        )
-      }
-
-      return existingComments.replace("/*", "").replace("*/", "")
+      return super.getDocBlock(node, options)
     }
 
     const nodeSymbol = getSymbol(node, this.checker)
-    const nodeParentSymbol = getSymbol(node.parent, this.checker)
-    const nodeType = this.getReturnType(actualNode)
-    const returnTypeStr = this.checker.typeToString(nodeType)
-    const normalizedTypeStr = returnTypeStr.startsWith("Promise<")
-      ? returnTypeStr.replace(/^Promise</, "").replace(/>$/, "")
-      : returnTypeStr
 
     let str = DOCBLOCK_START
 
@@ -289,43 +197,35 @@ class FunctionKindGenerator extends DefaultKindGenerator<FunctionOrVariableNode>
     str += `${
       options.summaryPrefix ||
       (this.isMethod(actualNode) ? `This method` : `This function`)
-    } ${this.getFunctionSummary({
-      node: actualNode,
-      symbol: nodeSymbol,
-      parentSymbol: nodeParentSymbol,
-      returnType: normalizedTypeStr,
-    })}${DOCBLOCK_NEW_LINE}`
+    } ${this.getFunctionSummary(actualNode, nodeSymbol)}${DOCBLOCK_NEW_LINE}`
 
-    actualNode.parameters.map((parameterNode) => {
-      const symbol = getSymbol(parameterNode, this.checker)
+    // add params
+    actualNode.forEachChild((childNode) => {
+      if (!ts.isParameter(childNode)) {
+        return
+      }
+      const symbol = getSymbol(childNode, this.checker)
       if (!symbol) {
         return
       }
 
       const symbolType = this.checker.getTypeOfSymbolAtLocation(
         symbol,
-        parameterNode
+        childNode
       )
-
-      const parameterName = symbol.getName()
-      const parameterSummary = this.getNodeSummary({
-        node: parameterNode,
-        symbol,
-        nodeType: symbolType,
-        knowledgeBaseOptions: {
-          templateOptions: {
-            rawParentName: nodeParentSymbol?.getName(),
-            pluralIndicatorStr: this.checker.typeToString(symbolType),
-          },
-        },
-      })
 
       str += `${DOCBLOCK_NEW_LINE}@param {${this.checker.typeToString(
         symbolType
-      )}} ${parameterName} - ${parameterSummary}`
+      )}} ${symbol.getName()} - ${this.getNodeSummary({
+        node: childNode,
+        symbol,
+        nodeType: symbolType,
+      })}`
     })
 
     // add returns
+    const nodeType = this.getReturnType(actualNode)
+    const returnTypeStr = this.checker.typeToString(nodeType)
     const possibleReturnSummary = !this.hasReturnData(returnTypeStr)
       ? `Resolves when ${this.defaultSummary}`
       : this.getNodeSummary({
@@ -338,20 +238,12 @@ class FunctionKindGenerator extends DefaultKindGenerator<FunctionOrVariableNode>
         ? this.knowledgeBaseFactory.tryToGetFunctionReturns({
             symbol: nodeSymbol,
             kind: actualNode.kind,
-            templateOptions: {
-              rawParentName: nodeParentSymbol?.getName(),
-              pluralIndicatorStr: normalizedTypeStr,
-            },
           }) || possibleReturnSummary
         : possibleReturnSummary
     }`
 
     // add example
-    if (!options.aiGenerator) {
-      str += this.getFunctionPlaceholderExample()
-    } else {
-      str += await this.getFunctionExampleAi(actualNode, options.aiGenerator)
-    }
+    str += this.getFunctionExample(nodeSymbol)
 
     // add common docs
     str += this.getCommonDocs(node, {
@@ -363,22 +255,6 @@ class FunctionKindGenerator extends DefaultKindGenerator<FunctionOrVariableNode>
     }
 
     return str
-  }
-
-  /**
-   * Allows documenting (updating) a node if it has the example placeholder.
-   *
-   * @param node - The node to document.
-   * @returns Whether the node can be documented.
-   */
-  canDocumentNode(node: ts.Node): boolean {
-    const comments = this.getNodeCommentsFromRange(node)
-
-    return (
-      !comments ||
-      comments?.includes(FunctionKindGenerator.EXAMPLE_PLACEHOLDER) ||
-      false
-    )
   }
 }
 

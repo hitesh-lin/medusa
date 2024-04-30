@@ -1,12 +1,10 @@
-import type { NextFunction, Request, Response } from "express"
 import type { Customer, User } from "../models"
+import type { NextFunction, Request, Response } from "express"
 
 import { MedusaContainer, RequestQueryFields } from "@medusajs/types"
 import { FindConfig } from "./common"
-import * as core from "express-serve-static-core"
 
-export interface MedusaRequest<Body = unknown>
-  extends Request<core.ParamsDictionary, any, Body> {
+export interface MedusaRequest<Body = unknown> extends Request {
   validatedBody: Body
   validatedQuery: RequestQueryFields & Record<string, unknown>
   /**
@@ -24,10 +22,7 @@ export interface MedusaRequest<Body = unknown>
   /**
    * An object containing fields and variables to be used with the remoteQuery
    */
-  remoteQueryConfig: {
-    fields: string[]
-    pagination: { order?: Record<string, string>; skip?: number; take?: number }
-  }
+  remoteQueryConfig: { fields: string[]; pagination: { order?: Record<string, string>, skip?: number, take?: number } }
   /**
    * An object containing the fields that are filterable e.g `{ id: Any<String> }`
    */
@@ -63,12 +58,12 @@ export interface AuthenticatedMedusaRequest<Body = never>
   }
 }
 
-export type MedusaResponse<Body = unknown> = Response<Body>
+export type MedusaResponse = Response
 
 export type MedusaNextFunction = NextFunction
 
-export type MedusaRequestHandler<Body = unknown, Res = unknown> = (
-  req: MedusaRequest<Body>,
-  res: MedusaResponse<Res>,
+export type MedusaRequestHandler = (
+  req: MedusaRequest<unknown>,
+  res: MedusaResponse,
   next: MedusaNextFunction
 ) => Promise<void> | void

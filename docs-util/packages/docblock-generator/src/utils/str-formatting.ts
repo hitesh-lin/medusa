@@ -22,6 +22,7 @@ export function camelToTitle(str: string): string {
     .map((word) => capitalize(word))
     .join(" ")
     .trim()
+    .toLowerCase()
 }
 
 export function snakeToWords(str: string): string {
@@ -61,10 +62,6 @@ export function wordsToPascal(str: string): string {
     .join("")
 }
 
-export function pascalToCamel(str: string): string {
-  return `${str.charAt(0).toLowerCase()}${str.substring(1)}`
-}
-
 /**
  * Remove parts of the name such as DTO, Filterable, etc...
  *
@@ -73,10 +70,8 @@ export function pascalToCamel(str: string): string {
  */
 export function normalizeName(str: string): string {
   return str
-    .replace(/^(create|update|delete|upsert)/i, "")
+    .replace(/^(create|update|delete)/i, "")
     .replace(/DTO$/, "")
     .replace(/^Filterable/, "")
     .replace(/Props$/, "")
-    .replace(/^I([A-Z])/, "$1")
-    .replace(/ModuleService$/, "")
 }

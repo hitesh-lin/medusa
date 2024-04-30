@@ -11,7 +11,6 @@ export enum LinkModuleUtils {
   REMOTE_LINK = "remoteLink",
 }
 
-// TODO: Remove this enum and use the one from @medusajs/utils
 export enum Modules {
   AUTH = "auth",
   CACHE = "cacheService",
@@ -35,7 +34,6 @@ export enum Modules {
   API_KEY = "apiKey",
   STORE = "store",
   CURRENCY = "currency",
-  FILE = "file",
 }
 
 export enum ModuleRegistrationName {
@@ -60,7 +58,6 @@ export enum ModuleRegistrationName {
   API_KEY = "apiKeyModuleService",
   STORE = "storeModuleService",
   CURRENCY = "currencyModuleService",
-  FILE = "fileModuleService",
 }
 
 export const MODULE_PACKAGE_NAMES = {
@@ -86,7 +83,6 @@ export const MODULE_PACKAGE_NAMES = {
   [Modules.API_KEY]: "@medusajs/api-key",
   [Modules.STORE]: "@medusajs/store",
   [Modules.CURRENCY]: "@medusajs/currency",
-  [Modules.FILE]: "@medusajs/file",
 }
 
 export const ModulesDefinition: { [key: string | Modules]: ModuleDefinition } =
@@ -357,19 +353,6 @@ export const ModulesDefinition: { [key: string | Modules]: ModuleDefinition } =
       registrationName: ModuleRegistrationName.CURRENCY,
       defaultPackage: false,
       label: upperCaseFirst(ModuleRegistrationName.CURRENCY),
-      isRequired: false,
-      isQueryable: true,
-      dependencies: ["logger"],
-      defaultModuleDeclaration: {
-        scope: MODULE_SCOPE.INTERNAL,
-        resources: MODULE_RESOURCE_TYPE.SHARED,
-      },
-    },
-    [Modules.FILE]: {
-      key: Modules.FILE,
-      registrationName: ModuleRegistrationName.FILE,
-      defaultPackage: false,
-      label: upperCaseFirst(ModuleRegistrationName.FILE),
       isRequired: false,
       isQueryable: true,
       dependencies: ["logger"],

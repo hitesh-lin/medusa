@@ -75,6 +75,7 @@ medusaIntegrationTestRunner({
           ends_at: expect.any(String),
           budget: {
             id: expect.any(String),
+            campaign: expect.any(Object),
             type: "spend",
             limit: 1000,
             raw_limit: {
@@ -102,7 +103,7 @@ medusaIntegrationTestRunner({
         )
 
         const response = await api.get(
-          `/admin/campaigns/${createdCampaign.id}?fields=name`,
+          `/admin/campaigns/${createdCampaign.id}?fields=name&expand=`,
           adminHeaders
         )
 

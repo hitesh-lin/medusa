@@ -110,9 +110,9 @@ medusaIntegrationTestRunner({
               {
                 action: "throw",
                 handlerType: "invoke",
-                error: expect.objectContaining({
-                  message: `Failed to do something after creating payment sessions`,
-                }),
+                error: new Error(
+                  `Failed to do something after creating payment sessions`
+                ),
               },
             ])
 

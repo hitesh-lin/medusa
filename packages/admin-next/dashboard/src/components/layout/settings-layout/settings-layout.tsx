@@ -53,10 +53,6 @@ const useSettingRoutes = (): NavItemProps[] => {
         label: t("salesChannels.domain"),
         to: "/settings/sales-channels",
       },
-      {
-        label: t("shippingProfile.domain"),
-        to: "/settings/shipping-profiles",
-      },
     ],
     [t]
   )
@@ -68,16 +64,12 @@ const useDeveloperRoutes = (): NavItemProps[] => {
   return useMemo(
     () => [
       {
-        label: t("apiKeyManagement.domain.publishable"),
-        to: "/settings/publishable-api-keys",
+        label: t("apiKeyManagement.domain"),
+        to: "/settings/api-key-management",
       },
       {
-        label: t("apiKeyManagement.domain.secret"),
-        to: "/settings/secret-api-keys",
-      },
-      {
-        label: t("workflowExecutions.domain"),
-        to: "/settings/workflows",
+        label: t("executions.domain"),
+        to: "/settings/executions",
       },
     ],
     [t]

@@ -1,3 +1,15 @@
+export const defaultAdminWorkflowExecutionsRelations = []
+export const allowedAdminWorkflowExecutionsRelations = []
+export const defaultAdminWorkflowExecutionsFields = [
+  "id",
+  "workflow_id",
+  "transaction_id",
+  "state",
+  "created_at",
+  "updated_at",
+  "deleted_at",
+]
+
 export const defaultAdminWorkflowExecutionDetailFields = [
   "id",
   "workflow_id",
@@ -10,23 +22,15 @@ export const defaultAdminWorkflowExecutionDetailFields = [
   "deleted_at",
 ]
 
-export const defaultAdminWorkflowExecutionsFields = [
-  "id",
-  "workflow_id",
-  "transaction_id",
-  "state",
-  "created_at",
-  "updated_at",
-  "deleted_at",
-]
-
 export const retrieveTransformQueryConfig = {
-  defaults: defaultAdminWorkflowExecutionDetailFields,
+  defaultFields: defaultAdminWorkflowExecutionDetailFields,
+  defaultRelations: defaultAdminWorkflowExecutionsRelations,
+  allowedRelations: allowedAdminWorkflowExecutionsRelations,
   isList: false,
 }
 
 export const listTransformQueryConfig = {
   ...retrieveTransformQueryConfig,
-  defaults: defaultAdminWorkflowExecutionsFields,
+  defaultFields: defaultAdminWorkflowExecutionsFields,
   isList: true,
 }

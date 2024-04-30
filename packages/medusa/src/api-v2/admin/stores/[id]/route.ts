@@ -1,37 +1,25 @@
 import { updateStoresWorkflow } from "@medusajs/core-flows"
 import { UpdateStoreDTO } from "@medusajs/types"
-import {
-  remoteQueryObjectFromString,
-  ContainerRegistrationKeys,
-} from "@medusajs/utils"
-import {
-  AuthenticatedMedusaRequest,
-  MedusaResponse,
-} from "../../../../types/routing"
-import { AdminGetStoreParamsType, AdminUpdateStoreType } from "../validators"
-import { refetchStore } from "../helpers"
+import { remoteQueryObjectFromString } from "@medusajs/utils"
+import { MedusaRequest, MedusaResponse } from "../../../../types/routing"
+import { defaultAdminStoreFields } from "../query-config"
 
-export const GET = async (
-  req: AuthenticatedMedusaRequest<AdminGetStoreParamsType>,
-  res: MedusaResponse
-) => {
-  const remoteQuery = req.scope.resolve(ContainerRegistrationKeys.REMOTE_QUERY)
+export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
+  const remoteQuery = req.scope.resolve("remoteQuery")
+
   const variables = { id: req.params.id }
 
   const queryObject = remoteQueryObjectFromString({
     entryPoint: "store",
     variables,
-    fields: req.remoteQueryConfig.fields,
+    fields: defaultAdminStoreFields,
   })
 
   const [store] = await remoteQuery(queryObject)
   res.status(200).json({ store })
 }
 
-export const POST = async (
-  req: AuthenticatedMedusaRequest<AdminUpdateStoreType>,
-  res: MedusaResponse
-) => {
+export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
   const { result, errors } = await updateStoresWorkflow(req.scope).run({
     input: {
       selector: { id: req.params.id },
@@ -44,11 +32,5 @@ export const POST = async (
     throw errors[0].error
   }
 
-  const store = await refetchStore(
-    result[0].id,
-    req.scope,
-    req.remoteQueryConfig.fields
-  )
-
-  res.status(200).json({ store })
+  res.status(200).json({ store: result[0] })
 }

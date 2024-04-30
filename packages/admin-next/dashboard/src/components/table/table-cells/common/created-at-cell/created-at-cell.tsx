@@ -1,17 +1,12 @@
 import { Tooltip } from "@medusajs/ui"
 import format from "date-fns/format"
 import { useTranslation } from "react-i18next"
-import { PlaceholderCell } from "../placeholder-cell"
 
 type DateCellProps = {
-  date: Date | string | undefined
+  date: Date
 }
 
 export const CreatedAtCell = ({ date }: DateCellProps) => {
-  if (!date) {
-    return <PlaceholderCell />
-  }
-
   const value = new Date(date)
   value.setMinutes(value.getMinutes() - value.getTimezoneOffset())
 

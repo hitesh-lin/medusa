@@ -10,7 +10,6 @@ import {
 
 const ITEMS_REL_NAME = "items"
 const REGION_REL_NAME = "region"
-const DISCOUNTS_REL_NAME = "discounts"
 
 export const OrderRepository = dataSource.getRepository(Order).extend({
   async findWithRelations(
@@ -29,11 +28,8 @@ export const OrderRepository = dataSource.getRepository(Order).extend({
           where: { id: In(entitiesIds) },
           select: ["id"],
           relations: rels,
-          withDeleted: [
-            ITEMS_REL_NAME,
-            REGION_REL_NAME,
-            DISCOUNTS_REL_NAME,
-          ].includes(topLevel),
+          withDeleted:
+            topLevel === ITEMS_REL_NAME || topLevel === REGION_REL_NAME,
           relationLoadStrategy: "join",
         })
       })

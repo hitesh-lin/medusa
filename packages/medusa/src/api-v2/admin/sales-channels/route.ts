@@ -1,4 +1,5 @@
 import { createSalesChannelsWorkflow } from "@medusajs/core-flows"
+import { CreateSalesChannelDTO } from "@medusajs/types"
 import {
   ContainerRegistrationKeys,
   remoteQueryObjectFromString,
@@ -7,24 +8,21 @@ import {
   AuthenticatedMedusaRequest,
   MedusaResponse,
 } from "../../../types/routing"
-import { refetchSalesChannel } from "./helpers"
-import {
-  AdminCreateSalesChannelType,
-  AdminGetSalesChannelsParamsType,
-} from "./validators"
 
 export const GET = async (
-  req: AuthenticatedMedusaRequest<AdminGetSalesChannelsParamsType>,
+  req: AuthenticatedMedusaRequest,
   res: MedusaResponse
 ) => {
   const remoteQuery = req.scope.resolve(ContainerRegistrationKeys.REMOTE_QUERY)
 
+  const variables = {
+    filters: req.filterableFields,
+    ...req.remoteQueryConfig.pagination,
+  }
+
   const queryObject = remoteQueryObjectFromString({
     entryPoint: "sales_channels",
-    variables: {
-      filters: req.filterableFields,
-      ...req.remoteQueryConfig.pagination,
-    },
+    variables,
     fields: req.remoteQueryConfig.fields,
   })
 
@@ -39,7 +37,7 @@ export const GET = async (
 }
 
 export const POST = async (
-  req: AuthenticatedMedusaRequest<AdminCreateSalesChannelType>,
+  req: AuthenticatedMedusaRequest<CreateSalesChannelDTO>,
   res: MedusaResponse
 ) => {
   const salesChannelsData = [req.validatedBody]
@@ -53,11 +51,17 @@ export const POST = async (
     throw errors[0].error
   }
 
-  const salesChannel = await refetchSalesChannel(
-    result[0].id,
-    req.scope,
-    req.remoteQueryConfig.fields
-  )
+  const salesChannel = result[0]
 
-  res.status(200).json({ sales_channel: salesChannel })
+  const remoteQuery = req.scope.resolve(ContainerRegistrationKeys.REMOTE_QUERY)
+
+  const queryObject = remoteQueryObjectFromString({
+    entryPoint: "sales_channels",
+    variables: { id: salesChannel.id },
+    fields: req.remoteQueryConfig.fields,
+  })
+
+  const [sales_channel] = await remoteQuery(queryObject)
+
+  res.status(200).json({ sales_channel })
 }
